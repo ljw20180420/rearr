@@ -37,5 +37,10 @@ get_table()
     }'
 }
 
-get_indel < barcode/A2_TEST.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.table
+# get_indel < barcode/A2_TEST.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.table
 # get_indel < barcode/A2_TEST.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.table | get_table 17
+
+for file in $(ls path/*.suffix)
+do
+    get_table col_num < $file
+done
