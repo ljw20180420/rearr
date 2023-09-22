@@ -6,7 +6,7 @@ if not ".fq." in barcodefile and not ".fastq." in barcodefile:
     raise Exception("barcode file must contain fq or fastq")
 csvpos = barcodefile.find(".fq.") + 4 if ".fq." in barcodefile else barcodefile.find(".fastq.") + 7
 csvfile = os.path.join(os.path.dirname(barcodefile), barcodefile[csvpos:-8])
-extup_left, extdown_left, extup_right, extdown_right = 50, 50, 50, 100
+extup_left, extdown_left, extup_right, extdown_right = 50, 0, 10, 100
 with os.popen(f'''cut -f1-2,6,8 {barcodefile}''', "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{$F[11]=~tr/ACGT/TGCA/; say $F[9] , "\t" , scalar reverse $F[11]}}' {csvfile} | sort -k2,2 | cut -f1 | bowtie2 -x /home/ljw/hg19_with_bowtie2_index/hg19 -r -U - 2> /dev/null | samtools view''', "r") as bf, os.popen(f'''tail -n+2 {csvfile} | cut -d',' -f12 | tr ACGT TGCA | rev | sort ''', "r") as rcb:
     _ = subprocess.run(f">{barcodefile}.alg", shell=True, check=True)
     bcdline = bcd.readline()
@@ -46,6 +46,6 @@ with os.popen(f'''cut -f1-2,6,8 {barcodefile}''', "r") as bcd, os.popen(f'''perl
                 break
             _ = cf.write(f"{seq[barcode_end + 3:]}\t{count}\n")
         cf.close()
-        _ = subprocess.run(f'''Rearrangement/build/rearrangement -file barcode/countfile -ref_file barcode/reference -ALIGN_MAX 1 -THR_NUM 1 >> {barcodefile}.alg; echo >> {barcodefile}.alg''', shell=True, check=True) # if thread number (-THR_NUM) set larger than 1, then the output does not keep order
+        _ = subprocess.run(f'''Rearrangement/build/rearrangement -file barcode/countfile -ref_file barcode/reference -ALIGN_MAX 1 -THR_NUM 1 -qv -5 >> {barcodefile}.alg; echo >> {barcodefile}.alg''', shell=True, check=True) # if thread number (-THR_NUM) set larger than 1, then the output does not keep order
     cf.close()
-    _ = subprocess.run(f'''Rearrangement/build/rearrangement -file barcode/countfile -ref_file barcode/reference -ALIGN_MAX 1 -THR_NUM 1 >> {barcodefile}.alg; echo >> {barcodefile}.alg''', shell=True, check=True)
+    _ = subprocess.run(f'''Rearrangement/build/rearrangement -file barcode/countfile -ref_file barcode/reference -ALIGN_MAX 1 -THR_NUM 1 -qv -5 >> {barcodefile}.alg; echo >> {barcodefile}.alg''', shell=True, check=True)

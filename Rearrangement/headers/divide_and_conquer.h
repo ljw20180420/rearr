@@ -214,12 +214,12 @@ void divide_and_conquer(std::vector<int>::iterator ve_b, std::vector<int>::itera
 }
 
 
-std::vector<Align> wapper_divide_and_conquer(std::string x, std::vector<int> S, std::string alg_type, int u, int v, std::vector<std::string> os, std::vector<int> index, std::vector<double> num, int max_len, int S0, int S1, std::string file, int blockindex, std::vector<int> left_exp, std::vector<int> right_exp, std::string mode)
+std::vector<Align> wapper_divide_and_conquer(std::string x, std::vector<int> S, std::string alg_type, int u, int v, int ru, int rv, int qu, int qv, std::vector<std::string> os, std::vector<int> index, std::vector<double> num, int max_len, int S0, int S1, std::string file, int blockindex, std::vector<int> left_exp, std::vector<int> right_exp, std::string mode)
 {
     std::map<char,int> nt2int;
     TD_array<int> gamma, vf, uf;
     std::vector<int> ve, ue, tvf, tuf;
-    std::tie(nt2int,gamma,ve, ue, tvf, tuf, vf, uf)=initialization(S, alg_type, u, v, max_len, S0, S1);
+    std::tie(nt2int,gamma,ve, ue, tvf, tuf, vf, uf)=initialization(S, alg_type, u, v, ru, rv, qu, qv, max_len, S0, S1);
     std::vector<int> GU(max_len+1), GD(max_len+1), GL(S.back()+1), GR(S.back()+1), EL(S.back()+1), ER(S.back()+1);
     std::vector<Align> aligns;
     std::ofstream fout("tmp/" + std::filesystem::path(file).filename().string() + "." + std::to_string(blockindex) + ".alg");

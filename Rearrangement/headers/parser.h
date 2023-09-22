@@ -71,6 +71,10 @@ struct Command_content
     int s1=1;
     int u=-2;
     int v=-5;
+    int ru=0;
+    int rv=0;
+    int qu=0;
+    int qv=0;
     std::string alg_type="local";
     double per_thres=0.0;
     // Output Options
@@ -127,6 +131,14 @@ Command_content command(int argc, char **argv)
             cc.u=atoi(argv[i+1]);
         if(!strcmp(argv[i],"-v"))
             cc.v=atoi(argv[i+1]);
+        if(!strcmp(argv[i],"-ru"))
+            cc.ru=atoi(argv[i+1]);
+        if(!strcmp(argv[i],"-rv"))
+            cc.rv=atoi(argv[i+1]);
+        if(!strcmp(argv[i],"-qu"))
+            cc.qu=atoi(argv[i+1]);
+        if(!strcmp(argv[i],"-qv"))
+            cc.qv=atoi(argv[i+1]);
         if(!strcmp(argv[i],"-alg_type"))
             cc.alg_type=argv[i+1];
         if(!strcmp(argv[i],"-per_thres"))

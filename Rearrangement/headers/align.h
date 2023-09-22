@@ -132,7 +132,7 @@ std::tuple<std::vector<int>,std::vector<int>,std::vector<std::string>,std::vecto
 }
 
 
-std::tuple<std::map<char,int>,TD_array<int>,std::vector<int>,std::vector<int>,std::vector<int>,std::vector<int>,TD_array<int>,TD_array<int>> initialization(std::vector<int>& S, std::string& alg_type, int u, int v, int max_len, int S0, int S1)
+std::tuple<std::map<char,int>,TD_array<int>,std::vector<int>,std::vector<int>,std::vector<int>,std::vector<int>,TD_array<int>,TD_array<int>> initialization(std::vector<int>& S, std::string& alg_type, int u, int v, int ru, int rv, int qu, int qv, int max_len, int S0, int S1)
 {
     TD_array<int> gamma(5,5,1,S0);
     gamma(1,1,0)=gamma(2,2,0)=gamma(3,3,0)=gamma(4,4,0)=S1;
@@ -141,24 +141,18 @@ std::tuple<std::map<char,int>,TD_array<int>,std::vector<int>,std::vector<int>,st
     {
         if(alg_type=="local" || alg_type=="contain")
         {
-            ve[S[j]]=0;
-            ue[S[j]]=0;
+            ve[S[j]] = qv;
+            ue[S[j]] = qu;
         }
-        if(alg_type=="local_imbed")
+        else if(alg_type == "local_imbed" && j != 0 && j != S.size() - 1)
         {
-            if(j!=0 && j!=S.size()-1)
-            {
-                ve[S[j]]=0;
-                ue[S[j]]=0;
-            }
+            ve[S[j]] = qv;
+            ue[S[j]] = qu;
         }
-        if(alg_type=="local" || alg_type=="local_imbed" || alg_type=="imbed")
+        if(j!=S.size()-1 && (alg_type=="local" || alg_type=="local_imbed" || alg_type=="imbed"))
         {
-            if(j!=S.size()-1)
-            {
-                tvf[j]=0;
-                tuf[j]=0;
-            }
+            tvf[j] = rv;
+            tuf[j] = ru;
         }
     }
     return std::make_tuple(std::map<char,int>{{'N',0},{'A',1},{'C',2},{'G',3},{'T',4},{'n',0},{'a',1},{'c',2},{'g',3},{'t',4}},gamma,ve,ue,tvf,tuf,TD_array<int>(S.size()-1,max_len+1,1,v),TD_array<int>(S.size()-1,max_len+1,1,u));
@@ -282,12 +276,12 @@ std::tuple<std::vector<Align>,std::vector<std::string>,std::vector<std::string>>
     return std::make_tuple(aligns, references, queries);
 }
 
-std::vector<Align> wapper_column_wise(std::string x, std::vector<int> S, std::string alg_type, int u, int v, int ALIGN_MAX, std::vector<std::string> os, std::vector<int> index, std::vector<double> num, int max_len, int S0, int S1, std::string file, int blockindex, std::vector<int> left_exp, std::vector<int> right_exp, std::string mode)
+std::vector<Align> wapper_column_wise(std::string x, std::vector<int> S, std::string alg_type, int u, int v, int ru, int rv, int qu, int qv, int ALIGN_MAX, std::vector<std::string> os, std::vector<int> index, std::vector<double> num, int max_len, int S0, int S1, std::string file, int blockindex, std::vector<int> left_exp, std::vector<int> right_exp, std::string mode)
 {
     std::map<char,int> nt2int;
     TD_array<int> gamma, vf, uf;
     std::vector<int> ve, ue, tvf, tuf;
-    std::tie(nt2int,gamma,ve, ue, tvf, tuf, vf, uf)=initialization(S, alg_type, u, v, max_len, S0, S1);
+    std::tie(nt2int,gamma,ve, ue, tvf, tuf, vf, uf)=initialization(S, alg_type, u, v, ru, rv, qu, qv, max_len, S0, S1);
     TD_array<Back> EFG(S.back()+1,max_len+1,3);
     std::vector<Align> aligns;
     for(int i=0; i<os.size(); ++i)
