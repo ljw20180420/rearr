@@ -1,6 +1,7 @@
 #ifndef TD_ARRAY_H
 #define TD_ARRAY_H
 
+#include <bits/stdc++.h>
 #include <functional>
 
 template<typename T>
