@@ -4,7 +4,6 @@
 #include "TD_array.h"
 #include <map>
 #include <string>
-#include <filesystem>
 
 template<typename vi, typename si>
 void row_wise_linear(vi ve_b, vi ue_b, int row, vi vf_b, vi uf_b, vi tvf_b, vi tuf_b, TD_array<int>& gamma, si x_b, si o_b, si o_e, vi S_b, vi S_e, std::map<char,int>& nt2int, vi G_b)
@@ -222,7 +221,13 @@ std::vector<Align> wapper_divide_and_conquer(std::string x, std::vector<int> S, 
     std::tie(nt2int,gamma,ve, ue, tvf, tuf, vf, uf)=initialization(S, alg_type, u, v, ru, rv, qu, qv, max_len, S0, S1);
     std::vector<int> GU(max_len+1), GD(max_len+1), GL(S.back()+1), GR(S.back()+1), EL(S.back()+1), ER(S.back()+1);
     std::vector<Align> aligns;
-    std::ofstream fout("tmp/" + std::filesystem::path(file).filename().string() + "." + std::to_string(blockindex) + ".alg");
+    int fnp = file.find_last_of("/");
+    std::string filename;
+    if (fnp != std::string::npos)
+        filename = file.substr(fnp + 1);
+    else
+        filename = file;
+    std::ofstream fout("tmp/" + filename + "." + std::to_string(blockindex) + ".alg");
     for(int i=0; i<os.size(); ++i)
     {
         aligns.emplace_back();

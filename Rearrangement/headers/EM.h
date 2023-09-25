@@ -5,7 +5,6 @@
 #include "tools.h"
 #include <fstream>
 #include <map>
-#include <filesystem>
 
 std::vector<std::vector<double>> initial_EM(std::string& ini, int dim, std::vector<TD_array<double>>& N_mats)
 {
@@ -81,17 +80,20 @@ void EM_predict(std::vector<Align>& aligns, std::string& x, std::vector<int>& le
         
     }
     std::string pre_str;
-    std::filesystem::path pathObj;
-    pathObj=ini_alpha;
-    pre_str.append(pathObj.filename().string());
-    pathObj=ini_beta;
-    if(!pre_str.empty() && !pathObj.filename().string().empty())
-        pre_str.append("_");
-    pre_str.append(pathObj.filename().string());
-    pathObj=ini_pi;
-    if(!pre_str.empty() && !pathObj.filename().string().empty())
-        pre_str.append("_");
-    pre_str.append(pathObj.filename().string());
+    int fnp = ini_alpha.find_last_of("/");
+    pre_str = fnp != std::string::npos ? ini_alpha.substr(fnp + 1) : ini_alpha;
+
+    fnp = ini_beta.find_last_of("/");
+    std::string toappend = fnp != std::string::npos ? ini_beta.substr(fnp + 1) : ini_beta;
+    if(!pre_str.empty() && !toappend.empty())
+        pre_str += '_';
+    pre_str += toappend;
+
+    fnp = ini_pi.find_last_of("/");
+    toappend = fnp != std::string::npos ? ini_pi.substr(fnp + 1) : ini_pi;
+    if(!pre_str.empty() && !toappend.empty())
+        pre_str += '_';
+    pre_str += toappend;
     if(!pre_str.empty())
         pre_str.append("_");
     std::vector<std::vector<double>> alphas=initial_EM(ini_alpha, 0, N_mats);
