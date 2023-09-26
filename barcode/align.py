@@ -1,13 +1,15 @@
 #!/home/xiaoge/miniconda3/envs/crispr/bin/python
 import sys, os, subprocess, Bio.Seq
 barcodefile = sys.argv[1]
+bowtie2genome = sys.argv[2]
+getfastagenome = sys.argv[3]
 scaffold = Bio.Seq.Seq("gttttagagctagaaatagcaagttaaaataaggctagtccgttatcaacttgaaaaagtggcaccgagtcggtgc").reverse_complement().__str__().upper()
 if not ".fq." in barcodefile and not ".fastq." in barcodefile:
     raise Exception("barcode file must contain fq or fastq")
 csvpos = barcodefile.find(".fq.") + 4 if ".fq." in barcodefile else barcodefile.find(".fastq.") + 7
 csvfile = os.path.join(os.path.dirname(barcodefile), barcodefile[csvpos:-8])
 extup_left, extdown_left, extup_right, extdown_right = 50, 0, 10, 100
-with os.popen(f'''cut -f1,6,8 {barcodefile}''', "r") as bcd, os.popen(f'''cut -f2 {barcodefile} | sed '=' | sed '1~2s/^/>s/' | cutadapt -a GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC - 2> /dev/null | sed -n '2~2p' ''') as bcdseq, os.popen(f'''perl -anF, -E 'if($.>1){{$F[11]=~tr/ACGT/TGCA/; say $F[9] , "\t" , scalar reverse $F[11]}}' {csvfile} | sort -k2,2 | cut -f1 | bowtie2 -x /home/ljw/hg19_with_bowtie2_index/hg19 -r -U - 2> /dev/null | samtools view''', "r") as bf, os.popen(f'''tail -n+2 {csvfile} | cut -d',' -f12 | tr ACGT TGCA | rev | sort ''', "r") as rcb:
+with os.popen(f'''cut -f1,6,8 {barcodefile}''', "r") as bcd, os.popen(f'''cut -f2 {barcodefile} | sed '=' | sed '1~2s/^/>s/' | cutadapt -a GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC - 2> /dev/null | sed -n '2~2p' ''') as bcdseq, os.popen(f'''perl -anF, -E 'if($.>1){{$F[11]=~tr/ACGT/TGCA/; say $F[9] , "\t" , scalar reverse $F[11]}}' {csvfile} | sort -k2,2 | cut -f1 | bowtie2 -x {bowtie2genome} -r -U - 2> /dev/null | samtools view''', "r") as bf, os.popen(f'''tail -n+2 {csvfile} | cut -d',' -f12 | tr ACGT TGCA | rev | sort ''', "r") as rcb:
     _ = subprocess.run(f'''> {barcodefile}.alg''', shell=True, check=True)
     _ = subprocess.run(f'''echo -n "barcode"$'\t'"index"$'\t'"count"$'\t'"score"$'\t'"start1"$'\t'"end1"$'\t'"random_insertion"$'\t'"start2"$'\t'"end2"$'\t'"cut1"$'\t'"cut2"$'\n' > {barcodefile}.table''', shell=True, check=True, executable="/bin/bash")
     bcdline = bcd.readline().rstrip()
@@ -32,8 +34,8 @@ with os.popen(f'''cut -f1,6,8 {barcodefile}''', "r") as bcd, os.popen(f'''cut -f
             eul, edl, eur, edr = extdown_left, extup_left, extdown_right, extup_right
         else:
             eul, edl, eur, edr = extup_left, extdown_left, extup_right, extdown_right
-        ref_left = subprocess.run(f'''bedtools getfasta -bedOut -s -fi /home/ljw/hg19_with_bowtie2_index/hg19.fa -bed <(echo "{chr}"$'\t'"{cut-eul}"$'\t'"{cut+edl}"$'\t'{qname}$'\t'"."$'\t'"{rfstrand}")''', shell=True, check=True, capture_output=True, executable="/bin/bash").stdout.decode().split()[-1].rstrip()
-        ref_right = subprocess.run(f'''bedtools getfasta -bedOut -s -fi /home/ljw/hg19_with_bowtie2_index/hg19.fa -bed <(echo "{chr}"$'\t'"{cut-eur}"$'\t'"{cut+edr}"$'\t'{qname}$'\t'"."$'\t'"{rfstrand}")''', shell=True, check=True, capture_output=True, executable="/bin/bash").stdout.decode().split()[-1].rstrip()
+        ref_left = subprocess.run(f'''bedtools getfasta -bedOut -s -fi {getfastagenome} -bed <(echo "{chr}"$'\t'"{cut-eul}"$'\t'"{cut+edl}"$'\t'{qname}$'\t'"."$'\t'"{rfstrand}")''', shell=True, check=True, capture_output=True, executable="/bin/bash").stdout.decode().split()[-1].rstrip()
+        ref_right = subprocess.run(f'''bedtools getfasta -bedOut -s -fi {getfastagenome} -bed <(echo "{chr}"$'\t'"{cut-eur}"$'\t'"{cut+edr}"$'\t'{qname}$'\t'"."$'\t'"{rfstrand}")''', shell=True, check=True, capture_output=True, executable="/bin/bash").stdout.decode().split()[-1].rstrip()
         with open(f"{barcodefile}.reference", "w") as rd:
             _ = rd.write(f"0\t0\t0\n{ref_left}\n{extup_left}\t{extup_left}\t{extup_left}\n{extup_right}\t{extup_right}\t{extup_right}\n{ref_right}\n{extup_right+extdown_right}\t{extup_right+extdown_right}\t{extup_right+extdown_right}\n")
         
