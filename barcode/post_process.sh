@@ -21,7 +21,7 @@ get_indel()
 
 get_table()
 {
-    awk -F "\t" -v OFS="\t" -v tg=$1 'NR>1{count[$1][$tg] += $3; tgvs[$tg] = 0;}
+    awk -v FS="\t" -v tg=$1 'NR>1{count[$1][$tg] += $3; tgvs[$tg] = 0;}
     END{
         printf("barcode");
         for(kt in tgvs) 
@@ -37,10 +37,30 @@ get_table()
     }'
 }
 
+case $1 in
+    get_indel)
+        get_indel < $2
+    ;;
+    get_table)
+        get_table $2 < $3
+    ;;
+    *)
+        echo "input is not get_indel or get_table"
+    ;;
+esac
+
+# if [ $1 = "get_indel" ]
+# then
+#     get_indel < $2
+# fi
+# if [ $1 = "get_table" ]
+# then
+#     get_table $2 < $3
+# fi
 # get_indel < barcode/A2_TEST.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.table
 # get_indel < barcode/A2_TEST.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.table | get_table 17
 
-for file in $(ls path/*.suffix)
-do
-    get_table col_num < $file
-done
+# for file in $(ls path/*.suffix)
+# do
+#     get_table col_num < $file
+# done

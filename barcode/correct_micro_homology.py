@@ -1,4 +1,5 @@
 import sys, re, more_itertools
+
 ref1len, cut1 = int(sys.argv[1]), int(sys.argv[2])
 relow = re.compile("[acgtn]")
 reup = re.compile("[ACGTN]")
