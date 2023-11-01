@@ -35,7 +35,7 @@ input=${1:-"ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz"} # the input file
 # esac
 ref=${2:-"CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT"} # reference
 sgRNA=${3:-"GGTGATGTGTTGAGACTGGT"} # sgRNA
-exec=${4:-"Rearrangement/build/rearrangement"} # executable for alignment
+exec=${4:-"Rearrangement/rearrangement"} # executable for alignment
 ext1=${5:-30} # upstream end downstream extension for template inserion (default: 30)
 ext2=${6:-30} # downstream end upstream extension (default: 30)
 
