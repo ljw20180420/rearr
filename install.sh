@@ -5,4 +5,4 @@ printf "\n%s\n" "export PATH=\"$(pwd)/tools\":"'$PATH' >> ~/.bashrc
 cd Rearrangement
 cmake .
 make
-printf "\n%s\n" "export PATH=\"$(pwd)/Rearrangement\":"'$PATH' >> ~/.bashrc
+printf "\n%s\n" "export PATH=\"$(pwd)\":"'$PATH' >> ~/.bashrc
