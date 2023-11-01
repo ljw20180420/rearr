@@ -19,24 +19,25 @@ get_indel()
 }
 
 input=${1:-"ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz"} # the input file
-# case $input in # count duplicate reads, support fasta, fastq, and their compressions
-#     *.fq.gz|*.fastq.gz)
-#         echo "the input is gzip fastq file"
-#         zcat $input | sed -n '2~4p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
-#     *.fa.gz|*.fasta.gz)
-#         echo "the input is gzip fasta file"
-#         zcat $input | sed -n '2~2p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
-#     *.fq|*.fastq)
-#         echo "the input is fastq file"
-#         sed -n '2~4p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
-#     *.fa|*.fasta)
-#         echo "the input is fasta file"
-#         sed -n '2~2p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
-# esac
+case $input in # count duplicate reads, support fasta, fastq, and their compressions
+    *.fq.gz|*.fastq.gz)
+        echo "the input is gzip fastq file"
+        zcat $input | sed -n '2~4p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
+    *.fa.gz|*.fasta.gz)
+        echo "the input is gzip fasta file"
+        zcat $input | sed -n '2~2p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
+    *.fq|*.fastq)
+        echo "the input is fastq file"
+        sed -n '2~4p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
+    *.fa|*.fasta)
+        echo "the input is fasta file"
+        sed -n '2~2p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
+esac
 ref=${2:-"CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT"} # reference
 sgRNA=${3:-"GGTGATGTGTTGAGACTGGT"} # sgRNA
-ext1=${5:-30} # upstream end downstream extension for template inserion (default: 30)
-ext2=${6:-30} # downstream end upstream extension (default: 30)
+ext1=${4:-30} # upstream end downstream extension for template inserion (default: 30)
+ext2=${5:-30} # downstream end upstream extension (default: 30)
+THR_NUM=${6:-$(expr $(lscpu | grep "CPU(s):"| head -n1 | sed -r 's/[^0-9]//g') / 2)} # threads number
 
 cut=$(generate_ref_file.py $input.count $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
 
