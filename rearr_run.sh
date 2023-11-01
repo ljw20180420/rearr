@@ -35,10 +35,9 @@ input=${1:-"ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz"} # the input file
 # esac
 ref=${2:-"CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT"} # reference
 sgRNA=${3:-"GGTGATGTGTTGAGACTGGT"} # sgRNA
-exec=${4:-"Rearrangement/rearrangement"} # executable for alignment
 ext1=${5:-30} # upstream end downstream extension for template inserion (default: 30)
 ext2=${6:-30} # downstream end upstream extension (default: 30)
 
-cut=$(generate_ref_file.py $input.count $ref $sgRNA $exec $ext1 $ext2) # prepare the reference file and return the cut point
+cut=$(generate_ref_file.py $input.count $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
 
-$exec -file $input.count -ref_file ref_file -ALIGN_MAX 1 -THR_NUM 24 -u -1 -v -3 -s0 -2 -qv -3 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | tee $input.alg.$cut.$ext1.$ext2 | correct_micro_homology.py $(($cut + $ext1)) $cut $(($cut + $ext1 + $ext2)) | tee $input.correct.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel > $input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+rearrangement -file $input.count -ref_file ref_file -ALIGN_MAX 1 -THR_NUM 24 -u -1 -v -3 -s0 -2 -qv -3 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | tee $input.alg.$cut.$ext1.$ext2 | correct_micro_homology.py $(($cut + $ext1)) $cut $(($cut + $ext1 + $ext2)) | tee $input.correct.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel > $input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
