@@ -1,4 +1,4 @@
-#!/home/xiaoge/miniconda3/envs/crispr/bin/python
+#!/usr/bin/env python
 import sys, fuzzysearch, numpy, os
 csvfile = sys.argv[1]
 primer = sys.argv[2]

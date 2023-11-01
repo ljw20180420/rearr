@@ -1,7 +1,0 @@
-{
-    "cmake.sourceDirectory": "${workspaceFolder}/Rearrangement",
-    "cmake.buildDirectory": "${workspaceFolder}/Rearrangement/build",
-    "files.associations": {
-        "functional": "cpp"
-    }
-}

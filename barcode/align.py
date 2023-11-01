@@ -1,4 +1,4 @@
-#!/home/xiaoge/miniconda3/envs/crispr/bin/python
+#!/usr/bin/env python
 import sys, os, subprocess, Bio.Seq
 barcodefile = sys.argv[1]
 bowtie2genome = sys.argv[2]
