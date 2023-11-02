@@ -2,7 +2,6 @@
 # simply append three paths to ~/.bashrc
 
 cd $(dirname $0)
-echo $PATH
 if [[ $(grep -c $(pwd) ~/.bashrc) -eq 0 ]]
 then
     printf "\n%s\n" "export PATH=\"$(pwd)\":"'$PATH' >> ~/.bashrc
