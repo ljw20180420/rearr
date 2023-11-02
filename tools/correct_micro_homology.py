@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, re, more_itertools
-def correct_micro(ref1len, cut1, cut2, fd):
+def correct_micro(ref1len, cut1, cut2, fd, NGGCCNtype):
     # modify the alignment within micro homology such that the left end is blunt if possible
     relow = re.compile("[acgtn]")
     reup = re.compile("[ACGTN]")
@@ -26,8 +26,9 @@ def correct_micro(ref1len, cut1, cut2, fd):
                     else:
                         qds = ds = de = cut2
             queryline = list(queryline)
-            for _ in range(abs(ue - cut1)):
-                if ue < cut1:
+            itersize = abs(ue - cut1) if NGGCCNtype == "NGG" else abs(ds -cut2) if NGGCCNtype == "CCN" else 0
+            for _ in range(itersize):
+                if NGGCCNtype == "NGG" and ue < cut1 or NGGCCNtype == "CCN" and ds < cut2:
                     if refline[que].upper() == refline[qds].upper():
                         queryline[que] = queryline[qds]
                         queryline[qds] = "-"
@@ -37,7 +38,7 @@ def correct_micro(ref1len, cut1, cut2, fd):
                         ds += 1
                     else:
                         break
-                if ue > cut1:
+                if NGGCCNtype == "NGG" and ue > cut1 or NGGCCNtype == "CCN" and ds > cut2:
                     if refline[que - 1].upper() == refline[qds - 1].upper():
                         queryline[qds - 1] = queryline[que - 1]
                         queryline[que - 1] = "-"
@@ -50,8 +51,8 @@ def correct_micro(ref1len, cut1, cut2, fd):
         
 
 if __name__ == "__main__":
-    ref1len, cut1, cut2 = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
-    for header, refline, queryline in correct_micro(ref1len, cut1, cut2, sys.stdin):
+    cut, ext1, ext2, NGGCCNtype = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
+    for header, refline, queryline in correct_micro(cut + ext1, cut, cut + ext1 + ext2, sys.stdin, NGGCCNtype):
         sys.stdout.write(header)
         sys.stdout.write(refline)
         sys.stdout.write(queryline)

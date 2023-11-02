@@ -48,25 +48,25 @@ def infer_cut(ref, sgRNA):
         if pos == -1:
             raise Exception("cannot locate sgRNA in reference")
     if ref[pos+len(sgRNA)+1:pos+len(sgRNA)+3] == "GG":
-        return pos+len(sgRNA)-3
+        return pos+len(sgRNA)-3, "NGG"
     if ref[pos-3:pos-1] == "CC":
-        return pos+3
+        return pos+3, "CCN"
     if ref[pos+len(sgRNA)-2:pos+len(sgRNA)] == "GG":
-        return pos+len(sgRNA)-6
+        return pos+len(sgRNA)-6, "NGG"
     if ref[pos:pos+2] == "CC":
-        return pos+6
+        return pos+6, "CCN"
     PAMpos = sgRNA.rfind("GG")
     if PAMpos != -1:
-        return PAMpos-4
+        return PAMpos-4, "NGG"
     PAMpos = sgRNA.find("CC")
     if PAMpos != -1:
-        return PAMpos+6
+        return PAMpos+6, "CCN"
     PAMpos = ref.find("GG", pos+len(sgRNA))
     if PAMpos != -1:
-        return PAMpos-4
+        return PAMpos-4, "NGG"
     PAMpos = ref.rfind("CC", 0, pos)
     if PAMpos != -1:
-        return PAMpos+6
+        return PAMpos+6, "CCN"
 
 def try_reverse_complement(countfile, ref, num=10):
     # use the first num reads in countfile to determine whether reference should be reversed and complemented
