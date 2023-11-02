@@ -1,4 +1,6 @@
 #!/bin/bash
+# simply append three paths to ~/.bashrc
+
 cd $(dirname $0)
 printf "\n%s\n" "export PATH=\"$(pwd)\":"'$PATH' >> ~/.bashrc
 printf "\n%s\n" "export PATH=\"$(pwd)/tools\":"'$PATH' >> ~/.bashrc

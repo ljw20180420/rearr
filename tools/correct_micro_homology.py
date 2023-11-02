@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys, re, more_itertools
 def correct_micro(ref1len, cut1, cut2, fd):
+    # modify the alignment within micro homology such that the left end is blunt if possible
     relow = re.compile("[acgtn]")
     reup = re.compile("[ACGTN]")
     for header, refline, queryline in more_itertools.batched(fd, 3):

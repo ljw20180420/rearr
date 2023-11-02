@@ -1,14 +1,25 @@
 #!/bin/bash
+# usage: rearr_run.sh input ref sgRNA [ext1 [ext2 [THR_NUM]]]
+# example: rearr_run.sh ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "GGTGATGTGTTGAGACTGGT" 30 30 16
+
+# input can be (compressed) fasta/fastq
+# ref and sgRNA are given in command line
+# ext1 is upstream end downstream extension for template inserion (default: 30)
+# ext2 is downstream end upstream extension (default: 30)
+# THR_NUM is thread number. Default is half the available cores.
+
 get_indel()
 {
+    # infer random insertion and left/right template indel
     awk -F "\t" -v OFS="\t" '
+        BEGIN{print "index", "count", "score", "start1", "end1", "random_insertion", "start2", "end2", "cut1", "cut2", "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"}
         {
-            ldel = ($10 > $6 ? $10 - $6 : 0);
-            rdel = ($8 > $11 ? $8 - $11 : 0);
+            ldel = ($9 > $5 ? $9 - $5 : 0);
+            rdel = ($7 > $10 ? $7 - $10 : 0);
             del = ldel + rdel;
-            tlins = ($6 > $10 ? $6 - $10 : 0);
-            trins = ($11 > $8 ? $11 - $8 : 0);
-            rins = length($7);
+            tlins = ($5 > $9 ? $5 - $9 : 0);
+            trins = ($10 > $7 ? $10 - $7 : 0);
+            rins = length($6);
             ins = tlins + trins + rins
             printf("%s\t%d\t%d\t%d\t%d\t%d\t", $0, ldel, rdel, tlins, trins, rins)
             if (del > 0 && ins > 0) print "indel";
@@ -33,12 +44,14 @@ case $input in # count duplicate reads, support fasta, fastq, and their compress
         echo "the input is fasta file"
         sed -n '2~2p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
 esac
-ref=${2:-"CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT"} # reference
-sgRNA=${3:-"GGTGATGTGTTGAGACTGGT"} # sgRNA
+ref=$2 # reference
+sgRNA=$3 # sgRNA
 ext1=${4:-30} # upstream end downstream extension for template inserion (default: 30)
 ext2=${5:-30} # downstream end upstream extension (default: 30)
 THR_NUM=${6:-$(expr $(lscpu | grep "CPU(s):"| head -n1 | sed -r 's/[^0-9]//g') / 2)} # threads number
 
-cut=$(generate_ref_file.py $input.count $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
+cut=$(generate_ref_file.py $input $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
 
-rearrangement -file $input.count -ref_file ref_file -ALIGN_MAX 1 -THR_NUM 24 -u -1 -v -3 -s0 -2 -qv -3 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | tee $input.alg.$cut.$ext1.$ext2 | correct_micro_homology.py $(($cut + $ext1)) $cut $(($cut + $ext1 + $ext2)) | tee $input.correct.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel > $input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+rearrangement -file $input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -THR_NUM 24 -u -1 -v -3 -s0 -2 -qv -3 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | correct_micro_homology.py $(($cut + $ext1)) $cut $(($cut + $ext1 + $ext2)) | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel > $input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+
+rm $input.ref.$cut.$ext1.$ext2 # remove temperary reference file

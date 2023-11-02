@@ -1,0 +1,29 @@
+Download
+git clone https://github.com/ljw20180420/sx_lcy.git
+
+Install
+cd sx_lcy
+./install.sh
+
+Usage
+rearr_run.sh input ref sgRNA [ext1 [ext2 [THR_NUM]]]
+
+Example
+rearr_run.sh ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "GGTGATGTGTTGAGACTGGT" 30 30 16
+
+Parameters
+input: plain/compressed fasta/fastq
+ref: reference string
+sgRNA: sgRNA
+ext1: upstream end downstream extension for upstream template inserion (default: 30)
+ext2: downstream end upstream extension (default: 30)
+THR_NUM: thread number. (default: half the available cores)
+
+Output
+input.count: the count of duplicates in the input file
+input.alg.cut.ext1.ext2: the alignments
+input.table.cut.ext1.ext2: the summarization table for indel information
+
+Tools
+rearr_view.sh input.alg [readnum]
+display the first readnum (default: 50) read's alignments in ANSI fomrat, the cut points and random insertions are aligned
