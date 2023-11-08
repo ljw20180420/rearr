@@ -9,7 +9,7 @@ def correct_micro(ref1len, cut1, cut2, fd, NGGCCNtype):
         us, ue, ds, de = int(us), int(ue), int(ds), int(de)
         if us == ue and ds == de:
             continue
-        if not mid and ue != cut1:
+        if not mid:
             jpos = relow.search(refline, pos = ref1len - 1).span()[1]
             if ds < de:
                 qds = reup.search(queryline, pos = jpos).span()[0]
@@ -29,7 +29,7 @@ def correct_micro(ref1len, cut1, cut2, fd, NGGCCNtype):
             itersize = abs(ue - cut1) if NGGCCNtype == "NGG" else abs(ds -cut2) if NGGCCNtype == "CCN" else 0
             for _ in range(itersize):
                 if NGGCCNtype == "NGG" and ue < cut1 or NGGCCNtype == "CCN" and ds < cut2:
-                    if refline[que].upper() == refline[qds].upper():
+                    if que < jpos and refline[que].upper() == refline[qds].upper():
                         queryline[que] = queryline[qds]
                         queryline[qds] = "-"
                         que += 1
@@ -39,7 +39,7 @@ def correct_micro(ref1len, cut1, cut2, fd, NGGCCNtype):
                     else:
                         break
                 if NGGCCNtype == "NGG" and ue > cut1 or NGGCCNtype == "CCN" and ds > cut2:
-                    if refline[que - 1].upper() == refline[qds - 1].upper():
+                    if qds > jpos and refline[que - 1].upper() == refline[qds - 1].upper():
                         queryline[qds - 1] = queryline[que - 1]
                         queryline[que - 1] = "-"
                         que -= 1
@@ -56,4 +56,5 @@ if __name__ == "__main__":
         sys.stdout.write(header)
         sys.stdout.write(refline)
         sys.stdout.write(queryline)
+
 

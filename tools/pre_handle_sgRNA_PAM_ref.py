@@ -6,13 +6,13 @@ def extend_ref(ref, upstream_extend=0, downstream_extend=0):
     if not upstream_extend and not downstream_extend:
         return ref
     _, flag, chr, pos, left = subprocess.run(f"echo {ref} | bowtie2 -x /home/ljw/hg19_with_bowtie2_index/hg19 -r -U - | samtools view", shell=True, executable="/bin/bash", check=True, capture_output=True).stdout.decode().split('\t', 4)
-    if int(re.search("AS:i:(-?\d+)", left).group(1)) != 0:
-        sys.stderr.write("warning: the reference is not exactly match the genome\n")
-    try:
-        pos = int(pos) - 1
-    except Exception:
+    mats = re.search("AS:i:(-?\d+)", left)
+    if not mats:
         sys.stderr.write("the reference cannot be found in hg19\n")
         return ref
+    if int(mats.group(1)) != 0:
+        sys.stderr.write("warning: the reference is not exactly match the genome\n")
+    pos = int(pos) - 1
     strand = "-" if (int(flag) / 16) % 2 else "+"
     if strand == "-":
         startup, endup, startdown, enddown = pos+len(ref), pos+len(ref)+upstream_extend, pos-downstream_extend, pos

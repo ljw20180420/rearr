@@ -25,5 +25,5 @@ input.alg.cut.ext1.ext2: the alignments
 input.table.cut.ext1.ext2: the summarization table for indel information
 
 Tools
-rearr_view.sh input.alg [readnum]
+rearr_view.sh input.alg.cut.ext1.ext2 [readnum]
 display the first readnum (default: 50) read's alignments in ANSI fomrat, the cut points and random insertions are aligned

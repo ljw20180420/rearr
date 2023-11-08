@@ -29,7 +29,7 @@ get_indel()
         }'
 }
 
-input=${1:-"ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz"} # the input file
+input=$1 # the input file
 case $input in # count duplicate reads, support fasta, fastq, and their compressions
     *.fq.gz|*.fastq.gz)
         echo "the input is gzip fastq file"
@@ -39,10 +39,10 @@ case $input in # count duplicate reads, support fasta, fastq, and their compress
         zcat $input | sed -n '2~2p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
     *.fq|*.fastq)
         echo "the input is fastq file"
-        sed -n '2~4p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
+        sed -n '2~4p' $input | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
     *.fa|*.fasta)
         echo "the input is fasta file"
-        sed -n '2~2p' | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
+        sed -n '2~2p' $input | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
 esac
 ref=$2 # reference
 sgRNA=$3 # sgRNA
