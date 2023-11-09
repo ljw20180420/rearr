@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, pandas, matplotlib.pyplot, seaborn, numpy
+import sys, pandas, matplotlib.pyplot, seaborn, numpy, os
 readnum = int(sys.argv[1])
 difffiles = sys.argv[2:]
 
@@ -9,7 +9,7 @@ difffiles = sys.argv[2:]
 
 pandict = {}
 pandict["index"] = [i+1 for i in range(readnum)] * len(difffiles)
-pandict["program"] = numpy.repeat(difffiles, readnum).tolist()
+pandict["program"] = numpy.repeat([os.path.basename(difffile) for difffile in difffiles], readnum).tolist()
 pandict["diff"] = []
 for i in range(len(difffiles)):
     diffs = [None] * readnum
@@ -24,10 +24,10 @@ diffdata = pandas.DataFrame(pandict)
 f, ax = matplotlib.pyplot.subplots()
 seaborn.scatterplot(data = diffdata, x = "index", y = "diff", hue = "program", style = "program", alpha = 0.5, ax = ax)
 f.tight_layout()
-f.savefig(f'diff_scatter.pdf')
+f.savefig(f'bench/diff_scatter.pdf')
 
 f, ax = matplotlib.pyplot.subplots()
-seaborn.boxplot(data = diffdata, x = "program", y = "diff", ax = ax)
+seaborn.violinplot(data = diffdata, x = "program", y = "diff", ax = ax)
 ax.tick_params(axis='x', rotation=10)
 f.tight_layout()
-f.savefig(f'diff_boxplot.pdf')
+f.savefig(f'bench/diff_violinplot.pdf')
