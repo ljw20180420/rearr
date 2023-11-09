@@ -52,6 +52,6 @@ THR_NUM=${6:-$(expr $(lscpu | grep "CPU(s):"| head -n1 | sed -r 's/[^0-9]//g') /
 
 read cut NGGCCNtype <<< $(generate_ref_file.py $input $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
 
-rearrangement -file $input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -THR_NUM 24 -u -1 -v -3 -s0 -2 -qv -3 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel > $input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+rearrangement -file $input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -THR_NUM 24 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel > $input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
 
-rm $input.ref.$cut.$ext1.$ext2 # remove temperary reference file
+# rm $input.ref.$cut.$ext1.$ext2 # remove temperary reference file

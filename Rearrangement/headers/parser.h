@@ -68,6 +68,7 @@ struct Command_content
     // Aligning Parameters
     int s0=-3;
     int s1=1;
+    int s2=1;
     int u=-2;
     int v=-5;
     int ru=0;
@@ -126,6 +127,8 @@ Command_content command(int argc, char **argv)
             cc.s0=atoi(argv[i+1]);
         if(!strcmp(argv[i],"-s1"))
             cc.s1=atoi(argv[i+1]);
+        if(!strcmp(argv[i],"-s2"))
+            cc.s2=atoi(argv[i+1]);
         if(!strcmp(argv[i],"-u"))
             cc.u=atoi(argv[i+1]);
         if(!strcmp(argv[i],"-v"))

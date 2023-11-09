@@ -4,7 +4,7 @@
 #include "headers/loader.h"
 #include "headers/parser.h"
 #include "headers/align.h"
-#include "headers/divide_and_conquer.h"
+// #include "headers/divide_and_conquer.h"
 #include <limits>
 
 int main(int argc, char **argv)
@@ -59,10 +59,10 @@ int main(int argc, char **argv)
             num.push_back(sus[i].second);
             index.push_back(++i);
         }
-        if(cc.ALIGN_MAX>1 || !cc.DIVCON)
-            futures.push_back(threads.submit(std::bind(wapper_column_wise, x, S, cc.alg_type, cc.u, cc.v, cc.ru, cc.rv, cc.qu, cc.qv, cc.ALIGN_MAX, std::move(os), std::move(index), std::move(num), max_len, cc.s0, cc.s1, cc.file, blockindex, left_exp, right_exp, cc.mode)));
-        else
-            futures.push_back(threads.submit(std::bind(wapper_divide_and_conquer, x, S, cc.alg_type, cc.u, cc.v, cc.ru, cc.rv, cc.qu, cc.qv, std::move(os), std::move(index), std::move(num), max_len, cc.s0, cc.s1, cc.file, blockindex, left_exp, right_exp, cc.mode)));
+        // if(cc.ALIGN_MAX>1 || !cc.DIVCON)
+            futures.push_back(threads.submit(std::bind(wapper_column_wise, x, S, cc.alg_type, cc.u, cc.v, cc.ru, cc.rv, cc.qu, cc.qv, cc.ALIGN_MAX, std::move(os), std::move(index), std::move(num), max_len, cc.s0, cc.s1, cc.s2, cc.file, blockindex, left_exp, right_exp, cc.mode)));
+        // else
+            // futures.push_back(threads.submit(std::bind(wapper_divide_and_conquer, x, S, cc.alg_type, cc.u, cc.v, cc.ru, cc.rv, cc.qu, cc.qv, std::move(os), std::move(index), std::move(num), max_len, cc.s0, cc.s1, cc.file, blockindex, left_exp, right_exp, cc.mode)));
     }
     std::vector<Align> aligns;
     for(unsigned i=0; i<futures.size(); i++)

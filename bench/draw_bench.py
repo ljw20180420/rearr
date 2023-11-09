@@ -4,8 +4,8 @@ import sys, pandas, matplotlib.pyplot, seaborn, numpy
 readnum = int(sys.argv[1])
 difffiles = sys.argv[2:]
 
-readnum = 50
-difffiles = ["rearr.diff", "CRISPResso.diff", "CrisprVariants.diff", "amplican.diff", "ampliconDIVider.diff"]
+# readnum = 50
+# difffiles = ["rearr.diff", "CRISPResso.diff", "CrisprVariants.diff", "amplican.diff", "ampliconDIVider.diff"]
 
 pandict = {}
 pandict["index"] = [i+1 for i in range(readnum)] * len(difffiles)
@@ -23,4 +23,11 @@ diffdata = pandas.DataFrame(pandict)
 
 f, ax = matplotlib.pyplot.subplots()
 seaborn.scatterplot(data = diffdata, x = "index", y = "diff", hue = "program", style = "program", alpha = 0.5, ax = ax)
+f.tight_layout()
 f.savefig(f'diff_scatter.pdf')
+
+f, ax = matplotlib.pyplot.subplots()
+seaborn.boxplot(data = diffdata, x = "program", y = "diff", ax = ax)
+ax.tick_params(axis='x', rotation=10)
+f.tight_layout()
+f.savefig(f'diff_boxplot.pdf')

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import Bio.Align, sys, pysam, more_itertools
+import Bio.Align, sys, pysam, more_itertools, re
 
 def coor2indel(refcoor, seqcoor):
     indels = []
@@ -59,7 +59,7 @@ if program.lower() == "crisprvariants":
 if program.lower() == "amplican":
     amplicon_start = int(sys.argv[2])
     for header, align_ref, align_seq, _ in more_itertools.batched(sys.stdin, 4):
-        _, _, _, id, _ = header.split(" ", 4)
+        id = int(re.search("read_id:\s+(\d+)", header).group(1))
         refcoor, seqcoor = Bio.Align.Alignment.infer_coordinates([align_ref, align_seq])
         indels = coor2indel(refcoor, seqcoor)
         sys.stdout.write(f"@seq{id}")
