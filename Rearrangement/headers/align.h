@@ -1,6 +1,7 @@
 #ifndef ALIGN_H
 #define ALIGN_H
 
+#include "TD_array.h"
 #include "structures.h"
 #include <tuple>
 
@@ -131,10 +132,12 @@ std::tuple<std::vector<int>,std::vector<int>,std::vector<std::string>,std::vecto
 }
 
 
-std::tuple<std::map<char,int>,TD_array<int>,std::vector<int>,std::vector<int>,std::vector<int>,std::vector<int>,TD_array<int>,TD_array<int>> initialization(std::vector<int>& S, std::string& alg_type, int u, int v, int ru, int rv, int qu, int qv, int max_len, int S0, int S1)
+std::tuple<std::map<char,int>,TD_array<int>,std::vector<int>,std::vector<int>,std::vector<int>,std::vector<int>,TD_array<int>,TD_array<int>> initialization(std::vector<int>& S, std::string& alg_type, int u, int v, int ru, int rv, int qu, int qv, int max_len, int S0, int S1, int S2)
 {
-    TD_array<int> gamma(5,5,1,S0);
-    gamma(1,1,0)=gamma(2,2,0)=gamma(3,3,0)=gamma(4,4,0)=S1;
+    TD_array<int> gamma(5,5,2,S0);
+    gamma(1,1,0) = gamma(2,2,0) = gamma(3,3,0) = gamma(4,4,0) = S1;
+    gamma(1,1,1) = gamma(2,2,1) = gamma(3,3,1) = gamma(4,4,1) = S2;
+    // std::cerr << S1 << '\t' << S2 << '\n'; // debug
     std::vector<int> ve(S.back()+1,v), ue(S.back()+1,u), tvf(S.size()-1,v), tuf(S.size()-1,u);
     for(int j=0; j<S.size(); ++j)
     {
@@ -170,7 +173,7 @@ void ori_cmp(Back& back, int new_val, Back* address)
     }
 }
 
-std::tuple<std::vector<Align>,std::vector<std::string>,std::vector<std::string>> column_wise(std::vector<int>::iterator ve_b, std::vector<int>::iterator ue_b, int row, std::vector<int>::iterator vf_b, std::vector<int>::iterator uf_b, std::vector<int>::iterator tvf_b, std::vector<int>::iterator tuf_b, TD_array<int>& gamma, std::string::iterator x_b, std::string::iterator o_b, std::string::iterator o_e, std::vector<int>::iterator S_b, std::vector<int>::iterator S_e, bool head, bool tail, bool ceil, bool floor, int ALIGN_MAX, std::map<char,int>& nt2int, TD_array<Back>& EFG)
+std::tuple<std::vector<Align>,std::vector<std::string>,std::vector<std::string>> column_wise(std::vector<int>::iterator ve_b, std::vector<int>::iterator ue_b, int row, std::vector<int>::iterator vf_b, std::vector<int>::iterator uf_b, std::vector<int>::iterator tvf_b, std::vector<int>::iterator tuf_b, TD_array<int>& gamma, std::string::iterator x_b, std::string::iterator o_b, std::string::iterator o_e, std::vector<int>::iterator S_b, std::vector<int>::iterator S_e, bool head, bool tail, bool ceil, bool floor, int ALIGN_MAX, std::map<char,int>& nt2int, TD_array<Back>& EFG, std::vector<int>& left_exp, std::vector<int>& right_exp)
 {
     EFG(0,0,2).max_val=0;
     for(int j=0; j<S_e-S_b; ++j)
@@ -191,6 +194,8 @@ std::tuple<std::vector<Align>,std::vector<std::string>,std::vector<std::string>>
                 EFG(*(S_b+j+1),w,1).max_val=std::numeric_limits<int>::min()/2;
             for(int s=*(S_b+j)+1; s<=*(S_b+j+1); ++s)
             {
+                // std::cerr << *(S_b+j) << '\t' << s << '\t' << right_exp[j] << '\t' << left_exp[j] << '\n'; // debug
+                int gamma_slice = ((s - *(S_b+j)) > right_exp[j] && (s - *(S_b+j)) <= left_exp[j]) ? 0 : 1;
                 if(floor)
                     ori_cmp(EFG(*(S_b+j+1),w,1), EFG(s-1,w,2).max_val+*(tvf_b+j)+(*(S_b+j+1)-s)*(*(tuf_b+j)), &EFG(s-1,w,2));
                 if(s!=*(S_b+j+1) || !floor)
@@ -212,7 +217,7 @@ std::tuple<std::vector<Align>,std::vector<std::string>,std::vector<std::string>>
                         ori_cmp(EFG(s,w,0), EFG(s,w-1,0).max_val+*(ue_b+s), &EFG(s,w-1,0));
                 }
                 EFG(s,w,2).max_val=std::numeric_limits<int>::min()/2;
-                ori_cmp(EFG(s,w,2), EFG(s-1,w-1,2).max_val+gamma(nt2int[*(x_b+s-1)],nt2int[*(o_b+w-1)],0), &EFG(s-1,w-1,2));
+                ori_cmp(EFG(s,w,2), EFG(s-1,w-1,2).max_val+gamma(nt2int[*(x_b+s-1)],nt2int[*(o_b+w-1)],gamma_slice), &EFG(s-1,w-1,2));
                 ori_cmp(EFG(s,w,2), EFG(s,w,1).max_val, &EFG(s,w,1));
                 ori_cmp(EFG(s,w,2), EFG(s,w,0).max_val, &EFG(s,w,0));
             }
@@ -275,19 +280,19 @@ std::tuple<std::vector<Align>,std::vector<std::string>,std::vector<std::string>>
     return std::make_tuple(aligns, references, queries);
 }
 
-std::vector<Align> wapper_column_wise(std::string x, std::vector<int> S, std::string alg_type, int u, int v, int ru, int rv, int qu, int qv, int ALIGN_MAX, std::vector<std::string> os, std::vector<int> index, std::vector<double> num, int max_len, int S0, int S1, std::string file, int blockindex, std::vector<int> left_exp, std::vector<int> right_exp, std::string mode)
+std::vector<Align> wapper_column_wise(std::string x, std::vector<int> S, std::string alg_type, int u, int v, int ru, int rv, int qu, int qv, int ALIGN_MAX, std::vector<std::string> os, std::vector<int> index, std::vector<double> num, int max_len, int S0, int S1, int S2, std::string file, int blockindex, std::vector<int> left_exp, std::vector<int> right_exp, std::string mode)
 {
     std::map<char,int> nt2int;
     TD_array<int> gamma, vf, uf;
     std::vector<int> ve, ue, tvf, tuf;
-    std::tie(nt2int,gamma,ve, ue, tvf, tuf, vf, uf)=initialization(S, alg_type, u, v, ru, rv, qu, qv, max_len, S0, S1);
+    std::tie(nt2int,gamma,ve, ue, tvf, tuf, vf, uf) = initialization(S, alg_type, u, v, ru, rv, qu, qv, max_len, S0, S1, S2);
     TD_array<Back> EFG(S.back()+1,max_len+1,3);
     std::vector<Align> aligns;
     for(int i=0; i<os.size(); ++i)
     {
         std::vector<Align> tmp;
         std::vector<std::string> references, queries;
-        std::tie(tmp, references, queries)=column_wise(ve.begin(), ue.begin(), S.size()-1, vf.p2i(&vf(0,0,0)), uf.p2i(&uf(0,0,0)), tvf.begin(), tuf.begin(), gamma, x.begin(), os[i].begin(), os[i].end(), S.begin(), S.end()-1, true, true, true, true, ALIGN_MAX, nt2int, EFG);
+        std::tie(tmp, references, queries)=column_wise(ve.begin(), ue.begin(), S.size()-1, vf.p2i(&vf(0,0,0)), uf.p2i(&uf(0,0,0)), tvf.begin(), tuf.begin(), gamma, x.begin(), os[i].begin(), os[i].end(), S.begin(), S.end()-1, true, true, true, true, ALIGN_MAX, nt2int, EFG, left_exp, right_exp);
         for(int j=0; j<tmp.size(); ++j)
         {
             tmp[j].index=index[i];

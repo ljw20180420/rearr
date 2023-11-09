@@ -40,6 +40,4 @@ for line in sys.stdin:
         if dis < mindis:
             mindis = dis
             mindisv = disv
-            # minindel2 = indel2 # debug
     sys.stdout.write(f"{query}\t{mindisv[0]}\t{mindisv[1]}\t{mindisv[2]}\n")
-    # sys.stdout.write(f"{query}\t{mindisv[0]}\t{mindisv[1]}\t{mindisv[2]}\t{indel1[0]}\t{indel1[1]}\t{indel1[2]}\t{minindel2[0]}\t{minindel2[1]}\t{minindel2[2]}\n") # debug
