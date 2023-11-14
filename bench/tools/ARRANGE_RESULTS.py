@@ -31,50 +31,92 @@ def cigar2coor(cigar):
         refcoor.append(refnc)
         seqcoor.append(seqnc)
     return refcoor, seqcoor
-        
-program = sys.argv[1]
 
-if program.lower() == "crispresso":
-    sys.stdin.readline()
-    for line in sys.stdin:
-        align_seq, align_ref, _ = line.split("\t", 2)
-        refcoor, seqcoor = Bio.Align.Alignment.infer_coordinates([align_ref, align_seq])
-        indels = coor2indel(refcoor, seqcoor)
-        sys.stdout.write(f"{align_seq.replace('-', '')}")
-        for indel in indels:
-            sys.stdout.write(f"\t{indel[0]}\t{indel[1]}\t{indel[2]}")
-        sys.stdout.write("\n")
+if __name__ == "__main__":
+    program = sys.argv[1]
 
-if program.lower() == "crisprvariants":
-    sgstart = int(sys.argv[2])
-    for line in sys.stdin:
-        query, cigar = line.split("\t")
-        refcoor, seqcoor = cigar2coor(cigar)
-        indels = coor2indel(refcoor, seqcoor)
-        sys.stdout.write(f"{query}")
-        for indel in indels:
-            sys.stdout.write(f"\t{indel[0] + sgstart}\t{indel[1] + sgstart}\t{indel[2]}")
-        sys.stdout.write("\n")
+    if program.lower() == "crispresso":
+        sys.stdin.readline()
+        for line in sys.stdin:
+            align_seq, align_ref, _ = line.split("\t", 2)
+            refcoor, seqcoor = Bio.Align.Alignment.infer_coordinates([align_ref, align_seq])
+            indels = coor2indel(refcoor, seqcoor)
+            sys.stdout.write(f"{align_seq.replace('-', '')}")
+            for indel in indels:
+                sys.stdout.write(f"\t{indel[0]}\t{indel[1]}\t{indel[2]}")
+            sys.stdout.write("\n")
 
-if program.lower() == "amplican":
-    amplicon_start = int(sys.argv[2])
-    for header, align_ref, align_seq, _ in more_itertools.batched(sys.stdin, 4):
-        id = int(re.search("read_id:\s+(\d+)", header).group(1))
-        refcoor, seqcoor = Bio.Align.Alignment.infer_coordinates([align_ref, align_seq])
-        indels = coor2indel(refcoor, seqcoor)
-        sys.stdout.write(f"@seq{id}")
-        for indel in indels:
-            sys.stdout.write(f"\t{amplicon_start + indel[0]}\t{amplicon_start + indel[1]}\t{indel[2]}")
-        sys.stdout.write("\n")
+    if program.lower() == "crisprvariants":
+        sgstart = int(sys.argv[2])
+        for line in sys.stdin:
+            query, cigar = line.split("\t")
+            refcoor, seqcoor = cigar2coor(cigar)
+            indels = coor2indel(refcoor, seqcoor)
+            sys.stdout.write(f"{query}")
+            for indel in indels:
+                sys.stdout.write(f"\t{indel[0] + sgstart}\t{indel[1] + sgstart}\t{indel[2]}")
+            sys.stdout.write("\n")
 
-if program.lower() == "amplicondivider":
-    for line, _ in more_itertools.batched(sys.stdin, 2):
-        query, _, ref, pos, _, cigar, _ = line.split('\t', 6)
-        if ref == "*":
-            continue
-        refcoor, seqcoor = cigar2coor(cigar)
-        indels = coor2indel(refcoor, seqcoor)
-        sys.stdout.write(f"{query}")
-        for indel in indels:
-            sys.stdout.write(f"\t{indel[0] + int(pos)}\t{indel[1] + int(pos)}\t{indel[2]}")
-        sys.stdout.write("\n")
+    if program.lower() == "amplican":
+        amplicon_start = int(sys.argv[2])
+        for header, align_ref, align_seq, _ in more_itertools.batched(sys.stdin, 4):
+            id = int(re.search("read_id:\s+(\d+)", header).group(1))
+            refcoor, seqcoor = Bio.Align.Alignment.infer_coordinates([align_ref, align_seq])
+            indels = coor2indel(refcoor, seqcoor)
+            sys.stdout.write(f"@seq{id}")
+            for indel in indels:
+                sys.stdout.write(f"\t{amplicon_start + indel[0]}\t{amplicon_start + indel[1]}\t{indel[2]}")
+            sys.stdout.write("\n")
+
+    if program.lower() == "amplicondivider":
+        for line, _ in more_itertools.batched(sys.stdin, 2):
+            query, _, ref, pos, _, cigar, _ = line.split('\t', 6)
+            if ref == "*":
+                continue
+            refcoor, seqcoor = cigar2coor(cigar)
+            indels = coor2indel(refcoor, seqcoor)
+            sys.stdout.write(f"{query}")
+            for indel in indels:
+                sys.stdout.write(f"\t{indel[0] + int(pos)}\t{indel[1] + int(pos)}\t{indel[2]}")
+            sys.stdout.write("\n")
+
+    if program.lower() == "crispr-grant":
+        for line in sys.stdin:
+            query, flag, _, pos, _, cigar, _ = line.split('\t', 6)
+            if (int(flag) / 4) % 2:
+                continue
+            refcoor, seqcoor = cigar2coor(cigar)
+            indels = coor2indel(refcoor, seqcoor)
+            sys.stdout.write(f"{query}")
+            for indel in indels:
+                sys.stdout.write(f"\t{indel[0] + int(pos)}\t{indel[1] + int(pos)}\t{indel[2]}")
+            sys.stdout.write("\n")
+
+    if program.lower() == "zhangfeng":
+        refstart = int(sys.argv[2])
+        for line in sys.stdin:
+            fields = line.rstrip().split()
+            query = fields[0]
+            ref_seq_coor = [int(s) for s in fields[1:]]
+            # sys.stderr.write(f"{ref_seq_coor}\n")
+            # sys.stderr.write(f"{len(ref_seq_coor)/2}\n")
+            indels = coor2indel(ref_seq_coor[:len(ref_seq_coor) // 2], ref_seq_coor[len(ref_seq_coor) // 2:])
+            sys.stdout.write(f"{query}")
+            for indel in indels:
+                sys.stdout.write(f"\t{indel[0] + refstart}\t{indel[1] + refstart}\t{indel[2]}")
+            sys.stdout.write("\n")
+
+    if program.lower() == "selftarget":
+        cut = int(sys.argv[2])
+        for line in sys.stdin:
+            query, _, identifier, _ = line.split("\t", 3)
+            if identifier == "-":
+                continue
+            lpos = int(re.search("L(-?\d+)", identifier).group(1)) + 1
+            rpos = int(re.search("R(-?\d+)", identifier).group(1))
+            ins = re.search("I(-?\d+)", identifier)
+            if ins:
+                ins = int(ins.group(1))
+            else:
+                ins = 0
+            sys.stdout.write(f"{query}\t{lpos + cut}\t{rpos + cut}\t{ins}\n")

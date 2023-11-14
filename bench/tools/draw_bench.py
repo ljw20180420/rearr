@@ -9,7 +9,7 @@ difffiles = sys.argv[2:]
 
 pandict = {}
 pandict["index"] = [i+1 for i in range(readnum)] * len(difffiles)
-pandict["program"] = numpy.repeat([os.path.basename(difffile) for difffile in difffiles], readnum).tolist()
+pandict["program"] = numpy.repeat([os.path.basename(os.path.splitext(difffile)[0]) for difffile in difffiles], readnum).tolist()
 pandict["diff"] = []
 for i in range(len(difffiles)):
     diffs = [None] * readnum
