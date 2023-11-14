@@ -27,7 +27,7 @@ rearr_run.sh bench/rearr/random.fq $ref $sgRNA $ext $ext
 tail -n+2 bench/rearr/random.fq.table.$cut.$ext.$ext | cut -f5,7,15 | awk -v OFS="\t" -v cut=$cut -v ext=$ext '{$2 -= 2 * ext; print $1,$2,$3}' | paste <(cut -f1 bench/rearr/random.fq.count) - | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4{s/^@//; N; s/\n/\t/; p}' bench/rearr/random.fq | sort -k2,2) - | cut -f2- | sort -k1,1V > bench/rearr.arr
 
 rm -rf bench/RESSO
-CRISPResso -r1 bench/random.fq -a $ref -g $sgRNA -o bench/RESSO -amas 0
+/home/ljw/py310/bin/CRISPResso -r1 bench/random.fq -a $ref -g $sgRNA -o bench/RESSO -amas 0
 unzip $(find bench/RESSO -name "*.zip") -d bench/RESSO
 bench/tools/ARRANGE_RESULTS.py <bench/RESSO/Alleles_frequency_table.txt CRISPResso | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4{s/^@//; N; s/\n/\t/; p}' bench/random.fq | sort -k2,2) - | cut -f2- | sort -k1,1V >bench/CRISPResso.arr
 
@@ -56,14 +56,37 @@ rm -rf bench/ADIV/Workdir_target_ bench/ADIV/Output_target_
 cd bench/ADIV; ../ampliconDIVider/ampliconDIVider_driver.sh -b random.bar -f ../ref.fa -x ref.nix random.bam; cd ../..
 samtools view bench/ADIV/Workdir_target_/random.aligned.bam | bench/tools/ARRANGE_RESULTS.py "ampliconDIVider" | sort -k1,1V >bench/ampliconDIVider.arr
 
-# rm -rf bench/ZhangFeng; mkdir -p bench/ZhangFeng
-# printf "random\trandom.fq\t%s\t%s\n" $sgRNA $ref >bench/ZhangFeng/samplefile 
-# ~/miniconda3/envs/py27/bin/python Screening_Protocols_manuscript/calculate_indel.py -i ZhangFeng/samplefile -no-m
+rm -rf bench/CRGR; mkdir -p bench/CRGR
+cp bench/random.fq bench/CRGR/random.for.fq
+perl -pE 'if ($. % 4 == 2){tr/acgtACGT/TGCATGCA/} if ($. % 2 == 0){chomp; $_ = scalar reverse; $_ .= "\n"}' bench/CRGR/random.for.fq >bench/CRGR/random.rev.fq
+cp bench/ref.fa bench/CRGR/ref.fa
+bench/CRISPR-GRANT/bin/indel_analysis -1:bench/CRGR/random.for.fq -2:bench/CRGR/random.rev.fq -r:bench/CRGR/ref.fa -o:bench/CRGR/output
+samtools view bench/CRGR/output/4.Mapping_sorted.bam | bench/tools/ARRANGE_RESULTS.py "CRISPR-GRANT" | sort -k1,1V >"bench/CRISPR-GRANT.arr"
 
+rm -rf bench/ZhangFeng; mkdir -p bench/ZhangFeng
+ZhangFengRefStart=$(expr $reflen / 4)
+printf "random,bench/random.fq,%s,%s\n" $sgRNA $(cut -c$(expr $ZhangFengRefStart + 1)-$(expr $reflen / 4 \* 3) <<<$ref) >bench/ZhangFeng/samplefile 
+bench/Screening_Protocols_manuscript/my_calculate_indel.py -i bench/ZhangFeng/samplefile -no-m -o bench/ZhangFeng/calc_indel_out.csv >bench/tmp
+tail -n+2 bench/tmp | bench/tools/ARRANGE_RESULTS.py ZhangFeng $ZhangFengRefStart >bench/ZhangFeng.arr
 
-for soft in $(printf "rearr CRISPResso CrisprVariants amplican ampliconDIVider")
+rm -rf bench/SelfTargetResults; mkdir -p bench/SeltTargetResults
+printf ">ref %d FORWARD\n%s\n" $(expr $cut + 3) $ref >bench/SeltTargetResults/oligo.fa
+bench/SelfTarget/indel_analysis/indelmap/indelmap bench/random.fq bench/SeltTargetResults/oligo.fa bench/SeltTargetResults/outputfile 0
+tail -n+2 bench/SeltTargetResults/outputfile | bench/tools/ARRANGE_RESULTS.py SelfTarget $cut >bench/SelfTarget.arr
+
+# cd bench/CRISPR_toolkit/Indel_searcher_2; ./Make_user_folder.sh
+# cp ../../ref.fa Input/JaeWoo/Reference
+# cp ../../random.fq Input/JaeWoo/FASTQ
+# ./Run_cmd.sh
+# cd ../../../
+
+# rm -rf bench/canf; mkdir -p bench/canf
+# sed -r -e '/^\s+outDir/c \        outDir = "output"' -e '/^\s+input/c \        input = "../random.fq"' -e '/^\s+r2file/c \        r2file = false' -e '/^\s+referenceFasta/c \        referenceFasta = "../ref.fa"' -e '/^\s+refOrganism/c \        refOrganism = [["ref", "other"]]' -e '/^\s+gRNAseq/c \        gRNAseq = [["ref", "'"$sgRNA"'"]]' -e '/^\s+selfRef/c \        selfRef = [["ref", false ]]' -e '/^\s+template_seq/c \        template_seq = "ref.fa"' -e '/^\s+protCutSite/c \        protCutSite = [["ref", -3]]' -e '/^\s+indexHuman/c \        indexHuman = "/home/ljw/hg19_with_bowtie2_index"' -e '/^\s+indexMouse/c \        indexMouse = "/home/ljw/mm9_with_bowtie2_index"' bench/crispr-a_nextflow/nf_input-example.config >bench/canf/random.config
+# cd bench/canf; ../crispr-a_nextflow/nextflow-21.10.6-all run ../crispr-a_nextflow/crispr-a.nf -c random.config; cd ../..
+
+for soft in $(printf "rearr CRISPResso CrisprVariants amplican ampliconDIVider CRISPR-GRANT ZhangFeng SelfTarget")
 do
     join -t $'\t' -1 1 -2 1 <(sort -k1,1 bench/random.seq) <(sort -k1,1 bench/$soft.arr) | sort -k1,1V | bench/tools/compare_indel.py $ref >bench/$soft.diff
 done
 
-bench/tools/draw_bench.py $readnum "bench/rearr.diff" "bench/CRISPResso.diff" "bench/CrisprVariants.diff" "bench/amplican.diff" "bench/ampliconDIVider.diff"
+bench/tools/draw_bench.py $readnum "bench/rearr.diff" "bench/CRISPResso.diff" "bench/CrisprVariants.diff" "bench/amplican.diff" "bench/ampliconDIVider.diff" "bench/CRISPR-GRANT.diff" "bench/ZhangFeng.diff" "bench/SelfTarget.diff"

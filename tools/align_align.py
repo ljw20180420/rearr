@@ -5,8 +5,6 @@ ref1len, cut1, cut2 = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 relow = re.compile("[acgtn]")
 reup = re.compile("[ACGTN]")
 reflines, querylines, jposs, midlens, cpos1s, cpos2s = [], [], [], [], [], []
-# with open("ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz.correct", "r") as fd:
-#     for header, refline, queryline in more_itertools.batched(fd, 3):
 for header, refline, queryline in more_itertools.batched(sys.stdin, 3):
     reflines.append(refline)
     idx, count, score, us, ue, mid, ds, de= header.split("\t")
