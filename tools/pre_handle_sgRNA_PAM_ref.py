@@ -99,7 +99,7 @@ def try_reverse_complement(countfile, ref, num=10):
 def get_ref_file(ref, cut, ref_file, ext1=10, ext2=10):
     # construct reference file
     with open(ref_file, "w") as rf:
-        _ = rf.write(f"0\t0\t0\n{ref[:cut + ext1]}\n{cut}\t{cut}\t{cut}\n{ext2}\t{ext2}\t{ext2}\n{ref[cut-ext2:]}\n{len(ref)-cut+ext2}\t{len(ref)-cut+ext2}\t{len(ref)-cut+ext2}\n")
+        _ = rf.write(f"0\n{ref[:cut + ext1]}\n{cut}\n{ext2}\n{ref[cut-ext2:]}\n{len(ref)-cut+ext2}\n")
 
 # this method is problematic because extending too long at the cut point leads to abnormal alignments, so do not use it
 def auto_cut_extend(countfile, ref, cut, exec, ref_file, num=100):

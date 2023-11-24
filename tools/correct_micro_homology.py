@@ -5,7 +5,7 @@ def correct_micro(ref1len, cut1, cut2, fd, NGGCCNtype):
     relow = re.compile("[acgtn]")
     reup = re.compile("[ACGTN]")
     for header, refline, queryline in more_itertools.batched(fd, 3):
-        idx, count, score, _ = header.split("\t", 3)
+        idx, count, score = header.rstrip("\n").split("\t", 3)
         refstart = relow.search(refline, pos = 0).span()[0]
         jpos = relow.search(refline, pos = refstart + 1).span()[1]
         jpos2 = relow.search(refline, pos = jpos).span()[0]
