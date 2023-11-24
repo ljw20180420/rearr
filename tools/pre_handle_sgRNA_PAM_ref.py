@@ -111,7 +111,7 @@ def auto_cut_extend(countfile, ref, cut, exec, ref_file, num=100):
     os.remove("tempref")
     ext1correct, ext2correct = 0, 0
     for header, _, _ in correct_micro_homology.correct_micro(cut + ext1, cut, cut + ext1 + ext2, output):
-        _, _, _, _, ue, _, ds, _ = header.split("\t")
+        _, _, _, _, _, _, ue, _, _, ds, _ = header.split("\t", 10)
         ext1correct = max(ext1correct, int(ue) - cut)
         ext2correct = max(ext2correct, cut + ext1 + ext2 - int(ds))
     ext1correct = min(ext1correct+5, ext1)
