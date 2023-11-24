@@ -31,4 +31,4 @@ if __name__ == "__main__":
         rand_ins2 = generate_random_DNA(numpy.random.randint(len(ref) // 20))
         readright_mut = SNP_DNA(indel_DNA(readright, probability), probability)
         rand_ins3 = generate_random_DNA(numpy.random.randint(len(ref) // 20))
-        sys.stdout.write(f"{rand_ins1}{readleft_mut}{rand_ins2}{readright_mut}{rand_ins3}\tseq{i + 1}\t{lpos}\t{rpos}\t{len(rand_ins2)}\n")
+        sys.stdout.write(f"{rand_ins1}{readleft_mut}{rand_ins2}{readright_mut}{rand_ins3}\tseq{i + 1}\t{lpos}\t{rpos}\t{len(rand_ins1)+len(readleft_mut)}\t{len(rand_ins1)+len(readleft_mut)+len(rand_ins2)}\n")

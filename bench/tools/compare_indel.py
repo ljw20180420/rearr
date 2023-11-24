@@ -2,42 +2,36 @@
 
 import sys, numpy
 
-def lrs_dis(lrs1, lrs2):
-    s1s = [lrs1[0][0] + lrs1[1][0], lrs1[0][1] + lrs1[1][1]]
-    s2s = [lrs2[0][0] + lrs2[1][0], lrs2[0][1] + lrs2[1][1]]
-    if s1s[1] < s2s[0]:
-        return [lrs1[0][1] - lrs2[0][0], lrs1[1][1] - lrs2[1][0]]
-    elif s1s[0] > s2s[1]:
-        return [lrs1[0][0] - lrs2[0][1], lrs1[1][0] - lrs2[1][1]]
-    else:
-        ld = (lrs1[0][0] - lrs2[0][0]) / 2 + (lrs2[1][0] - lrs1[1][0]) / 2
-        return [ld, -ld]
+def NDsegment_distance(indel1, indel2, range1, range2):
+    range = [range1[0] - range2[1], range1[1] - range2[0]]
+    target = numpy.median(indel2 - indel1)
+    actual = range[1] if target > range[1] else range[0] if target < range[0] else target
+    return indel1 + actual - indel2
 
-def indel2lrs(indel, ref):
-    lrs = [[indel[0]] * 2, [indel[1]] * 2]
-    while lrs[0][0] - 1 > 0 and ref[lrs[0][0] - 1] == ref[lrs[1][0] - 1]:
-        lrs[0][0], lrs[1][0] = lrs[0][0] - 1, lrs[1][0] - 1
-    while lrs[1][1] < len(ref) and ref[lrs[0][1]] == ref[lrs[1][1]]:
-        lrs[0][1], lrs[1][1] = lrs[0][1] + 1, lrs[1][1] + 1
-    return lrs
-
+def get_range(indel, ref):
+    range = [0, 0]
+    while indel[0] + range[0] - 1 >= 0 and indel[1] + range[0] - 1 >= 0 and ref[indel[0] + range[0] - 1] == ref[indel[1] + range[0] - 1]:
+        range[0] = range[0] - 1
+    while indel[0] + range[1] < len(ref) and indel[1] + range[1] < len(ref) and ref[indel[0] + range[1]] == ref[indel[1] + range[1]]:
+        range[1] = range[1] + 1
+    return range
 
 def indel_dis(indel1, indel2, ref):
-    lrs1, lrs2 = indel2lrs(indel1, ref), indel2lrs(indel2, ref)
-    return lrs_dis(lrs1, lrs2) + [indel1[2] - indel2[2]]
+    range1, range2 = get_range(indel1, ref), get_range(indel2, ref)
+    return NDsegment_distance(indel1, indel2, range1, range2)
 
 ref = sys.argv[1]
 
 for line in sys.stdin:
     mindis = numpy.inf
-    query, l1, r1, m1, c2 = line.split("\t", 4)
-    indel1 = [int(l1), int(r1), int(m1)]
+    query, refl1, refr1, queryl1, queryr1, c2 = line.split("\t", 5)
+    indel1 = numpy.array([int(refl1), int(refr1), int(queryl1), int(queryr1)])
     c2 = c2.split("\t")
-    for i in range(0, len(c2), 3):
-        indel2 = [int(c2[i]), int(c2[i + 1]), int(c2[i + 2])]
+    for i in range(0, len(c2), 4):
+        indel2 = numpy.array([int(c2[i]), int(c2[i + 1]), int(c2[i + 2]), int(c2[i + 3])])
         disv = indel_dis(indel1, indel2, ref)
         dis = numpy.sum(numpy.abs(disv))
         if dis < mindis:
             mindis = dis
             mindisv = disv
-    sys.stdout.write(f"{query}\t{mindisv[0]}\t{mindisv[1]}\t{mindisv[2]}\n")
+    sys.stdout.write(f"{query}\t{mindisv[0]}\t{mindisv[1]}\t{mindisv[2]}\t{mindisv[3]}\n")

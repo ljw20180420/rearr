@@ -14,15 +14,15 @@ get_indel()
     cat >get_indel_tmp
     count=$(awk '{count += $2} END{print count}' <get_indel_tmp)
     awk -F "\t" -v OFS="\t" -v count=$count '
-        BEGIN{print "index", "count", "score", "start1", "end1", "random_insertion", "start2", "end2", "cut1", "cut2", "percent", "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"}
+        BEGIN{print "index", "count", "score", "updangle", "ref_start1", "query_start1", "ref_end1", "query_end1", "random_insertion", "ref_start2","query_start2", "ref_end2", "query_end2", "cut1", "cut2", "percent", "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"}
         {
             printf("%s\t%.2f\t", $0, $2/count*100)
-            ldel = ($9 > $5 ? $9 - $5 : 0);
-            rdel = ($7 > $10 ? $7 - $10 : 0);
+            ldel = ($14 > $7 ? $14 - $7 : 0);
+            rdel = ($10 > $15 ? $10 - $15 : 0);
             del = ldel + rdel;
-            tlins = ($5 > $9 ? $5 - $9 : 0);
-            trins = ($10 > $7 ? $10 - $7 : 0);
-            rins = length($6);
+            tlins = ($7 > $14 ? $7 - $14 : 0);
+            trins = ($15 > $10 ? $15 - $10 : 0);
+            rins = length($9);
             ins = tlins + trins + rins
             printf("%d\t%d\t%d\t%d\t%d\t", ldel, rdel, tlins, trins, rins)
             if (del > 0 && ins > 0) print "indel";

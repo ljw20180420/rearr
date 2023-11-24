@@ -7,7 +7,7 @@ reup = re.compile("[ACGTN]")
 reflines, querylines, jposs, midlens, cpos1s, cpos2s = [], [], [], [], [], []
 for header, refline, queryline in more_itertools.batched(sys.stdin, 3):
     reflines.append(refline)
-    idx, count, score, us, ue, mid, ds, de= header.split("\t")
+    _, _, _, _, us, _, ue, _, mid, ds, _, de, _ = header.split("\t", 12)
     midlens.append(len(mid))
     us, ue, ds, de = int(us), int(ue), int(ds), int(de)
     jpos = relow.search(refline, pos = ref1len - 1).span()[1]
