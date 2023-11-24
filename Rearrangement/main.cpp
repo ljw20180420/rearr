@@ -1,10 +1,6 @@
-#include "headers/EM.h"
-#include "headers/thread_pools.h"
-#include "headers/output.h"
 #include "headers/loader.h"
 #include "headers/parser.h"
 #include "headers/align.h"
-// #include "headers/divide_and_conquer.h"
 #include <limits>
 
 int main(int argc, char **argv)
@@ -14,66 +10,65 @@ int main(int argc, char **argv)
     Command_content cc=command(argc, argv);
     
     std::string x;
-    std::vector<int> S, left_exp, left_down, left_up, right_exp, right_down, right_up;
-    load_ref(cc.ref_file, x, S, left_exp, left_down, left_up, right_exp, right_down, right_up);
+    std::vector<int> S, left_exp, right_exp;
+    load_ref(cc.ref_file, x, S, left_exp, right_exp);
     if(x.empty())
     {
         std::cerr << "empty reference loaded\n";
-        return -1;
+        return EXIT_FAILURE;
     }
 
-    std::vector<std::pair<std::string,int>> sus;
-    int total_read = 0, max_len = std::numeric_limits<int>::min();
-    {
-        std::ifstream fin(cc.file);
-        std::string read_tmp;
-        int num_tmp;
-        while(fin >> read_tmp >> num_tmp)
-        {
-            sus.emplace_back(read_tmp, num_tmp);
-            total_read += num_tmp;
-            max_len=std::max(max_len,int(read_tmp.size()));
-        }
-        fin.close();
-    }
-    for (int i=0; i<sus.size(); ++i)
-    {
-        if (double(sus[i].second)/total_read < cc.per_thres)
-        {
-            sus.resize(i);
-            break;
-        }
-    }
+    int max_len = 0;
+    std::string o;
+    size_t num;
 
-    thread_pool threads(cc.THR_NUM);
-    std::vector<std::future<std::vector<Align>>> futures;
-    int blockindex = 0;
-    for(int so=0; so<sus.size(); so+=cc.SEQ_BATCH, ++blockindex)
+    std::map<char,int> nt2int{{'N',0},{'A',1},{'C',2},{'G',3},{'T',4},{'n',0},{'a',1},{'c',2},{'g',3},{'t',4}};
+    TD_array<int> gamma(5, 5, 2, cc.s0);
+    gamma(1, 1, 0) = gamma(2, 2, 0) = gamma(3, 3, 0) = gamma(4, 4, 0) = cc.s1;
+    gamma(1, 1, 1) = gamma(2, 2, 1) = gamma(3, 3, 1) = gamma(4, 4, 1) = cc.s2;
+    std::vector<int> ve(S.back()+1, cc.v), ue(S.back()+1, cc.u), tvf(S.size()-1, cc.v), tuf(S.size()-1, cc.u);
+    for(int j=0; j<S.size(); ++j)
     {
-        std::vector<std::string> os;
-        std::vector<double> num;
-        std::vector<int> index;
-        for (int i=so; i<so+cc.SEQ_BATCH && i<sus.size();)
+        if(cc.alg_type=="local" || cc.alg_type=="contain")
         {
-            os.push_back(sus[i].first);
-            num.push_back(sus[i].second);
-            index.push_back(++i);
+            ve[S[j]] = cc.qv;
+            ue[S[j]] = cc.qu;
         }
-        // if(cc.ALIGN_MAX>1 || !cc.DIVCON)
-            futures.push_back(threads.submit(std::bind(wapper_column_wise, x, S, cc.alg_type, cc.u, cc.v, cc.ru, cc.rv, cc.qu, cc.qv, cc.ALIGN_MAX, std::move(os), std::move(index), std::move(num), max_len, cc.s0, cc.s1, cc.s2, cc.file, blockindex, left_exp, right_exp, cc.mode)));
-        // else
-            // futures.push_back(threads.submit(std::bind(wapper_divide_and_conquer, x, S, cc.alg_type, cc.u, cc.v, cc.ru, cc.rv, cc.qu, cc.qv, std::move(os), std::move(index), std::move(num), max_len, cc.s0, cc.s1, cc.file, blockindex, left_exp, right_exp, cc.mode)));
+        else if(cc.alg_type == "local_imbed" && j != 0 && j != S.size() - 1)
+        {
+            ve[S[j]] = cc.qv;
+            ue[S[j]] = cc.qu;
+        }
+        if(j!=S.size()-1 && (cc.alg_type=="local" || cc.alg_type=="local_imbed" || cc.alg_type=="imbed"))
+        {
+            tvf[j] = cc.rv;
+            tuf[j] = cc.ru;
+        }
     }
-    std::vector<Align> aligns;
-    for(unsigned i=0; i<futures.size(); i++)
+    TD_array<Back> EFG;
+    for(size_t index=1; std::cin >> o >> num; ++index)
     {
-        std::vector<Align> tmp=futures[i].get();
-        std::move(tmp.begin(), tmp.end(), std::back_inserter(aligns));
+        bool new_max = false;
+        if (max_len)
+        {
+            while (max_len < o.size())
+            {
+                max_len *= 2;
+                new_max = true;
+            }
+        }
+        else
+        {
+            max_len = o.size();
+            new_max = true;
+        }
+        if (new_max)
+        {
+            EFG.resize(S.back() + 1, max_len + 1, 3);
+        }
+    
+        wapper_column_wise(x, S, nt2int, gamma, cc.v, cc.u, ve, ue, tvf, tuf, EFG, cc.ALIGN_MAX, o, index, num, left_exp, right_exp);
     }
-    if (cc.indel)
-        indel_label_fun(aligns, left_exp, right_exp, cc.file);
-    if (cc.EM)
-        EM_predict(aligns, x, left_exp, left_down, left_up, right_exp, right_down, right_up, cc.MID_MAX, cc.ini_alpha, cc.ini_beta, cc.ini_pi, cc.thres, cc.file);
 
     return 0;
 }

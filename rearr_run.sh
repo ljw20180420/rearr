@@ -1,12 +1,11 @@
 #!/bin/bash
-# usage: rearr_run.sh input ref sgRNA [ext1 [ext2 [THR_NUM]]]
+# usage: rearr_run.sh input ref sgRNA [ext1 [ext2]]
 # example: rearr_run.sh ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "GGTGATGTGTTGAGACTGGT" 30 30 16
 
 # input can be (compressed) fasta/fastq
 # ref and sgRNA are given in command line
 # ext1 is upstream end downstream extension for template inserion (default: 30)
 # ext2 is downstream end upstream extension (default: 30)
-# THR_NUM is thread number. Default is half the available cores.
 
 get_indel()
 {
@@ -52,8 +51,7 @@ ref=$2 # reference
 sgRNA=$3 # sgRNA
 ext1=${4:-30} # upstream end downstream extension for template inserion (default: 30)
 ext2=${5:-30} # downstream end upstream extension (default: 30)
-THR_NUM=${6:-$(expr $(lscpu | grep "CPU(s):"| head -n1 | sed -r 's/[^0-9]//g') / 2)} # threads number
 
 read cut NGGCCNtype <<< $(generate_ref_file.py $input $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
 
-rearrangement -file $input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -THR_NUM 24 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+rearrangement <$input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
