@@ -37,3 +37,5 @@ with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr
         _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile -ref_file {barcodefile}.reference -ALIGN_MAX 1 -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
     cf.close()
     _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile -ref_file {barcodefile}.reference -ALIGN_MAX 1 -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
+    os.remove(f"{barcodefile}.countfile")
+    os.remove(f"{barcodefile}.reference")
