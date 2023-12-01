@@ -10,7 +10,7 @@
 void print_help(int argc, char **argv)
 {
     for(int i=1; i<argc; ++i)
-        if(!strcmp(argv[i],"-help"))
+        if(!strcmp(argv[i],"--help") || !strcmp(argv[i],"-h"))
         {
             std::cout << "###Basic Usage\n"
             << "rearrangement -file input_file -ref_file reference_file -ALIGN_MAX 1 -THR_NUM 6\n"
@@ -22,14 +22,16 @@ void print_help(int argc, char **argv)
             << "\n# Input Files\n"
             << "-ref_file: Reference file.\n"
 
-            << "\n# Aligning Engine\n"
-            << "-DIVCON: Use divide-and-conquer linear space method. This parameter is valid only if -ALIGN_MAX is 1. (default: false)\n"
-
             << "\n# Aligning Parameters\n"
             << "-s0: Mismatching score. (default: -3)\n"
-            << "-s1: Matching score. (default: +1)\n"
+            << "-s1: Matching score for non-extension reference part. (default: +1)\n"
+            << "-s2: Matching score for extension reference part. (default: +1)\n"
             << "-u: Gap-extending penalty. (default: -2)\n"
             << "-v: Gap-opening penalty. (default: -5)\n"
+            << "-ru: Gap-extending penalty for unaligned reference end. (default: 0)\n"
+            << "-rv: Gap-opening penalty for unaligned reference end. (default: 0)\n"
+            << "-qu: Gap-extending penalty for unaligned query part. (default: 0)\n"
+            << "-qv: Gap-opening penalty for unaligned query part. (default: 0)\n"
             << "-alg_type: Method to scoring unaligned parts between aligned segments in query sequence and reference (-alg_type local|imbed|contain|local_imbed). (default: local)\n"
 
             << "\n# Output Options\n"
@@ -43,8 +45,6 @@ struct Command_content
 {
     // Input Files
     std::string ref_file="";
-    // Aligning Engine
-    bool DIVCON=false;
     // Aligning Parameters
     int s0=-3; // mismatch score
     int s1=1; // match score for non-extension part of reference
@@ -69,22 +69,6 @@ Command_content command(int argc, char **argv)
         // Input Files
         if(!strcmp(argv[i],"-ref_file"))
             cc.ref_file=argv[i+1];
-        // Aligning Engine
-        if(!strcmp(argv[i],"-DIVCON"))
-        {
-            if(!strcasecmp(argv[i+1],"false"))
-                cc.DIVCON=false;
-            else
-            {
-                if(!strcasecmp(argv[i+1],"true"))
-                    cc.DIVCON=true;
-                else
-                {
-                    std::cerr << "-DIVCON must be true or false\n";
-                    exit(-1);
-                }
-            }
-        }
         // Aligning Parameters
         if(!strcmp(argv[i],"-s0"))
             cc.s0=atoi(argv[i+1]);

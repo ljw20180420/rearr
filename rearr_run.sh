@@ -13,14 +13,14 @@ get_indel()
     cat >get_indel_tmp
     count=$(awk '{count += $2} END{print count}' <get_indel_tmp)
     awk -F "\t" -v OFS="\t" -v count=$count '
-        BEGIN{print "index", "count", "score", "updangle", "ref_start1", "query_start1", "ref_end1", "query_end1", "random_insertion", "ref_start2","query_start2", "ref_end2", "query_end2", "cut1", "cut2", "percent", "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"}
+        BEGIN{print "index", "count", "score", "updangle", "ref_start1", "query_start1", "ref_end1", "query_end1", "random_insertion", "ref_start2","query_start2", "ref_end2", "query_end2", "downdangle", "cut1", "cut2", "percent", "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"}
         {
             printf("%s\t%.2f\t", $0, $2/count*100)
-            ldel = ($14 > $7 ? $14 - $7 : 0);
-            rdel = ($10 > $15 ? $10 - $15 : 0);
+            ldel = ($15 > $7 ? $15 - $7 : 0);
+            rdel = ($10 > $16 ? $10 - $16 : 0);
             del = ldel + rdel;
-            tlins = ($7 > $14 ? $7 - $14 : 0);
-            trins = ($15 > $10 ? $15 - $10 : 0);
+            tlins = ($7 > $15 ? $7 - $15 : 0);
+            trins = ($16 > $10 ? $16 - $10 : 0);
             rins = length($9);
             ins = tlins + trins + rins
             printf("%d\t%d\t%d\t%d\t%d\t", ldel, rdel, tlins, trins, rins)
@@ -54,4 +54,4 @@ ext2=${5:-30} # downstream end upstream extension (default: 30)
 
 read cut NGGCCNtype <<< $(generate_ref_file.py $input $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
 
-rearrangement <$input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | sed -nr 'N;N;s/\n/\t/g;p' | sort -k1,1n | awk -F "\t" '{for (i=1; i<=NF-3; ++i) printf("%s\t",$i); printf("%s\n%s\n%s\n", $(NF-2), $(NF-1), $NF);}' | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+rearrangement <$input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
