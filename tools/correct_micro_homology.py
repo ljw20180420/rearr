@@ -63,6 +63,6 @@ def correct_micro(cut1, cut2, fd, NGGCCNtype):
 if __name__ == "__main__":
     cut, ext1, ext2, NGGCCNtype = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
     for header, refline, queryline in correct_micro(cut, cut + ext1 + ext2, sys.stdin, NGGCCNtype):
-        sys.stdout.write(header)
-        sys.stdout.write(f"{refline}")
+        sys.stdout.write(f"{header}\n")
+        sys.stdout.write(f"{refline}\n")
         sys.stdout.write(f"{queryline}\n")

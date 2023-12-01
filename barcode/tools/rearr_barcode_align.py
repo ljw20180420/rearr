@@ -11,7 +11,7 @@ with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr
     bcdline = bcd.readline().rstrip()
     if not bcdline:
         raise Exception("*.fq/fastq.barcode is empty")
-    count, _, naseq, _, _, _, barcodegroup, _, barcode_end, _ = bcdline.split('\t', 9)
+    _, count, naseq, barcode_end, barcodegroup = bcdline.split('\t')
     barcode_end = int(barcode_end)
     for ref_left, ref_right in more_itertools.batched(bf, 2):
         barcode = rcb.readline().rstrip()
@@ -27,7 +27,7 @@ with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr
             bcdline = bcd.readline().rstrip()
             if not bcdline:
                 break
-            count, _, naseq, _, _, _, barcode, _, barcode_end, _ = bcdline.split('\t', 9)
+            _, count, naseq, barcode_end, barcode = bcdline.split('\t')
             barcode_end = int(barcode_end)
             if barcode != barcodegroup:
                 barcodegroup = barcode
