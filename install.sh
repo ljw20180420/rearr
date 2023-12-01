@@ -19,7 +19,7 @@ then
     printf "\n%s\n" "export PATH=\"$(pwd)/barcode/tools\":"'$PATH' >> ~/.bashrc
 fi
 mkdir -p Rearrangement/build
-cmake -DCMAKE_BUILD_TYPE=Release Rearrangement/build
+cmake -DCMAKE_BUILD_TYPE=Release -S Rearrangement -B Rearrangement/build
 make -C Rearrangement/build
 if [[ $(grep -c $(pwd)/Rearrangement/build ~/.bashrc) -eq 0 ]]
 then
