@@ -1,11 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include <algorithm>
-#include <thread>
-#include <cstring>
-#include <stdlib.h>
-#include <iostream>
+#include <bits/stdc++.h>
 
 void print_help(int argc, char **argv)
 {

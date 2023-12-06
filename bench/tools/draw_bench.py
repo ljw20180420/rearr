@@ -3,9 +3,7 @@
 import sys, pandas, matplotlib.pyplot, seaborn, numpy, os
 readnum = int(sys.argv[1])
 difffiles = sys.argv[2:]
-
-readnum = 1000
-difffiles = ["bench/rearr.diff", "bench/CRISPResso.diff", "bench/CrisprVariants.diff", "bench/amplican.diff", "bench/ampliconDIVider.diff", "bench/CRISPR-GRANT.diff", "bench/ZhangFeng.diff", "bench/SelfTarget.diff"]
+workdir = os.path.dirname(difffiles[0])
 
 pandict = {}
 pandict["index"] = numpy.repeat([i+1 for i in range(readnum)] * len(difffiles), 4).tolist()
@@ -26,10 +24,10 @@ diffdata = pandas.DataFrame(pandict)
 f, ax = matplotlib.pyplot.subplots()
 seaborn.scatterplot(data = diffdata, x = "index", y = "diff", hue = "program", style = "program", alpha = 0.5, ax = ax)
 f.tight_layout()
-f.savefig(f'bench/diff_scatter.png')
+f.savefig(os.path.join(workdir, 'diff_scatter.png'))
 
 f, ax = matplotlib.pyplot.subplots()
 seaborn.violinplot(data = diffdata, x = "program", y = "diff", ax = ax)
 ax.tick_params(axis='x', rotation=10)
 f.tight_layout()
-f.savefig(f'bench/diff_violinplot.png')
+f.savefig(os.path.join(workdir, 'diff_violinplot.png'))

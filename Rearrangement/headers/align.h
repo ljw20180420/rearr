@@ -1,128 +1,186 @@
 #ifndef ALIGN_H
 #define ALIGN_H
 
-#include "TD_array.h"
-#include "structures.h"
-#include <tuple>
+#include <bits/stdc++.h>
 
-void ori_cmp(Back& back, int new_val, Back* address)
+const static int32_t inf = std::numeric_limits<int32_t>::max() / 2;
+
+void cross_align(int32_t *tAs, int32_t *hAs, int32_t *hBs, int32_t *hCs, uint32_t *hDs, int32_t *Es, int32_t *Gs, int32_t *Gps, const char *ref, const uint32_t ref_sz, const char *O, const uint32_t O_sz, const int32_t u, const int32_t v, const int32_t *gr, const int32_t qu, const int32_t qv, const int32_t s0, const int32_t s1, const int32_t s2, const uint32_t upper_boundary, const uint32_t down_boundary)
 {
-    if(back.max_val<=new_val)
+    for (uint32_t s = 0; s <= ref_sz; ++s)
     {
-        if(back.max_val<new_val)
+        Es[s] = -inf;
+        Gs[s] = tAs[0] + gr[s];
+    }
+    hCs[0] = Gs[0] + gr[ref_sz];
+    hDs[0] = 0;
+    hBs[0] = -inf;
+
+    for (uint32_t w = 1; w <= O_sz; ++w)
+    {
+        std::swap(Gs, Gps);
+        for (uint32_t s = 0; s <= ref_sz; ++s)
         {
-            back.max_val=new_val;
-            back.biters.clear();
+            Es[s] = std::max(Es[s] + u, Gps[s] + v);
+            Gs[s] = std::max(tAs[w] + gr[s], Es[s]);
         }
-        back.biters.push_back(address);
+        hCs[w] = Gs[0] + gr[ref_sz];
+        hDs[w] = 0;
+        int32_t F = -inf;
+        for (uint32_t s = 0; s < ref_sz; ++s)
+        {
+            F = std::max(F + u, Gs[s] + v);
+            Gs[s + 1] = std::max(Gs[s + 1], F);
+            int32_t gamma;
+            if (ref[s] != O[w-1])
+                gamma = s0;
+            else if (s < upper_boundary || s >= down_boundary)
+                gamma = s2;
+            else
+                gamma = s1;
+            Gs[s + 1] = std::max(Gs[s + 1], Gps[s] + gamma);
+            if (Gs[s + 1] + gr[ref_sz - s - 1] > hCs[w])
+            {
+                hCs[w] = Gs[s + 1] + gr[ref_sz - s - 1];
+                hDs[w] = s + 1;
+            }
+        }
+        hBs[w] = std::max(hBs[w - 1] + qu, hCs[w - 1] + qv);
+        hAs[w] = std::max(hBs[w], hCs[w]);
     }
 }
 
-std::tuple<std::vector<int>,std::vector<std::string>,std::vector<std::string>> column_wise(const std::vector<int> &ve, const std::vector<int> &ue, int v, int u, const std::vector<int> &tvf, const std::vector<int> &tuf, TD_array<int>& gamma, std::string::iterator x_b, const std::string &o, std::vector<int>::iterator S_b, std::vector<int>::iterator S_e, int ALIGN_MAX, std::map<char,int>& nt2int, TD_array<Back>& EFG, std::vector<int>& left_exp, std::vector<int>& right_exp)
+uint32_t EdgeTrack(std::string &refline, std::string &queryline, const uint32_t s, const uint32_t w, const int32_t *tAs, const int32_t *hAs, const char *ref, const uint32_t ref_sz, const char *O, const uint32_t O_sz, const int32_t u, const int32_t v, const int32_t *gr, const int32_t qv, const int32_t s0, const int32_t s1, const int32_t s2, const uint32_t upper_boundary, const uint32_t down_boundary)
 {
-    EFG(0,0,2).max_val = 0;
-    for(int j = 0; j < S_e - S_b; ++j)
-        for(int s = *(S_b+j) + 1; s <= *(S_b+j+1); ++s)
-        {
-            EFG(s,0,2).max_val = EFG(s-1,0,2).max_val + ((s==*(S_b+j)+1) ? (tvf[j]) : (tuf[j]));
-
-            EFG(s,0,0).max_val=std::numeric_limits<int>::min()/2;
-        }
-    for(int w = 1; w <= o.size(); ++w)
+    std::vector<int32_t> Es, Fs, Gs;
+    std::vector<uint32_t> shifts, wends;
+    shifts.push_back(0);
+    wends.push_back(w);
+    Gs.push_back(hAs[w] - gr[ref_sz - s]);
+    Fs.push_back(inf);
+    Es.push_back(inf);
+    for (uint32_t i = 1; ; ++i)
     {
-        EFG(0, w, 0).max_val = EFG(0, w, 2).max_val = EFG(0, w - 1, 2).max_val + ((w == 1) ? (ve[0]) : (ue[0]));
-        for(int j=0; j<S_e-S_b; ++j)
+        shifts.push_back(Gs.size());
+        wends.push_back(wends[i - 1]);
+        for (uint32_t j = 0; j <= wends[i];)
         {
-            EFG(*(S_b+j+1),w,1).max_val=std::numeric_limits<int>::min()/2;
-            for(int s=*(S_b+j)+1; s<=*(S_b+j+1); ++s)
+            int32_t E, F, G, gamma;
+            if (j == 0)
+                E = inf;
+            else
+                E = std::min(Es[shifts[i] + j - 1], Gs[shifts[i] + j - 1]) - u;
+            uint32_t pj = wends[i - 1] - wends[i] + j;
+            if (pj >= shifts[i] - shifts[i - 1])
+                F = inf;
+            else
+                F = std::min(Fs[shifts[i - 1] + pj], Gs[shifts[i - 1] + pj]) - u;
+            G = std::min(E, F) - v + u;
+            uint32_t ss = s - i, ww = wends[i] - j;
+            if (pj > 0 && pj - 1 < shifts[i] - shifts[i - 1])
             {
-                // std::cerr << *(S_b+j) << '\t' << s << '\t' << right_exp[j] << '\t' << left_exp[j] << '\n'; // debug
-                int gamma_slice = ((s - *(S_b+j)) > right_exp[j] && (s - *(S_b+j)) <= left_exp[j]) ? 0 : 1;
-                ori_cmp(EFG(*(S_b+j+1),w,1), EFG(s-1,w,2).max_val + tvf[j] + (*(S_b+j+1)-s) * tuf[j], &EFG(s-1,w,2));
-                if(s!=*(S_b+j+1))
-                {
-                    EFG(s,w,1).max_val=std::numeric_limits<int>::min()/2;
-                    ori_cmp(EFG(s,w,1), EFG(s-1,w,2).max_val + v, &EFG(s-1,w,2));
-                    if(s!=*(S_b+j)+1)
-                        ori_cmp(EFG(s,w,1), EFG(s-1,w,1).max_val + u, &EFG(s-1,w,1));
-                    ori_cmp(EFG(s,w,1), EFG(*(S_b+j),w,2).max_val + tvf[j] + (s-*(S_b+j)-1) * tuf[j], &EFG(*(S_b+j),w,2));
-                }
-                EFG(s,w,0).max_val=std::numeric_limits<int>::min()/2;
-
-                ori_cmp(EFG(s,w,0), EFG(s,w-1,2).max_val + ve[s], &EFG(s,w-1,2));
-                if(EFG(s,w-1,2).max_val!=EFG(s,w-1,0).max_val || ve[s] != ue[s])
-                    ori_cmp(EFG(s,w,0), EFG(s,w-1,0).max_val + ue[s], &EFG(s,w-1,0));
-
-                EFG(s,w,2).max_val=std::numeric_limits<int>::min()/2;
-                ori_cmp(EFG(s,w,2), EFG(s-1,w-1,2).max_val + gamma(nt2int[*(x_b+s-1)], nt2int[o[w-1]], gamma_slice), &EFG(s-1,w-1,2));
-                ori_cmp(EFG(s,w,2), EFG(s,w,1).max_val, &EFG(s,w,1));
-                ori_cmp(EFG(s,w,2), EFG(s,w,0).max_val, &EFG(s,w,0));
+                if (ref[ss] != O[ww])
+                    gamma = s0;
+                else if (ss < upper_boundary || ss >= down_boundary)
+                    gamma = s2;
+                else
+                    gamma = s1;
+                G = std::min(G, Gs[shifts[i - 1] + pj - 1] - gamma);
             }
-        }
-    }
-    std::vector<std::vector<std::pair<int,int>>> rivets;
-    std::vector<Back*> biters;
-    rivets.push_back(std::vector<std::pair<int,int>>());
-    biters.push_back(&EFG(*S_e, o.size(), 2));
-    int i=0;
-    while(i<biters.size())
-    {
-        rivets[i].push_back(std::make_pair(EFG.grow(biters[i]),EFG.gcol(biters[i])));
-        if(rivets[i].back().first==0 || rivets[i].back().second==0)
-        {
-            rivets[i].push_back(std::make_pair(0,0));
-            ++i;
-        }
-        else
-        {
-            std::vector<Back*>::iterator iter=biters[i]->biters.begin();
-            std::vector<Back*>::iterator end_iter=biters[i]->biters.end();
-            biters[i]=*iter;
-            ++iter;
-            while(biters.size()<ALIGN_MAX && iter!=end_iter)
+            bool legal_G = (G + gr[ref_sz - ss] <= hAs[ww]), legal_E = (E - v + u + gr[ref_sz - ss] <= hAs[ww] + std::max(int32_t(0), u - qv));
+            if (j > 0 || legal_G || legal_E)
             {
-                rivets.push_back(rivets[i]);
-                biters.push_back(*iter);
-                ++iter;
-            }
-        }
-    }
-    std::vector<int> max_scores;
-    std::vector<std::string> references, queries;
-    for(int i=0; i<rivets.size(); ++i)
-    {
-        references.emplace_back();
-        queries.emplace_back();
-        max_scores.push_back(EFG(*S_e, o.size(), 2).max_val);
-        for(std::vector<std::pair<int,int>>::reverse_iterator iter=rivets[i].rbegin(); iter!=rivets[i].rend()-1; ++iter)
-        {
-            if(iter->first==(iter+1)->first)
-            {
-                references.back().append(std::string((iter+1)->second-iter->second,'-'));
-                queries.back().append(o.begin() + iter->second, o.begin() + (iter+1)->second);
-            }
-            else if(iter->second==(iter+1)->second)
-            {
-                references.back().append(x_b+iter->first,x_b+(iter+1)->first);
-                queries.back().append(std::string((iter+1)->first-iter->first,'-'));
+                Gs.push_back(G);
+                Fs.push_back(F);
+                Es.push_back(E);
+                ++j;
             }
             else
+                --wends[i];
+            if (!legal_G && !legal_E && wends[i - 1] - ww >= shifts[i] - shifts[i - 1])
+                break;
+
+            if (G - gr[ss] == tAs[ww])
             {
-                references.back().append(x_b+iter->first,x_b+(iter+1)->first);
-                queries.back().append(o.begin() + iter->second, o.begin() + (iter+1)->second);
+                uint32_t www = ww;
+                refline.append(ref, ss);
+                queryline.append(ss, '-');
+                char type = 'G';
+                while (ss != s || ww != w)
+                {
+                    uint32_t ii = s - ss, jj = wends[ii] - ww, pjj;
+                    if (ii > 0)
+                        pjj = wends[ii - 1] - ww;
+                    switch (type)
+                    {
+                        case 'G':
+                            if (ii > 0 && pjj > 0 && pjj - 1 < shifts[ii] - shifts[ii - 1])
+                            {
+                                int32_t gg;
+                                if (ref[ss] != O[ww])
+                                    gg = s0;
+                                else if (ss < upper_boundary || ss >= down_boundary)
+                                    gg = s2;
+                                else
+                                    gg = s1;
+                                if (Gs[shifts[ii] + jj] == Gs[shifts[ii - 1] + pjj - 1] - gg)
+                                {
+                                    refline += ref[ss++];
+                                    queryline += O[ww++];
+                                    break;
+                                }
+                            }
+                            if (Gs[shifts[ii] + jj] == Es[shifts[ii] + jj] - v + u)
+                                type = 'E';
+                            else
+                                type = 'F';
+                            break;
+                        case 'F':
+                            if (Gs[shifts[ii - 1] + pjj] <= Fs[shifts[ii - 1] + pjj])
+                                type = 'G';
+                            refline += ref[ss++];
+                            queryline += '-';
+                            break;
+                        case 'E':
+                            if (Gs[shifts[ii] + jj - 1] <= Es[shifts[ii] + jj - 1])
+                                type = 'G';
+                            queryline += O[ww++];
+                            refline += '-';
+                            break;
+                    }
+                }
+                refline.append(ref + s, ref_sz - s);
+                queryline.append(ref_sz - s, '-');
+                size_t pos = refline.find_first_not_of('-');
+                refline[pos] = std::tolower(refline[pos]);
+                pos = refline.find_last_not_of('-');
+                refline[pos] = std::tolower(refline[pos]);
+                return www;
             }
         }
     }
-    return std::make_tuple(max_scores, references, queries);
 }
 
-void wapper_column_wise(std::string x, std::vector<int> S, std::map<char,int> &nt2int, TD_array<int> &gamma, int v, int u, const std::vector<int> &ve, const std::vector<int> &ue, const std::vector<int> &tvf, const std::vector<int> &tuf, TD_array<Back> &EFG, int ALIGN_MAX, const std::string &o, size_t index, size_t num, std::vector<int> left_exp, std::vector<int> right_exp)
+std::pair<uint32_t, uint32_t> NodeTrack(const uint32_t w, const int32_t *hAs, const int32_t *hBs, const int32_t *hCs, const uint32_t *hDs, const int32_t qv)
 {
-    std::vector<int> max_scores;
-    std::vector<std::string> references, queries;
-    std::tie(max_scores, references, queries) = column_wise(ve, ue, v, u, tvf, tuf, gamma, x.begin(), o, S.begin(), S.end()-1, ALIGN_MAX, nt2int, EFG, left_exp, right_exp);
-    for(int j=0; j<max_scores.size(); ++j)
-        std::cout << index << '\t' << num << '\t' << max_scores[j] << '\n' << references[j] << '\n' << queries[j] << '\n';
+    uint32_t ww = w;
+    char type = 'A';
+    while (true)
+    {
+        switch (type)
+        {
+            case 'A':
+                if (hAs[ww] == hCs[ww])
+                    return std::make_pair(hDs[ww], ww);
+                type = 'B';
+                break;
+            case 'B':
+                if (hBs[ww] == hAs[ww - 1] + qv)
+                    type = 'A';
+                --ww;
+                break;
+        }
+    }
 }
 
 #endif
