@@ -161,23 +161,22 @@ uint32_t EdgeTrack(std::string &refline, std::string &queryline, const uint32_t 
     }
 }
 
-std::pair<uint32_t, uint32_t> NodeTrack(const uint32_t w, const int32_t *hAs, const int32_t *hBs, const int32_t *hCs, const uint32_t *hDs, const int32_t qv)
+std::pair<uint32_t, uint32_t> NodeTrack(uint32_t w, const int32_t *hAs, const int32_t *hBs, const int32_t *hCs, const uint32_t *hDs, const int32_t qv)
 {
-    uint32_t ww = w;
     char type = 'A';
     while (true)
     {
         switch (type)
         {
             case 'A':
-                if (hAs[ww] == hCs[ww])
-                    return std::make_pair(hDs[ww], ww);
+                if (hAs[w] == hCs[w])
+                    return std::make_pair(hDs[w], w);
                 type = 'B';
                 break;
             case 'B':
-                if (hBs[ww] == hAs[ww - 1] + qv)
+                if (hBs[w] == hAs[w - 1] + qv)
                     type = 'A';
-                --ww;
+                --w;
                 break;
         }
     }
