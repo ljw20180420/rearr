@@ -54,4 +54,4 @@ ext2=${5:-30} # downstream end upstream extension (default: 30)
 
 read cut NGGCCNtype <<< $(generate_ref_file.py $input $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
 
-rearrangement <$input.count -ref_file $input.ref.$cut.$ext1.$ext2 -ALIGN_MAX 1 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+rearrangement <$input.count 3<$input.ref.$cut.$ext1.$ext2 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
