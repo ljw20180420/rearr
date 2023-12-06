@@ -1,7 +1,5 @@
-#include "headers/loader.h"
 #include "headers/parser.h"
 #include "headers/align.h"
-#include <limits>
 
 int main(int argc, char **argv)
 {
@@ -9,65 +7,88 @@ int main(int argc, char **argv)
     
     Command_content cc=command(argc, argv);
     
-    std::string x;
-    std::vector<int> S, left_exp, right_exp;
-    load_ref(cc.ref_file, x, S, left_exp, right_exp);
-    if(x.empty())
+    std::deque<std::string> refs;
+    std::deque<uint32_t> upper_boundaries, down_boundaries;
+    std::ifstream fin(cc.ref_file);
+    uint32_t upper_boundary, down_boundary;
+    std::string ref;
+    uint32_t max_ref_sz = 0;
+    while(fin >> upper_boundary >> ref >> down_boundary)
+    {
+        std::transform(ref.begin(), ref.end(), ref.begin(), toupper);
+        max_ref_sz = ref.size() > max_ref_sz ? ref.size() : max_ref_sz;
+        refs.push_back(ref);
+        upper_boundaries.push_back(upper_boundary);
+        down_boundaries.push_back(down_boundary);
+    }
+    fin.close();
+    if(!max_ref_sz)
     {
         std::cerr << "empty reference loaded\n";
         return EXIT_FAILURE;
     }
+    std::vector<int32_t> Es(max_ref_sz + 1), Gs(max_ref_sz + 1), Gps(max_ref_sz + 1), gr(max_ref_sz + 1);
+    gr[0] = 0;
+    gr[1] = cc.rv;
+    for (size_t i = 2; i <= max_ref_sz; ++i)
+        gr[i] = gr[i - 1] + cc.ru;
 
-    int max_len = 0;
-    std::string o;
-    size_t num;
-
-    std::map<char,int> nt2int{{'N',0},{'A',1},{'C',2},{'G',3},{'T',4},{'n',0},{'a',1},{'c',2},{'g',3},{'t',4}};
-    TD_array<int> gamma(5, 5, 2, cc.s0);
-    gamma(1, 1, 0) = gamma(2, 2, 0) = gamma(3, 3, 0) = gamma(4, 4, 0) = cc.s1;
-    gamma(1, 1, 1) = gamma(2, 2, 1) = gamma(3, 3, 1) = gamma(4, 4, 1) = cc.s2;
-    std::vector<int> ve(S.back()+1, cc.v), ue(S.back()+1, cc.u), tvf(S.size()-1, cc.v), tuf(S.size()-1, cc.u);
-    for(int j=0; j<S.size(); ++j)
+    uint32_t Omax = 0;
+    std::string O;
+    size_t count;
+    std::vector<int32_t> As, Bs, Cs;
+    std::vector<uint32_t> Ds;
+    for(size_t index=1; std::cin >> O >> count; ++index)
     {
-        if(cc.alg_type=="local" || cc.alg_type=="contain")
-        {
-            ve[S[j]] = cc.qv;
-            ue[S[j]] = cc.qu;
-        }
-        else if(cc.alg_type == "local_imbed" && j != 0 && j != S.size() - 1)
-        {
-            ve[S[j]] = cc.qv;
-            ue[S[j]] = cc.qu;
-        }
-        if(j!=S.size()-1 && (cc.alg_type=="local" || cc.alg_type=="local_imbed" || cc.alg_type=="imbed"))
-        {
-            tvf[j] = cc.rv;
-            tuf[j] = cc.ru;
-        }
-    }
-    TD_array<Back> EFG;
-    for(size_t index=1; std::cin >> o >> num; ++index)
-    {
+        std::transform(O.begin(), O.end(), O.begin(), toupper);
         bool new_max = false;
-        if (max_len)
+        if (index == 1)
         {
-            while (max_len < o.size())
-            {
-                max_len *= 2;
-                new_max = true;
-            }
+            Omax = O.size();
+            new_max = true;
         }
-        else
+        while (Omax < O.size())
         {
-            max_len = o.size();
+            Omax *= 2;
             new_max = true;
         }
         if (new_max)
         {
-            EFG.resize(S.back() + 1, max_len + 1, 3);
+            As.resize((Omax + 1) * (refs.size() + 1));
+            As[0] = 0;
+            As[1] = cc.qv;
+            for (size_t i = 2; i <= Omax; ++i)
+                As[i] = As[i - 1] + cc.qu;
+            Bs.resize((Omax + 1) * (refs.size()));
+            Cs.resize((Omax + 1) * (refs.size()));
+            Ds.resize((Omax + 1) * (refs.size()));
         }
     
-        wapper_column_wise(x, S, nt2int, gamma, cc.v, cc.u, ve, ue, tvf, tuf, EFG, cc.ALIGN_MAX, o, index, num, left_exp, right_exp);
+        for (size_t i = 0; i < refs.size(); ++i)
+        {
+            cross_align(As.data() + i * (Omax + 1), As.data() + (i + 1) * (Omax + 1), Bs.data() + i * (Omax + 1), Cs.data() + i * (Omax + 1), Ds.data() + i * (Omax + 1), Es.data(), Gs.data(), Gps.data(), refs[i].data(), refs[i].size(), O.data(), O.size(), cc.u, cc.v, gr.data(), cc.qu, cc.qv, cc.s0, cc.s1, cc.s2, upper_boundaries[i], down_boundaries[i]);
+        }
+
+        std::deque<std::string> reflines, querylines, random_parts;
+        uint32_t w = O.size();
+        for (size_t i = 0; i < refs.size(); ++i)
+        {
+            size_t j = refs.size() - i;
+            std::pair<uint32_t, uint32_t> swp = NodeTrack(w, As.data() + j * (Omax + 1), Bs.data() + (j - 1) * (Omax + 1), Cs.data() + (j - 1) * (Omax + 1), Ds.data() + (j - 1) * (Omax + 1), cc.qv);
+            random_parts.push_front(O.substr(swp.second, w - swp.second));
+            reflines.emplace_front();
+            querylines.emplace_front();
+            w = EdgeTrack(reflines.front(), querylines.front(), swp.first, swp.second, As.data() + (j - 1) * (Omax + 1), As.data() + j * (Omax + 1), refs[j - 1].data(), refs[j - 1].size(), O.data(), O.size(), cc.u, cc.v, gr.data(), cc.qv, cc.s0, cc.s1, cc.s2, upper_boundaries[j - 1], down_boundaries[j - 1]);
+        }
+        random_parts.push_front(O.substr(0, w));
+
+        std::cout << index << '\t' << count << '\t' << As[refs.size() * (Omax + 1) + O.size()] << '\n';
+        for (size_t i = 0; i < reflines.size(); ++i)
+            std::cout << std::string(random_parts[i].size(), '-') << reflines[i];
+        std::cout << std::string(random_parts.back().size(), '-') << '\n';
+        for (size_t i = 0; i < querylines.size(); ++i)
+            std::cout << random_parts[i] << querylines[i];
+        std::cout << random_parts.back() << '\n';
     }
 
     return 0;
