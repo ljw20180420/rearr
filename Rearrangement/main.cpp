@@ -1,8 +1,6 @@
 #include "headers/parser.h"
 #include "headers/align.h"
 
-const static uint32_t longest_allowed_ref = 100000; 
-
 int main(int argc, char **argv)
 {
     print_help(argc, argv);
@@ -13,8 +11,8 @@ int main(int argc, char **argv)
     std::deque<uint32_t> upper_boundaries, down_boundaries;
     uint32_t max_ref_sz = 0;
     FILE *ref_fd = fdopen(3, "r");
-    char *buffer_ref = new char[longest_allowed_ref];
-    for (size_t i = 0; fgets(buffer_ref, longest_allowed_ref, ref_fd); ++i)
+    char buffer_ref[128];
+    for (size_t i = 0; fgets(buffer_ref, 128, ref_fd); ++i)
     {
         switch (i % 3)
         {
@@ -22,15 +20,16 @@ int main(int argc, char **argv)
                 upper_boundaries.push_back(std::atoi(buffer_ref));
                 break;
             case 1:
-                max_ref_sz = std::strlen(buffer_ref) > max_ref_sz ? std::strlen(buffer_ref) : max_ref_sz;
-                if (max_ref_sz + 1 == longest_allowed_ref)
+                refs.emplace_back();
+                while (strcspn(buffer_ref, "\n") == strlen(buffer_ref))
                 {
-                    std::cerr << "reference buffer is not enough\n";
-                    return EXIT_FAILURE;
+                    refs.back().append(buffer_ref);
+                    fgets(buffer_ref, 128, ref_fd);
                 }
                 buffer_ref[strcspn(buffer_ref, "\n")] = '\0';
-                refs.push_back(buffer_ref);
+                refs.back().append(buffer_ref);
                 std::transform(refs.back().begin(), refs.back().end(), refs.back().begin(), toupper);
+                max_ref_sz = refs.back().size() > max_ref_sz ? refs.back().size() : max_ref_sz;
                 break;
             case 2:
                 down_boundaries.push_back(std::atoi(buffer_ref));
@@ -42,7 +41,6 @@ int main(int argc, char **argv)
         std::cerr << "empty reference loaded\n";
         return EXIT_FAILURE;
     }
-    delete[] buffer_ref;
     fclose(ref_fd);
 
     std::vector<int32_t> Es(max_ref_sz + 1), Gs(max_ref_sz + 1), Gps(max_ref_sz + 1), gr(max_ref_sz + 1);
