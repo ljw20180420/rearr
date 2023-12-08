@@ -14,6 +14,7 @@ with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr
     _, count, naseq, barcode_end, barcodegroup = bcdline.split('\t')
     barcode_end = int(barcode_end)
     for ref_left, ref_right in more_itertools.batched(bf, 2):
+        ref_left, ref_right = ref_left.rstrip(), ref_right.rstrip()
         barcode = rcb.readline().rstrip()
         if barcode != barcodegroup:
             continue
@@ -21,7 +22,7 @@ with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr
         _ = cf.write(f"{naseq[barcode_end + 3:]}\t{count}\n")
         _ = subprocess.run(f'''echo "{barcodegroup}" >> {barcodefile}.alg''', shell=True, check=True)
         with open(f"{barcodefile}.reference", "w") as rd:
-            _ = rd.write(f"0\n{ref_left}{extup_left}\n{extup_right}\n{ref_right}{extup_right+extdown_right}\n")
+            _ = rd.write(f"0\n{ref_left}\n{extup_left}\n{extup_right}\n{ref_right}\n{extup_right+extdown_right}\n")
         
         while True:
             bcdline = bcd.readline().rstrip()
