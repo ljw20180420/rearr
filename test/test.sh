@@ -23,7 +23,7 @@ cut -f2- test/random.seq > test/random.seq2; mv test/random.seq2 test/random.seq
 
 rm -rf test/rearr; mkdir -p test/rearr
 cp test/random.fq test/rearr/random.fq
-rearr_run.sh test/rearr/random.fq $ref $sgRNA $ext $ext
+time rearr_run.sh test/rearr/random.fq $ref $sgRNA $ext $ext
 tail -n+2 test/rearr/random.fq.table.$cut.$ext.$ext | awk -F "\t" -v OFS="\t" -v cut=$cut -v ext=$ext '{$10 -= 2 * ext; print $7,$10,$8, $11}' | paste <(cut -f1 test/rearr/random.fq.count) - | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4{s/^@//; N; s/\n/\t/; p}' test/rearr/random.fq | sort -k2,2) - | cut -f2- | sort -k1,1V > test/rearr.arr
 
 join -t $'\t' -1 1 -2 1 <(sort -k1,1 test/random.seq) <(sort -k1,1 test/rearr.arr) | sort -k1,1V | bench/tools/compare_indel.py $ref >test/rearr.diff

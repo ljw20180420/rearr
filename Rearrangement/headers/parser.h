@@ -3,6 +3,8 @@
 
 #include <bits/stdc++.h>
 
+typedef int32_t SCORETYPE;
+
 void print_help(int argc, char **argv)
 {
     bool print_help = false;
@@ -40,22 +42,22 @@ void print_help(int argc, char **argv)
 struct Command_content
 {
     // Aligning Parameters
-    int s0=-3; // mismatch score
-    int s1=1; // match score for non-extension part of reference
-    int s2=1; // match score for extension part of reference
-    int u=-2; // gap extension
-    int v=-5; // gap open
-    int ru=0; // reference end gap extension
-    int rv=0; // reference end gap open
-    int qu=0; // query unaligned gap extension
-    int qv=0; // query unaligned gap open
+    SCORETYPE s0=-3; // mismatch score
+    SCORETYPE s1=1; // match score for non-extension part of reference
+    SCORETYPE s2=1; // match score for extension part of reference
+    SCORETYPE u=-2; // gap extension
+    SCORETYPE v=-5; // gap open
+    SCORETYPE ru=0; // reference end gap extension
+    SCORETYPE rv=0; // reference end gap open
+    SCORETYPE qu=0; // query unaligned gap extension
+    SCORETYPE qv=0; // query unaligned gap open
 };
 
 Command_content command(int argc, char **argv)
 {
     Command_content cc;
 
-    for(int i=1; i<argc-1; ++i)
+    for(size_t i=1; i<argc-1; ++i)
     {
         // Aligning Parameters
         if(!strcmp(argv[i],"-s0"))
