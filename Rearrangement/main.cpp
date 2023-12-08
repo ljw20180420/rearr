@@ -42,12 +42,54 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     fclose(ref_fd);
+    uint32_t max_seg_sz = max_ref_sz / 8 + 1;
+    std::vector<int32_t> gr = {0, cc.rv};
+    for (uint32_t s = 2; s < max_seg_sz * 8; ++s)
+        gr.push_back(gr.back() + cc.ru);
+    v8si *Es = new v8si[max_seg_sz], *Gs = new v8si[max_seg_sz], *Gps = new v8si[max_seg_sz];
+    std::vector<v8si *> grps, grms;
+    std::vector<v8si **> gammas;
+    for (uint32_t i = 0; i < refs.size(); ++i)
+    {
+        uint32_t seg_sz = refs[i].size() / 8 + 1;
+        grps.push_back(new v8si[seg_sz]);
+        grms.push_back(new v8si[seg_sz]);
+        for (uint32_t j = 0; j < seg_sz; ++j)
+            for (uint32_t k = 0; k < 8; ++k)
+            {
+                uint32_t s = seg_sz * k + j;
+                grps[i][j][k] = s > 0 ? cc.rv + (s - 1) * cc.ru : 0;
+                grms[i][j][k] = s == refs[i].size() ? 0 : cc.rv + (refs[i].size() - s - 1) * cc.ru;
+            }
 
-    std::vector<int32_t> Es(max_ref_sz + 1), Gs(max_ref_sz + 1), Gps(max_ref_sz + 1), gr(max_ref_sz + 1);
-    gr[0] = 0;
-    gr[1] = cc.rv;
-    for (size_t i = 2; i <= max_ref_sz; ++i)
-        gr[i] = gr[i - 1] + cc.ru;
+        gammas.push_back(new v8si *[seg_sz]);
+        for (size_t j = 0; j < seg_sz; ++j)
+        {
+            gammas[i][j] = new v8si[5];
+            for (size_t k = 0; k < 8; ++k)
+            {
+                uint32_t s = k * seg_sz + j; 
+                const char *bases = "ACGTN";
+                for (size_t l = 0; l < 5; ++l)
+                {
+                    if (s >= refs[i].size())
+                        gammas[i][j][l][k] = -inf;
+                    else
+                    {
+                        if (refs[i][s] != 'N' && refs[i][s] == bases[l])
+                        {
+                            if (s >= upper_boundaries[i] &&  s < down_boundaries[i])
+                                gammas[i][j][l][k] = cc.s1;
+                            else
+                                gammas[i][j][l][k] = cc.s2;
+                        }
+                        else
+                            gammas[i][j][l][k] = cc.s0;
+                    }
+                }
+            }
+        }
+    }
 
     uint32_t Omax = 0;
     std::string O;
@@ -81,9 +123,7 @@ int main(int argc, char **argv)
         }
     
         for (size_t i = 0; i < refs.size(); ++i)
-        {
-            cross_align(As.data() + i * (Omax + 1), As.data() + (i + 1) * (Omax + 1), Bs.data() + i * (Omax + 1), Cs.data() + i * (Omax + 1), Ds.data() + i * (Omax + 1), Es.data(), Gs.data(), Gps.data(), refs[i].data(), refs[i].size(), O.data(), O.size(), cc.u, cc.v, gr.data(), cc.qu, cc.qv, cc.s0, cc.s1, cc.s2, upper_boundaries[i], down_boundaries[i]);
-        }
+            cross_align(As.data() + i * (Omax + 1), As.data() + (i + 1) * (Omax + 1), Bs.data() + i * (Omax + 1), Cs.data() + i * (Omax + 1), Ds.data() + i * (Omax + 1), Es, Gs, Gps, refs[i].data(), refs[i].size(), O.data(), O.size(), cc.u, cc.v, grps[i], grms[i], gammas[i], cc.qu, cc.qv, cc.s0, cc.s1, cc.s2, upper_boundaries[i], down_boundaries[i]);
 
         std::deque<std::string> reflines, querylines, random_parts;
         uint32_t w = O.size();

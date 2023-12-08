@@ -26,4 +26,4 @@ rearr_index_barcode.sh "path_to_barcode_csv"
 # Get a long table of indel
 rearr_barcode_post_process.sh <fastq.barcode_csv.barcode.table
 # To hist a certain column
-rearr_barcode_post_process.sh <fastq.barcode_csv.barcode.table | cut -f column | tail -n+2 | sort | uniq -c
+rearr_barcode_post_process.sh <fastq.barcode_csv.barcode.table column

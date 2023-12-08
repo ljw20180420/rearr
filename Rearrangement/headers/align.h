@@ -4,47 +4,88 @@
 #include <bits/stdc++.h>
 
 const static int32_t inf = std::numeric_limits<int32_t>::max() / 2;
+typedef int32_t v8si __attribute__ ((vector_size (32)));
 
-void cross_align(int32_t *tAs, int32_t *hAs, int32_t *hBs, int32_t *hCs, uint32_t *hDs, int32_t *Es, int32_t *Gs, int32_t *Gps, const char *ref, const uint32_t ref_sz, const char *O, const uint32_t O_sz, const int32_t u, const int32_t v, const int32_t *gr, const int32_t qu, const int32_t qv, const int32_t s0, const int32_t s1, const int32_t s2, const uint32_t upper_boundary, const uint32_t down_boundary)
+void cross_align(int32_t *tAs, int32_t *hAs, int32_t *hBs, int32_t *hCs, uint32_t *hDs, v8si *Es, v8si *Gs, v8si *Gps, const char *ref, const uint32_t ref_sz, const char *O, const uint32_t O_sz, const int32_t u, const int32_t v, const v8si *grp, const v8si *grm, v8si **gamma, const int32_t qu, const int32_t qv, const int32_t s0, const int32_t s1, const int32_t s2, const uint32_t upper_boundary, const uint32_t down_boundary)
 {
-    for (uint32_t s = 0; s <= ref_sz; ++s)
+    v8si inf8 = {-inf, -inf, -inf, -inf, -inf, -inf, -inf, -inf};
+    uint32_t seg_sz = ref_sz / 8 + 1;
+    for (uint32_t i = 0; i < seg_sz; ++i)
     {
-        Es[s] = -inf;
-        Gs[s] = tAs[0] + gr[s];
+        Es[i] = inf8;
+        Gs[i] = tAs[0] + grp[i];
     }
-    hCs[0] = Gs[0] + gr[ref_sz];
+    hCs[0] = Gs[0][0] + grp[seg_sz - 1][ref_sz - (seg_sz - 1) * 8];
     hDs[0] = 0;
     hBs[0] = -inf;
 
+    v8si umask = {7, 0, 1, 2, 3, 4, 5, 6};
+    std::map<char, uint8_t> base2int = {{'A', 0}, {'C', 1}, {'G', 2}, {'T', 3}, {'N', 4}};
     for (uint32_t w = 1; w <= O_sz; ++w)
     {
+        uint8_t baseint = base2int[O[w - 1]];
         std::swap(Gs, Gps);
-        for (uint32_t s = 0; s <= ref_sz; ++s)
+        for (uint32_t i = 0; i < seg_sz; ++i)
         {
-            Es[s] = std::max(Es[s] + u, Gps[s] + v);
-            Gs[s] = std::max(tAs[w] + gr[s], Es[s]);
+            Es[i] = Es[i] + u > Gps[i] + v ? Es[i] + u : Gps[i] + v; 
+            Gs[i] = tAs[w] + grp[i] > Es[i] ? tAs[w] + grp[i] : Es[i];
         }
-        hCs[w] = Gs[0] + gr[ref_sz];
+        hCs[w] = Gs[0][0] + grp[seg_sz - 1][ref_sz - (seg_sz - 1) * 8];
         hDs[w] = 0;
-        int32_t F = -inf;
-        for (uint32_t s = 0; s < ref_sz; ++s)
+
+        v8si G = __builtin_shuffle(Gps[seg_sz - 1] + gamma[seg_sz - 1][baseint], umask);
+        Gs[0] = G > Gs[0] ? G : Gs[0];
+        v8si F = Gs[0] + v;
+        for (uint32_t i = 1; i < seg_sz; ++i)
         {
-            F = std::max(F + u, Gs[s] + v);
-            Gs[s + 1] = std::max(Gs[s + 1], F);
-            int32_t gamma;
-            if (ref[s] != O[w-1])
-                gamma = s0;
-            else if (s < upper_boundary || s >= down_boundary)
-                gamma = s2;
-            else
-                gamma = s1;
-            Gs[s + 1] = std::max(Gs[s + 1], Gps[s] + gamma);
-            if (Gs[s + 1] + gr[ref_sz - s - 1] > hCs[w])
+            Gs[i] = F > Gs[i] ? F : Gs[i];
+            G = Gps[i - 1] + gamma[i - 1][baseint];
+            Gs[i] = G > Gs[i] ? G : Gs[i];
+            F = Gs[i] + v > F + u ? Gs[i] + v : F + u;
+        }
+
+        F = __builtin_shuffle(F, umask);
+        F[0] = -inf; 
+        for (uint32_t i = 0; ;)
+        {
+            bool FisLarge = false;
+            for (uint32_t k = 0; k < 8; ++k)
             {
-                hCs[w] = Gs[s + 1] + gr[ref_sz - s - 1];
-                hDs[w] = s + 1;
+                if (F[k] + u > Gs[i][k] + v)
+                {
+                    FisLarge = true;
+                    break;
+                }
+            }
+            if (!FisLarge)
+                break;
+            Gs[i] = F > Gs[i] ? F : Gs[i]; 
+            F = F + u;
+            if (++i == seg_sz)
+            {
+                F = __builtin_shuffle(F, umask);
+                F[0] = -inf;
+                i = 0;
             }
         }
+        v8si hC = Gs[0], hD, hDnow = {0, 1, 2, 3, 4, 5, 6, 7};
+        hDnow *= int32_t(seg_sz);
+        hD = hDnow;
+        for (uint32_t i = 1; i < seg_sz; ++i)
+        {
+            hDnow += 1;
+            v8si cmp = Gs[i] > hC;
+            hC = cmp ? Gs[i] : hC;
+            hD = cmp ? hDnow : hD;
+        }
+        hCs[w] = hC[0];
+        hDs[w] = hD[0];
+        for (uint32_t k = 1; k < 8; ++k)
+            if (hC[k] > hCs[w])
+            {
+                hCs[w] = hC[k];
+                hDs[w] = hD[k];
+            }
         hBs[w] = std::max(hBs[w - 1] + qu, hCs[w - 1] + qv);
         hAs[w] = std::max(hBs[w], hCs[w]);
     }
@@ -79,7 +120,7 @@ uint32_t EdgeTrack(std::string &refline, std::string &queryline, const uint32_t 
             uint32_t ss = s - i, ww = wends[i] - j;
             if (pj > 0 && pj - 1 < shifts[i] - shifts[i - 1])
             {
-                if (ref[ss] != O[ww])
+                if (ref[ss] == 'N' || O[ww] == 'N' || ref[ss] != O[ww])
                     gamma = s0;
                 else if (ss < upper_boundary || ss >= down_boundary)
                     gamma = s2;
@@ -117,7 +158,7 @@ uint32_t EdgeTrack(std::string &refline, std::string &queryline, const uint32_t 
                             if (ii > 0 && pjj > 0 && pjj - 1 < shifts[ii] - shifts[ii - 1])
                             {
                                 int32_t gg;
-                                if (ref[ss] != O[ww])
+                                if (ref[ss] == 'N' || O[ww] == 'N' || ref[ss] != O[ww])
                                     gg = s0;
                                 else if (ss < upper_boundary || ss >= down_boundary)
                                     gg = s2;
