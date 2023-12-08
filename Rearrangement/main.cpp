@@ -8,8 +8,8 @@ int main(int argc, char **argv)
     Command_content cc=command(argc, argv);
     
     std::deque<std::string> refs;
-    std::deque<uint32_t> upper_boundaries, down_boundaries;
-    uint32_t max_ref_sz = 0;
+    std::deque<size_t> upper_boundaries, down_boundaries;
+    size_t max_ref_sz = 0;
     FILE *ref_fd = fdopen(3, "r");
     char buffer_ref[128];
     for (size_t i = 0; fgets(buffer_ref, 128, ref_fd); ++i)
@@ -42,33 +42,33 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     fclose(ref_fd);
-    uint32_t max_seg_sz = max_ref_sz / 8 + 1;
-    std::vector<int32_t> gr = {0, cc.rv};
-    for (uint32_t s = 2; s < max_seg_sz * 8; ++s)
+    size_t max_seg_sz = max_ref_sz / simd_sz + 1;
+    std::vector<SCORETYPE> gr = {0, cc.rv};
+    for (size_t s = 2; s < max_seg_sz * simd_sz; ++s)
         gr.push_back(gr.back() + cc.ru);
-    v8si *Es = new v8si[max_seg_sz], *Gs = new v8si[max_seg_sz], *Gps = new v8si[max_seg_sz];
-    std::vector<v8si *> grps, grms;
-    std::vector<v8si **> gammas;
-    for (uint32_t i = 0; i < refs.size(); ++i)
+    vsimd *Es = new vsimd[max_seg_sz], *Gs = new vsimd[max_seg_sz], *Gps = new vsimd[max_seg_sz];
+    std::vector<vsimd *> grps, grms;
+    std::vector<vsimd **> gammas;
+    for (size_t i = 0; i < refs.size(); ++i)
     {
-        uint32_t seg_sz = refs[i].size() / 8 + 1;
-        grps.push_back(new v8si[seg_sz]);
-        grms.push_back(new v8si[seg_sz]);
-        for (uint32_t j = 0; j < seg_sz; ++j)
-            for (uint32_t k = 0; k < 8; ++k)
+        size_t seg_sz = refs[i].size() / simd_sz + 1;
+        grps.push_back(new vsimd[seg_sz]);
+        grms.push_back(new vsimd[seg_sz]);
+        for (size_t j = 0; j < seg_sz; ++j)
+            for (size_t k = 0; k < simd_sz; ++k)
             {
-                uint32_t s = seg_sz * k + j;
-                grps[i][j][k] = s > 0 ? cc.rv + (s - 1) * cc.ru : 0;
-                grms[i][j][k] = s == refs[i].size() ? 0 : cc.rv + (refs[i].size() - s - 1) * cc.ru;
+                size_t s = seg_sz * k + j;
+                grps[i][j][k] = s > 0 ? (cc.rv + (s - 1) * cc.ru) : 0;
+                grms[i][j][k] = s == refs[i].size() ? 0 : (cc.rv + (refs[i].size() - s - 1) * cc.ru);
             }
 
-        gammas.push_back(new v8si *[seg_sz]);
+        gammas.push_back(new vsimd *[seg_sz]);
         for (size_t j = 0; j < seg_sz; ++j)
         {
-            gammas[i][j] = new v8si[5];
-            for (size_t k = 0; k < 8; ++k)
+            gammas[i][j] = new vsimd[5];
+            for (size_t k = 0; k < simd_sz; ++k)
             {
-                uint32_t s = k * seg_sz + j; 
+                size_t s = k * seg_sz + j; 
                 const char *bases = "ACGTN";
                 for (size_t l = 0; l < 5; ++l)
                 {
@@ -91,11 +91,11 @@ int main(int argc, char **argv)
         }
     }
 
-    uint32_t Omax = 0;
+    size_t Omax = 0;
     std::string O;
     size_t count;
-    std::vector<int32_t> As, Bs, Cs;
-    std::vector<uint32_t> Ds;
+    std::vector<SCORETYPE> As, Bs, Cs;
+    std::vector<size_t> Ds;
     for(size_t index=1; std::cin >> O >> count; ++index)
     {
         std::transform(O.begin(), O.end(), O.begin(), toupper);
@@ -126,11 +126,11 @@ int main(int argc, char **argv)
             cross_align(As.data() + i * (Omax + 1), As.data() + (i + 1) * (Omax + 1), Bs.data() + i * (Omax + 1), Cs.data() + i * (Omax + 1), Ds.data() + i * (Omax + 1), Es, Gs, Gps, refs[i].data(), refs[i].size(), O.data(), O.size(), cc.u, cc.v, grps[i], grms[i], gammas[i], cc.qu, cc.qv, cc.s0, cc.s1, cc.s2, upper_boundaries[i], down_boundaries[i]);
 
         std::deque<std::string> reflines, querylines, random_parts;
-        uint32_t w = O.size();
+        size_t w = O.size();
         for (size_t i = 0; i < refs.size(); ++i)
         {
             size_t j = refs.size() - i;
-            std::pair<uint32_t, uint32_t> swp = NodeTrack(w, As.data() + j * (Omax + 1), Bs.data() + (j - 1) * (Omax + 1), Cs.data() + (j - 1) * (Omax + 1), Ds.data() + (j - 1) * (Omax + 1), cc.qv);
+            std::pair<size_t, size_t> swp = NodeTrack(w, As.data() + j * (Omax + 1), Bs.data() + (j - 1) * (Omax + 1), Cs.data() + (j - 1) * (Omax + 1), Ds.data() + (j - 1) * (Omax + 1), cc.qv);
             random_parts.push_front(O.substr(swp.second, w - swp.second));
             reflines.emplace_front();
             querylines.emplace_front();
