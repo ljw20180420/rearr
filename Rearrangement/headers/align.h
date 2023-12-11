@@ -74,6 +74,7 @@ void cross_align(SCORETYPE *tAs, SCORETYPE *hAs, SCORETYPE *hBs, SCORETYPE *hCs,
                 i = 0;
             }
         }
+
         vsimd hC = Gs[0], hD, hDnow;
         for (size_t k = 0; k < simd_sz; ++k)
             hDnow[k] = k * seg_sz;
@@ -106,8 +107,38 @@ size_t EdgeTrack(std::string &refline, std::string &queryline, const size_t s, c
     shifts.push_back(0);
     wends.push_back(w);
     Gs.push_back(hAs[w] - gr[ref_sz - s]);
+    if (Gs[0] - gr[s] == tAs[w])
+    {
+        refline.append(ref, ref_sz);
+        refline[0] = std::tolower(refline[0]);
+        refline[ref_sz - 1] = std::tolower(refline[ref_sz - 1]);
+        queryline.append(ref_sz, '-');
+        return w;
+    }
     Fs.push_back(inf);
     Es.push_back(inf);
+    for (size_t j = 1; j <= w; ++j)
+    {
+        SCORETYPE E = std::min(Es[j - 1], Gs[j - 1]) - u;
+        SCORETYPE F = inf;
+        SCORETYPE G = std::min(E, F) - v + u;
+        bool legal_G = (G + gr[ref_sz - s] <= hAs[w - j]), legal_E = (E - v + u + gr[ref_sz - s] <= hAs[w - j] + (qv > u ? 0 : (u - qv)));
+        if (!legal_G && !legal_E)
+            break;
+        Gs.push_back(G);
+        Fs.push_back(F);
+        Es.push_back(E);
+        if (G - gr[s] == tAs[w - j])
+        {
+            refline.append(ref, s);
+            queryline.append(s, '-');
+            refline.append(j, '-');
+            queryline.append(O + w - j, j);
+            refline.append(ref + s, ref_sz - s);
+            queryline.append(ref_sz - s, '-');
+            return w - j;
+        }
+    }
     for (size_t i = 1; ; ++i)
     {
         shifts.push_back(Gs.size());
