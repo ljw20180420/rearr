@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-import sys, os, subprocess, Bio.Seq, more_itertools
+import sys, os, subprocess, more_itertools
 _, barcodefile, csvfile, bowtie2genome, getfastagenome = sys.argv
-# scaffold = Bio.Seq.Seq("gttttagagctagaaatagcaagttaaaataaggctagtccgttatcaacttgaaaaagtggcaccgagtcggtgc").reverse_complement().__str__().upper()
 extup_left, extdown_left, extup_right, extdown_right = 50, 0, 10, 100
 min_seq = 20
 with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr($F[9], 16, 2)="CC"; $F[11]=~tr/ACGT/TGCA/; say $F[9] , "\t" , scalar reverse $F[11]}}' {csvfile} | sort -k2,2 | cut -f1 | bowtie2 --quiet -x {bowtie2genome} -r -U - 2> /dev/null | samtools view | rearr_barcode2ref.py {extup_left} {extdown_left} {extup_right} {extdown_right} | bedtools getfasta -s -fi {getfastagenome} -bed - | sed '1~2d' ''', "r") as bf, os.popen(f'''tail -n+2 {csvfile} | cut -d',' -f12 | tr ACGT TGCA | rev | sort ''', "r") as rcb:
