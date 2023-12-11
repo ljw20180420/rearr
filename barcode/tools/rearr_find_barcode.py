@@ -2,7 +2,7 @@
 import sys, pysam
 
 for line in sys.stdin:
-    query, _, barcode, _, _, CIGAR, _ = line.split("\t", 6)
+    flag, barcode, CIGAR = line.split("\t")
     pAS = pysam.AlignedSegment()
     pAS.cigarstring = CIGAR
-    sys.stdout.write(f"{int(query)+1}\t{barcode}\t{pAS.query_alignment_end}\n")
+    sys.stdout.write(f"{flag}\t{barcode}\t{pAS.query_alignment_end}\n")

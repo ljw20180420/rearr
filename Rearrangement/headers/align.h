@@ -18,7 +18,7 @@ void cross_align(SCORETYPE *tAs, SCORETYPE *hAs, SCORETYPE *hBs, SCORETYPE *hCs,
         Es[i] = infsimd;
         Gs[i] = tAs[0] + grp[i];
     }
-    hCs[0] = Gs[0][0] + grp[seg_sz - 1][ref_sz - (seg_sz - 1) * simd_sz];
+    hAs[0] = hCs[0] = Gs[0][0] + grp[seg_sz - 1][ref_sz - (seg_sz - 1) * simd_sz];
     hDs[0] = 0;
     hBs[0] = -inf;
 

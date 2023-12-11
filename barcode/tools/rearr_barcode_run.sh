@@ -8,7 +8,7 @@ find_barcode()
     csvfile=$2
 
     sed -n '2~4p' "$fastqfile" | sort | uniq -c | awk -v OFS="\t" '{print $2, $1}' >"$fastqfile.count"
-    cut -f1 "$fastqfile.count" | bowtie2 --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscore -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | awk -F "\t" -v OFS="\t" '($2/4)%2!=0 || ($2/16)%2!=0{print > "'"$fastqfile.$(basename $csvfile).not_find"'"} ($2/4)%2==0 && ($2/16)%2==0{print}' | rearr_find_barcode.py | sort -k1,1 | join -t $'\t' -1 1 -2 1 <(cut -f1 "$fastqfile.count" | sed '=' | sed '1~2s/^/>s/' | cutadapt -a GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC - 2> /dev/null | sed '1~2d' | paste <(nl -w1 "$fastqfile.count") - | sort -k1,1) - | cut -f2- | sort -k4,4 | join -t $'\t' -1 4 -2 1 - <(sed -r 's/^>//; N; s/\n'"$primer"'/\t/' "$csvfile.primer+barcode.fa" | sort -k1,1) | cut -f2- | awk -v minscore=$minscore '$4+minscore>length($3){print >"'"$fastqfile.$(basename $csvfile).too_short"'"} $4+minscore<=length($3){print}' | sort -k5,5 -k2,2nr >"$fastqfile.$(basename $csvfile).barcode"
+    cut -f1 "$fastqfile.count" | bowtie2 --quiet --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscore -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | rearr_find_barcode.py | awk -F "\t" -v csvfile=$csvfile -v primer=$primer -v OFS="\t" 'BEGIN{pbfa = csvfile ".primer+barcode.fa"; while (getline bn <pbfa) {getline bc <pbfa; sub("^" primer, "", bc); bn2bc[substr(bn, 2)] = bc}} {print $1, bn2bc[$2], $3}' | paste "$fastqfile.count" <(cut -f1 "$fastqfile.count" | sed '=' | sed '1~2s/^/>s/' | cutadapt -a GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC - 2> /dev/null | sed '1~2d') - | awk -F "\t" -v OFS="\t" -v minscore=$minscore '{if (($4/4)%2==1 || ($4/16)%2==1) print $1, $2 > "'"$fastqfile.$(basename $csvfile).not_find"'"; else if ($6+minscore>length($3)) print $1, $2 > "'"$fastqfile.$(basename $csvfile).too_short"'"; else print $1, $2, $3, $6, $5}' | sort -k5,5 -k2,2nr >"$fastqfile.$(basename $csvfile).barcode"
 }
 
 bowtie2genome=$1
@@ -21,3 +21,5 @@ done
 
 jobs
 wait
+
+

@@ -4,7 +4,7 @@ _, barcodefile, csvfile, bowtie2genome, getfastagenome = sys.argv
 # scaffold = Bio.Seq.Seq("gttttagagctagaaatagcaagttaaaataaggctagtccgttatcaacttgaaaaagtggcaccgagtcggtgc").reverse_complement().__str__().upper()
 extup_left, extdown_left, extup_right, extdown_right = 50, 0, 10, 100
 min_seq = 20
-with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr($F[9], 16, 2)="CC"; $F[11]=~tr/ACGT/TGCA/; say $F[9] , "\t" , scalar reverse $F[11]}}' {csvfile} | sort -k2,2 | cut -f1 | bowtie2 -x {bowtie2genome} -r -U - 2> /dev/null | samtools view | rearr_barcode2ref.py {extup_left} {extdown_left} {extup_right} {extdown_right} | bedtools getfasta -s -fi {getfastagenome} -bed - | sed '1~2d' ''', "r") as bf, os.popen(f'''tail -n+2 {csvfile} | cut -d',' -f12 | tr ACGT TGCA | rev | sort ''', "r") as rcb:
+with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr($F[9], 16, 2)="CC"; $F[11]=~tr/ACGT/TGCA/; say $F[9] , "\t" , scalar reverse $F[11]}}' {csvfile} | sort -k2,2 | cut -f1 | bowtie2 --quiet -x {bowtie2genome} -r -U - 2> /dev/null | samtools view | rearr_barcode2ref.py {extup_left} {extdown_left} {extup_right} {extdown_right} | bedtools getfasta -s -fi {getfastagenome} -bed - | sed '1~2d' ''', "r") as bf, os.popen(f'''tail -n+2 {csvfile} | cut -d',' -f12 | tr ACGT TGCA | rev | sort ''', "r") as rcb:
     _ = subprocess.run(f'''> {barcodefile}.alg''', shell=True, check=True)
     _ = subprocess.run(f'''printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "barcode" "index" "count" "score" "updangle" "ref_start1" "query_start1" "ref_end1" "query_end1" "random_insertion" "ref_start2" "query_start2" "ref_end2" "query_end2" "downdangle" "cut1" "cut2" > {barcodefile}.table''', shell=True, check=True, executable="/bin/bash")
 
@@ -35,8 +35,8 @@ with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr
                 break
             _ = cf.write(f"{naseq[barcode_end + 3:]}\t{count}\n")
         cf.close()
-        _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile -ref_file {barcodefile}.reference -ALIGN_MAX 1 -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
+        runres = subprocess.run(f'''rearrangement <{barcodefile}.countfile 3<{barcodefile}.reference -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
     cf.close()
-    _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile -ref_file {barcodefile}.reference -ALIGN_MAX 1 -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
+    runres = subprocess.run(f'''rearrangement <{barcodefile}.countfile -ref_file 3<{barcodefile}.reference -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
     os.remove(f"{barcodefile}.countfile")
     os.remove(f"{barcodefile}.reference")
