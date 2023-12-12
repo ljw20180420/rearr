@@ -13,14 +13,15 @@ printf "%s\t%s\n" \
 | rearr_barcode_run.sh "/home/ljw/hg19_with_bowtie2_index/hg19" "/home/ljw/hg19_with_bowtie2_index/hg19.fa"
 
 # Output
-# fastq.count: reads after counting duplicates
+# fastq.count: the count of duplicates in the input file
 # fastq.barcode_csv.barcode: non-duplicate reads with barcode
 # fastq.barcode_csv.not_find: non-duplicate reads cannot find barcode
+# fastq.barcode_csv.too_short: non-duplicate reads which is too short after cutadapt
 # fastq.barcode_csv.barcode.alg: alignments of non-duplicate reads with barcode
 # fastq.barcode_csv.barcode.table: informative table of alignments of non-duplicate reads with barcode
 
 # Index barcode
-rearr_index_barcode.sh "path_to_barcode_csv"
+rearr_index_barcode.sh "path_to_barcode_csv": this step is necessary for using bowtie2 local mode to demultiplex reads by barcodes
 
 # Tools
 # Get a long table of indel

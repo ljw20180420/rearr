@@ -34,8 +34,8 @@ with open(barcodefile, "r") as bcd, os.popen(f'''perl -anF, -E 'if($.>1){{substr
                 break
             _ = cf.write(f"{naseq[barcode_end + 3:]}\t{count}\n")
         cf.close()
-        _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile 3<{barcodefile}.reference -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
+        _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile 3<{barcodefile}.reference -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} NGG {extup_right} NGG {extup_left + extdown_left} | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
     cf.close()
-    _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile -ref_file 3<{barcodefile}.reference -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} {extdown_left} {extup_right} NGG | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
+    _ = subprocess.run(f'''rearrangement <{barcodefile}.countfile -ref_file 3<{barcodefile}.reference -u -1 -v -3 -s0 -2 -qv -3 | correct_micro_homology.py {extup_left} NGG {extup_right} NGG {extup_left + extdown_left} | tee -a {barcodefile}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={extup_left} -v cut2={len(ref_left)+extup_right} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {barcodefile}.table; echo >> {barcodefile}.alg''', shell=True, check=True)
     os.remove(f"{barcodefile}.countfile")
     os.remove(f"{barcodefile}.reference")

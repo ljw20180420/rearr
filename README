@@ -6,24 +6,23 @@ cd sx_lcy
 ./install.sh
 
 Usage
-rearr_run.sh input ref sgRNA [ext1 [ext2]]
+rearr_run.sh input ref1 ref2 sgRNA1 sgRNA2
 
 Example
-rearr_run.sh ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "GGTGATGTGTTGAGACTGGT" 30 30 16
+rearr_run.sh ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "GGTGATGTGTTGAGACTGGT"
 
 Parameters
 input: plain/compressed fasta/fastq
-ref: reference string
-sgRNA: sgRNA
-ext1: upstream end downstream extension for upstream template inserion (default: 30)
-ext2: downstream end upstream extension (default: 30)
-THR_NUM: thread number. (default: half the available cores)
+ref1: reference string of locus 1
+ref2: reference string of locus 2 (for single cut, ref2 = ref1)
+sgRNA1: sgRNA for ref1
+sgRNA2: sgRNA for ref2 (for single cut, sgRNA2 = sgRNA1)
 
 Output
 input.count: the count of duplicates in the input file
-input.alg.cut.ext1.ext2: the alignments
-input.table.cut.ext1.ext2: the summarization table for indel information
+input.alg.cut1.cut2.ref1len: the alignments
+input.table.cut1.cut2.ref1len: the summarization table for indel information
 
 Tools
-rearr_view.sh input.alg.cut.ext1.ext2 [readnum]
+rearr_view.sh input.alg.cut1.cut1.ref1len [readnum]
 display the first readnum (default: 50) read's alignments in ANSI fomrat, the cut points and random insertions are aligned

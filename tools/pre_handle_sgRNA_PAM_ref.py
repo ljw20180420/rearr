@@ -1,49 +1,5 @@
 #!/usr/bin/env python
-import subprocess, Bio.Seq, Bio.Align, numpy, os, re, sys, correct_micro_homology
-
-def extend_ref(ref, upstream_extend=0, downstream_extend=0):
-    # extend ref to up/downstream if ref comes from genome
-    if not upstream_extend and not downstream_extend:
-        return ref
-    _, flag, chr, pos, left = subprocess.run(f"echo {ref} | bowtie2 -x /home/ljw/hg19_with_bowtie2_index/hg19 -r -U - | samtools view", shell=True, executable="/bin/bash", check=True, capture_output=True).stdout.decode().split('\t', 4)
-    mats = re.search("AS:i:(-?\d+)", left)
-    if not mats:
-        sys.stderr.write("the reference cannot be found in hg19\n")
-        return ref
-    if int(mats.group(1)) != 0:
-        sys.stderr.write("warning: the reference is not exactly match the genome\n")
-    pos = int(pos) - 1
-    strand = "-" if (int(flag) / 16) % 2 else "+"
-    if strand == "-":
-        startup, endup, startdown, enddown = pos+len(ref), pos+len(ref)+upstream_extend, pos-downstream_extend, pos
-    else:
-        startup, endup, startdown, enddown = pos-upstream_extend, pos, pos+len(ref), pos+len(ref)+downstream_extend
-    extup = subprocess.run(f''' printf "{chr}\t{startup}\t{endup}\t.\t.\t{strand}\n" | bedtools getfasta -s -fi /home/ljw/hg19_with_bowtie2_index/hg19.fa -bed - | tail -n1 ''', shell=True, executable="/bin/bash", check=True, capture_output=True).stdout.decode().rstrip()
-    extdown = subprocess.run(f''' printf "{chr}\t{startdown}\t{enddown}\t.\t.\t{strand}\n" | bedtools getfasta -s -fi /home/ljw/hg19_with_bowtie2_index/hg19.fa -bed - | tail -n1 ''', shell=True, executable="/bin/bash", check=True, capture_output=True).stdout.decode().rstrip()
-    return (extup + ref + extdown).upper()
-
-def auto_extend_ref(countfile, ref, num=100):
-    # use the first num reads in countfile to determine how long ref should be extended
-    aligner = Bio.Align.PairwiseAligner()
-    aligner.mode = 'local'
-    aligner.match_score = 1
-    aligner.mismatch_score = -2
-    aligner.open_gap_score = -3
-    aligner.extend_gap_score = -1
-    ref = extend_ref(ref, upstream_extend=100, downstream_extend=100)
-    with open(countfile, "r") as cf:
-        start, end = len(ref), 0
-        for _ in range(num):
-            line = cf.readline()
-            if not line:
-                break
-            read = line.split("\t")[0]
-            ranges = aligner.align(read, ref)[0].coordinates[1]
-            start = min(start, ranges[0])
-            end = max(end, ranges[-1])
-    start = max(0, start-10)
-    end = min(len(ref), end+10)
-    return ref[start:end]
+import Bio.Seq, Bio.Align, numpy
 
 def infer_cut(ref, sgRNA):
     # infer the cut point of reference from sgRNA
@@ -74,7 +30,7 @@ def infer_cut(ref, sgRNA):
     if PAMpos != -1:
         return PAMpos+6, "CCN"
 
-def try_reverse_complement(countfile, ref, num=10):
+def try_reverse_complement(countfile, ref1, cut1, NGGCCNtype1, ref2, cut2, NGGCCNtype2, num=10):
     # use the first num reads in countfile to determine whether reference should be reversed and complemented
     aligner = Bio.Align.PairwiseAligner()
     aligner.mode = 'local'
@@ -83,38 +39,33 @@ def try_reverse_complement(countfile, ref, num=10):
     aligner.open_gap_score = -3
     aligner.extend_gap_score = -1
     with open(countfile, "r") as cf:
-        revref = Bio.Seq.Seq(ref).reverse_complement().__str__()
-        scores, revscores = [], []
+        f1f2 = ref1[:cut1] + ref2[cut2:]
+        f1r2 = ref1[:cut1] + Bio.Seq.Seq(ref2[:cut2]).reverse_complement().__str__()
+        r1f2 = Bio.Seq.Seq(ref1[cut1:]).reverse_complement().__str__() + ref2[cut2:]
+        r1r2 = Bio.Seq.Seq(ref1[cut1:]).reverse_complement().__str__() + Bio.Seq.Seq(ref2[:cut2]).reverse_complement().__str__()
+        f1f2scores, f1r2scores, r1f2scores, r1r2scores = [], [], [], []
         for _ in range(num):
             line = cf.readline()
             if not line:
                 break
             read = line.split("\t")[0]
-            scores.append(aligner.align(read, ref).score)
-            revscores.append(aligner.align(read, revref).score)
-    if numpy.mean(revscores) > numpy.mean(scores):
-        return revref
-    return ref
+            f1f2scores.append(aligner.align(read, f1f2).score)
+            f1r2scores.append(aligner.align(read, f1r2).score)
+            r1f2scores.append(aligner.align(read, r1f2).score)
+            r1r2scores.append(aligner.align(read, r1r2).score)
+    f1f2score, f1r2score, r1f2score, r1r2score = numpy.mean(f1f2scores), numpy.mean(f1r2scores), numpy.mean(r1f2scores), numpy.mean(r1r2scores)
+    idx = numpy.argmax([f1f2score, f1r2score, r1f2score, r1r2score])
+    if idx == 2 or idx == 3:
+        ref1 = Bio.Seq.Seq(ref1).reverse_complement().__str__()
+        cut1 = len(ref1) - cut1
+        NGGCCNtype1 = "CCN" if NGGCCNtype1 == "NGG" else "NGG"
+    if idx == 1 or idx == 3:
+        ref2 = Bio.Seq.Seq(ref2).reverse_complement().__str__()
+        cut2 = len(ref2) - cut2
+        NGGCCNtype2 = "CCN" if NGGCCNtype2 == "NGG" else "NGG"
+    return ref1, cut1, NGGCCNtype1, ref2, cut2, NGGCCNtype2
 
-def get_ref_file(ref, cut, ref_file, ext1=10, ext2=10):
+def get_ref_file(ref1, cut1, ref2, cut2, ref_file):
     # construct reference file
     with open(ref_file, "w") as rf:
-        _ = rf.write(f"0\n{ref[:cut + ext1]}\n{cut}\n{ext2}\n{ref[cut-ext2:]}\n{len(ref)-cut+ext2}\n")
-
-# this method is problematic because extending too long at the cut point leads to abnormal alignments, so do not use it
-def auto_cut_extend(countfile, ref, cut, exec, ref_file, num=100):
-    # use the first num reads in countfile to determine how long the cut pos should be extended to hold the templated insertion
-    ext1 = min(100, len(ref) - cut)
-    ext2 = min(100, cut)
-    get_ref_file(ref, cut, "tempref", ext1=ext1, ext2=ext2)
-    output = subprocess.run(f'''{exec} -file <(head -n{num} {countfile}) -ref_file tempref -ALIGN_MAX 1 -THR_NUM 1 -u -1 -v -3 -s0 -2 -qv -3''', shell=True,  executable="/bin/bash", check=True, capture_output=True).stdout.decode().splitlines()
-    os.remove("tempref")
-    ext1correct, ext2correct = 0, 0
-    for header, _, _ in correct_micro_homology.correct_micro(cut + ext1, cut, cut + ext1 + ext2, output):
-        _, _, _, _, _, _, ue, _, _, ds, _ = header.split("\t", 10)
-        ext1correct = max(ext1correct, int(ue) - cut)
-        ext2correct = max(ext2correct, cut + ext1 + ext2 - int(ds))
-    ext1correct = min(ext1correct+5, ext1)
-    ext2correct = min(ext2correct+5, ext2)
-    get_ref_file(ref, cut, ref_file, ext1=ext1correct, ext2=ext2correct)
-    return ext1correct, ext2correct
+        _ = rf.write(f"0\n{ref1}\n{cut1}\n{cut2}\n{ref2}\n{len(ref2)}\n")
