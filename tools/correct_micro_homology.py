@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, re, more_itertools, subprocess
-def correct_micro(cut1, cut2, fd, NGGCCNtype):
+def correct_micro(cut1, cut2, NGGCCNtype1, NGGCCNtype2, fd):
     # modify the alignment within micro homology such that the upstream end is blunt for NGG and downstream end is blunt for CCN if possible
     relow = re.compile("[acgtn]")
     reup = re.compile("[ACGTN]")
@@ -36,9 +36,9 @@ def correct_micro(cut1, cut2, fd, NGGCCNtype):
                 segd1 = segd2 = refend - (reflen - ds1)
         if jpos == jpos2:
             queryline = list(queryline)
-            itersize = abs(us2 - cut1) if NGGCCNtype == "NGG" else abs(ds1 -cut2) if NGGCCNtype == "CCN" else 0
+            itersize = abs(us2 - cut1) if NGGCCNtype1 == "NGG" else abs(ds1 -cut2) if NGGCCNtype2 == "CCN" else 0
             for _ in range(itersize):
-                if NGGCCNtype == "NGG" and us2 < cut1 or NGGCCNtype == "CCN" and ds1 < cut2:
+                if NGGCCNtype1 == "NGG" and us2 < cut1 or NGGCCNtype1 == "CCN" and NGGCCNtype2 == "CCN" and ds1 < cut2:
                     if dw1 < dw2 and segu2 < jpos and refline[segu2].upper() == refline[segd1].upper():
                         queryline[segu2] = queryline[segd1]
                         queryline[segd1] = "-"
@@ -47,7 +47,7 @@ def correct_micro(cut1, cut2, fd, NGGCCNtype):
                         if dw1 == dw2:
                             ds1 = ds2 = cut2 + (us2 - cut1) if us2 > cut1 else cut2
                         break
-                if NGGCCNtype == "NGG" and us2 > cut1 or NGGCCNtype == "CCN" and ds1 > cut2:
+                if NGGCCNtype1 == "NGG" and us2 > cut1 or NGGCCNtype1 == "CCN" and NGGCCNtype2 == "CCN" and ds1 > cut2:
                     if uw1 < uw2 and segd1 > jpos and refline[segu2 - 1].upper() == refline[segd1 - 1].upper():
                         queryline[segd1 - 1] = queryline[segu2 - 1]
                         queryline[segu2 - 1] = "-"
@@ -61,8 +61,8 @@ def correct_micro(cut1, cut2, fd, NGGCCNtype):
         
 
 if __name__ == "__main__":
-    cut, ext1, ext2, NGGCCNtype = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
-    for header, refline, queryline in correct_micro(cut, cut + ext1 + ext2, sys.stdin, NGGCCNtype):
+    cut1, NGGCCNtype1, cut2, NGGCCNtype2, ref1len, = int(sys.argv[1]), sys.argv[2], int(sys.argv[3]), sys.argv[4], int(sys.argv[5])
+    for header, refline, queryline in correct_micro(cut1, ref1len + cut2, NGGCCNtype1, NGGCCNtype2, sys.stdin):
         sys.stdout.write(f"{header}\n")
         sys.stdout.write(f"{refline}\n")
         sys.stdout.write(f"{queryline}\n")

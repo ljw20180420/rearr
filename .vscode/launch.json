@@ -1,0 +1,36 @@
+{
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            // Resolved by CMake Tools:
+            "program": "${command:cmake.launchTargetPath}",
+            
+            "cwd": "${workspaceFolder}",
+
+            "args": ["<barcode/test4/A7-G1-n-1.R2.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.countfile.debug", ">rearr.debug", "3<barcode/test4/A7-G1-n-1.R2.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.reference", "-u", "-1", "-v", "-3", "-s0", "-2", "-qv", "-3"],
+
+            "stopAtEntry": false,
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+                },
+                {
+                    "name": "CMAKE_BUILD_TYPE",
+                    "value": "Debug"
+                }
+            ],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+        }
+    ]
+}

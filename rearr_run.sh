@@ -47,11 +47,11 @@ case $input in # count duplicate reads, support fasta, fastq, and their compress
         echo "the input is fasta file"
         sed -n '2~2p' $input | sort | uniq -c | sort -k1,1nr | awk -v OFS="\t" '{print $2, $1}' >$input.count;;
 esac
-ref=$2 # reference
-sgRNA=$3 # sgRNA
-ext1=${4:-30} # upstream end downstream extension for template inserion (default: 30)
-ext2=${5:-30} # downstream end upstream extension (default: 30)
+ref1=$2 # reference1
+ref2=$3 # reference2
+sgRNA1=$4 # sgRNA1
+sgRNA2=$5 # sgRNA2
 
-read cut NGGCCNtype <<< $(generate_ref_file.py $input $ref $sgRNA $ext1 $ext2) # prepare the reference file and return the cut point
+read cut1 NGGCCNtype1 cut2 NGGCCNtype2 <<< $(generate_ref_file.py $input $ref1 $ref2 $sgRNA1 $sgRNA2) # prepare the reference file and return the cut point
 
-rearrangement <$input.count 3<$input.ref.$cut.$ext1.$ext2 -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.py $cut $ext1 $ext2 $NGGCCNtype | tee $input.alg.$cut.$ext1.$ext2 | awk -v OFS="\t" -v cut1=$cut -v cut2=$(($cut + $ext1 + $ext2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut.$ext1.$ext2 # align reads (input.alg), correct micro homology (input.correct)
+rearrangement <$input.count 3<$input.ref.$cut1.$cut2.${#ref1} -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.py $cut1 $NGGCCNtype1 $cut2 $NGGCCNtype2 ${#ref1} | tee $input.alg.$cut1.$cut2.${#ref1} | awk -v OFS="\t" -v cut1=$cut1 -v cut2=$((${#ref1} + $cut2)) 'NR%3==1{print $0, cut1, cut2}' | get_indel >$input.table.$cut1.$cut2.${#ref1} # align reads (input.alg), correct micro homology (input.correct)

@@ -107,7 +107,10 @@ if __name__ == "__main__":
     if program.lower() == "selftarget":
         for line in sys.stdin:
             query, _, identifier_uw2_dw1, _ = line.split("\t", 3)
-            identifier, uw2m1, dw1 = identifier_uw2_dw1.split("|")
+            try:
+                identifier, uw2m1, dw1 = identifier_uw2_dw1.split("|")
+            except Exception:
+                continue
             if identifier == "-":
                 continue
             lpos = int(re.search("L(-?\d+)", identifier).group(1)) + 1
