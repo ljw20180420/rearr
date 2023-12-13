@@ -23,6 +23,7 @@ get_table()
 {
     awk -v FS="\t" -v tg=$1 'NR>1{count[$1][$tg] += $3; tgvs[$tg] = 0;}
     END{
+        PROCINFO["sorted_in"] = "@ind_str_asc";
         printf("barcode");
         for(kt in tgvs) 
             printf("\t%s", kt);

@@ -1,13 +1,22 @@
 #!/usr/bin/env python
 
 import sys, pandas, matplotlib.pyplot, seaborn, numpy, os
-readnum = int(sys.argv[1])
-difffiles = sys.argv[2:]
-workdir = os.path.dirname(difffiles[0])
+import plotnine
+from plotnine import ggplot, aes, facet_grid, geom_point, ggsave
 
+
+# readnum = int(sys.argv[1])
+# difffiles = sys.argv[2:]
+
+
+readnum = 1000
+difffiles = ["bench/single/rearr.diff", "bench/single/CRISPResso.diff", "bench/single/CrisprVariants.diff", "bench/single/amplican.diff", "bench/single/ampliconDIVider.diff", "bench/single/CRISPR-GRANT.diff", "bench/single/ZhangFeng.diff", "bench/single/SelfTarget.diff"]
+
+workdir = os.path.dirname(difffiles[0])
 pandict = {}
 pandict["index"] = numpy.repeat([i+1 for i in range(readnum)] * len(difffiles), 4).tolist()
-pandict["program"] = numpy.repeat([os.path.basename(os.path.splitext(difffile)[0]) for difffile in difffiles], 4 * readnum).tolist()
+programs = [os.path.basename(os.path.splitext(difffile)[0]) for difffile in difffiles]
+pandict["program"] = numpy.repeat(programs, 4 * readnum).tolist()
 pandict["end"] = ["us2", "ds1", "uw2", "dw1"] * readnum * len(difffiles)
 pandict["diff"] = []
 for i in range(len(difffiles)):
@@ -20,6 +29,13 @@ for i in range(len(difffiles)):
     pandict["diff"].extend(diffs)
 
 diffdata = pandas.DataFrame(pandict)
+
+ggfig = ggplot(diffdata, aes("index", "diff")) + geom_point() + facet_grid("end ~ program", True)
+ggsave(ggfig, os.path.join(workdir, 'diff_scatter_grid.png'))
+
+FG = seaborn.FacetGrid(diffdata, row="end", col="program", row_order=["us2", "ds1", "uw2", "dw1"], col_order=programs, legend_out=True, despine=False)
+FG.map(seaborn.scatterplot, "index", "diff")
+FG.savefig(os.path.join(workdir, 'diff_scatter_grid.png'))
 
 f, ax = matplotlib.pyplot.subplots()
 seaborn.scatterplot(data = diffdata, x = "index", y = "diff", hue = "program", style = "program", alpha = 0.5, ax = ax)
