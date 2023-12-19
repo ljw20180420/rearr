@@ -2,8 +2,7 @@
 
 import sys, pandas, matplotlib.pyplot, seaborn, numpy, os
 import plotnine
-from plotnine import ggplot, aes, facet_grid, geom_point, ggsave
-
+from plotnine import ggplot, aes, facet_grid, facet_wrap, geom_point, geom_smooth, geom_violin, ggsave
 
 # readnum = int(sys.argv[1])
 # difffiles = sys.argv[2:]
@@ -30,20 +29,8 @@ for i in range(len(difffiles)):
 
 diffdata = pandas.DataFrame(pandict)
 
-ggfig = ggplot(diffdata, aes("index", "diff")) + geom_point() + facet_grid("end ~ program", True)
-ggsave(ggfig, os.path.join(workdir, 'diff_scatter_grid.png'))
+ggfig = ggplot(diffdata, aes("index", "diff")) + geom_point(alpha=0.2, color="blue") + geom_smooth() + facet_grid("end ~ program", margins=True, shrink=False)
+ggsave(ggfig, os.path.join(workdir, 'diff_scatter.png'), width = 16, height = 12)
 
-FG = seaborn.FacetGrid(diffdata, row="end", col="program", row_order=["us2", "ds1", "uw2", "dw1"], col_order=programs, legend_out=True, despine=False)
-FG.map(seaborn.scatterplot, "index", "diff")
-FG.savefig(os.path.join(workdir, 'diff_scatter_grid.png'))
-
-f, ax = matplotlib.pyplot.subplots()
-seaborn.scatterplot(data = diffdata, x = "index", y = "diff", hue = "program", style = "program", alpha = 0.5, ax = ax)
-f.tight_layout()
-f.savefig(os.path.join(workdir, 'diff_scatter.png'))
-
-f, ax = matplotlib.pyplot.subplots()
-seaborn.violinplot(data = diffdata, x = "program", y = "diff", ax = ax)
-ax.tick_params(axis='x', rotation=10)
-f.tight_layout()
-f.savefig(os.path.join(workdir, 'diff_violinplot.png'))
+ggfig = ggplot(diffdata, aes("program", "diff")) + geom_violin() + facet_grid(". ~ end", margins=True, shrink=False)
+ggsave(ggfig, os.path.join(workdir, 'diff_violinplot.png'), width = 24, height = 6)
