@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import numpy, sys, time
+import numpy, sys
 
 def generate_random_DNA(length):
     # usage: generate_random_DNA of length
