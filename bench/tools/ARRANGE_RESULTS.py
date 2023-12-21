@@ -43,33 +43,35 @@ if __name__ == "__main__":
             sys.stdout.write("\n")
 
     if program.lower() == "crisprvariants":
-        for line in sys.stdin:
+        gquery = ""
+        for i, line in enumerate(sys.stdin):
             query, flag, _, pos, _, cigar, _ = line.split('\t', 6)
             if (int(flag) / 4) % 2 or (int(flag) / 16) % 2:
                 continue
+            if query != gquery:
+                fc = "" if i == 0 else "\n"
+                sys.stdout.write(f"{fc}{query}")
+                gquery = query
             refcoor, seqcoor = cigar2coor(cigar)
             indels = coor2indel(refcoor, seqcoor, cut - int(pos))
-            sys.stdout.write(f"{query}")
             for indel in indels:
                 sys.stdout.write(f"\t{indel[0] + int(pos)}\t{indel[1] + int(pos)}\t{indel[2]}\t{indel[3]}")
-            sys.stdout.write("\n")
 
     if program.lower() == "amplican":
         amplicon_start = int(sys.argv[3])
         primer_len = int(sys.argv[4])
-        for header, align_ref, align_seq, _ in more_itertools.batched(sys.stdin, 4):
-            id = int(re.search("read_id:\s+(\d+)", header).group(1))
+        for _, align_ref, align_seq, _ in more_itertools.batched(sys.stdin, 4):
             refcoor, seqcoor = Bio.Align.Alignment.infer_coordinates([align_ref, align_seq])
             indels = coor2indel(refcoor, seqcoor, cut - amplicon_start)
-            sys.stdout.write(f"@seq{id}")
-            for indel in indels:
-                sys.stdout.write(f"\t{amplicon_start + indel[0]}\t{amplicon_start + indel[1]}\t{indel[2] - primer_len}\t{indel[3] - primer_len}")
-            sys.stdout.write("\n")
+            for i in range(len(indels)):
+                lc = "\t" if i < len(indels) - 1 else "\n"
+                indel = indels[i]
+                sys.stdout.write(f"{amplicon_start + indel[0]}\t{amplicon_start + indel[1]}\t{indel[2] - primer_len}\t{indel[3] - primer_len}{lc}")
 
     if program.lower() == "amplicondivider":
         for line, _ in more_itertools.batched(sys.stdin, 2):
             query, _, ref, pos, _, cigar, _ = line.split('\t', 6)
-            if ref == "*":
+            if cigar == "*":
                 continue
             refcoor, seqcoor = cigar2coor(cigar)
             indels = coor2indel(refcoor, seqcoor, cut - int(pos))
