@@ -20,12 +20,12 @@ def indel_dis(indel1, indel2, ref1, ref2):
     range1, range2 = get_range(indel1, ref1, ref2), get_range(indel2, ref1, ref2)
     return NDsegment_distance(indel1, indel2, range1, range2)
 
-_, ref1, ref2, randomseq = sys.argv
+_, ref1, ref2, randomseq, mode, reflen, probability, readnum, program = sys.argv
 
 with open(randomseq, "r") as rd:
-    mode, reflen, probability, readnum, program, usertime, systime, realtime, memory = [None] * 9
+    usertime, systime, realtime, memory = ["*"] * 4
     for line in sys.stdin:
-        mode, reflen, probability, readnum, program, usertime, systime, realtime, memory, name, c2 = line.rstrip().split("\t", 10)
+        _, _, _, _, _, usertime, systime, realtime, memory, name, c2 = line.rstrip().split("\t", 10)
         for randline in rd:
             query, refl1, refr1, queryl1, queryr1 = randline.rstrip().split("\t")
             if query == name:
