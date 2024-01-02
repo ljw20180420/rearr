@@ -25,3 +25,5 @@ rearr_index_barcode.sh "bowtie2_index" "genome_fasta": this step is necessary fo
 rearr_barcode_post_process.sh <fastq.table
 # To hist a certain column
 rearr_barcode_post_process.sh <fastq.table column
+# Count percentage of -4
+trouble_shooting.r path_to_fastq
