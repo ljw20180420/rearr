@@ -41,19 +41,41 @@ idtable <- read_tsv(sprintf("%s.table", fqfile))
 # all insertions
 idtable |>
   left_join(barcode_sgRNA, by = "barcode") |>
-  mutate(minus4 = factor(substring(sgRNA, 17, 17), levels = c("A", "T", "C", "G"))) |>
-  mutate(ins = factor(ref_end1 > cut1 | !is.na(random_insertion) | ref_start2 < cut2, levels = c(FALSE, TRUE), labels = c("not insertion", "insertion"))) |>
-  ggplot(aes(minus4, fill = ins, weight = count)) +
+  mutate(m6 = factor(substring(sgRNA, 15, 15), levels = c("A", "T", "C", "G"))) |>
+  mutate(m5 = factor(substring(sgRNA, 16, 16), levels = c("A", "T", "C", "G"))) |>
+  mutate(m4 = factor(substring(sgRNA, 17, 17), levels = c("A", "T", "C", "G"))) |>
+  mutate(m3 = factor(substring(sgRNA, 18, 18), levels = c("A", "T", "C", "G"))) |>
+  mutate(m2 = factor(substring(sgRNA, 19, 19), levels = c("A", "T", "C", "G"))) |>
+  mutate(m1 = factor(substring(sgRNA, 20, 20), levels = c("A", "T", "C", "G"))) |>
+  mutate(insertion = factor(ref_end1 > cut1 | !is.na(random_insertion) | ref_start2 < cut2, levels = c(FALSE, TRUE), labels = c("not_insertion", "insertion"))) |>
+  mutate(templated = factor(ref_end1 > cut1 | ref_start2 < cut2, levels = c(FALSE, TRUE), labels = c("not_templated", "templated"))) |>
+  pivot_longer(cols = c(m1, m2, m3, m4, m5, m6), names_to = "pos", values_to = "base") ->
+  long_idtable
+
+## insertion
+# write tsv
+long_idtable |>
+  summarise(count = n(), .by = c(pos, base, insertion)) |>
+  arrange(pos, base, insertion) |>
+  write_tsv(sprintf("%s.insertion.tsv", fqfile))
+# draw figure
+long_idtable |>
+  ggplot(aes(base, fill = insertion, weight = count)) +
+  facet_wrap(~ pos) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = scales::percent) -> ggfig
 ggsave(sprintf("%s.insertion.png", basename(fqfile)), path = dirname(fqfile), width = 22, height = 12)
 
-# templated insertions
-idtable |>
-  left_join(barcode_sgRNA, by = "barcode") |>
-  mutate(minus4 = factor(substring(sgRNA, 17, 17), levels = c("A", "T", "C", "G"))) |>
-  mutate(ins = factor(ref_end1 > cut1 | ref_start2 < cut2, levels = c(FALSE, TRUE), labels = c("not insertion", "insertion"))) |>
-  ggplot(aes(minus4, fill = ins, weight = count)) +
+## templated
+# write tsv
+long_idtable |>
+  summarise(count = n(), .by = c(pos, base, templated)) |>
+  arrange(pos, base, templated) |>
+  write_tsv(sprintf("%s.templated.tsv", fqfile))
+# draw figure
+long_idtable |>
+  ggplot(aes(base, fill = templated, weight = count)) +
+  facet_wrap(~ pos) +
   geom_bar(position = "fill") +
   scale_y_continuous(labels = scales::percent) -> ggfig
-ggsave(sprintf("%s.templated_insertion.png", basename(fqfile)), path = dirname(fqfile), width = 22, height = 12)
+ggsave(sprintf("%s.templated.png", basename(fqfile)), path = dirname(fqfile), width = 22, height = 12)
