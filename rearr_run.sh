@@ -12,7 +12,7 @@ get_indel()
     # infer random insertion and left/right template indel
     cat >get_indel_tmp
     count=$(awk '{count += $2} END{print count}' <get_indel_tmp)
-    awk -F "\t" -v OFS="\t" -v count=$count '
+    awk -F "\t" -v OFS="\t" -v count="$count" '
         BEGIN{print "index", "count", "score", "updangle", "ref_start1", "query_start1", "ref_end1", "query_end1", "random_insertion", "ref_start2","query_start2", "ref_end2", "query_end2", "downdangle", "cut1", "cut2", "percent", "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"}
         {
             printf("%s\t%.2f\t", $0, $2/count*100)

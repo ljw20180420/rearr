@@ -1,30 +1,27 @@
 # Usage
-printf "%s\t%s\n" \
-"path_to_fastq1" "path_to_barcode_csv1" \
-"path_to_fastq2" "path_to_barcode_csv2" \
+printf "%s\n" \
+"path_to_fastq1" \
+"path_to_fastq2" \
 ...
-"path_to_fastqN" "path_to_barcode_csvN" \
+"path_to_fastqN"
 | rearr_barcode_run.sh "bowtie2_index" "genome_fasta"
 
 # Example
-printf "%s\t%s\n" \
-"barcode/test1/A2_TEST.fq" "barcode/final_hgsgrna_libb_all_0811-NGG.csv" \
-"barcode/test2/A2_TEST.fq" "barcode/final_hgsgrna_libb_all_0811-NGG.csv" \
+printf "%s\n" \
+"barcode/test1/D2-g1n-1.fq" \
 | rearr_barcode_run.sh "/home/ljw/hg19_with_bowtie2_index/hg19" "/home/ljw/hg19_with_bowtie2_index/hg19.fa"
 
 # Output
 # fastq.count: the count of duplicates in the input file
-# fastq.barcode_csv.barcode: non-duplicate reads with barcode
-# fastq.barcode_csv.not_find: non-duplicate reads cannot find barcode
-# fastq.barcode_csv.too_short: non-duplicate reads which is too short after cutadapt
-# fastq.barcode_csv.barcode.alg: alignments of non-duplicate reads with barcode
-# fastq.barcode_csv.barcode.table: informative table of alignments of non-duplicate reads with barcode
+# fastq.not_find: non-duplicate reads cannot find barcode
+# fastq.alg: alignments of non-duplicate reads with barcode
+# fastq.table: informative table of alignments of non-duplicate reads with barcode
 
 # Index barcode
-rearr_index_barcode.sh "path_to_barcode_csv": this step is necessary for using bowtie2 local mode to demultiplex reads by barcodes
+rearr_index_barcode.sh "bowtie2_index" "genome_fasta": this step is necessary for using bowtie2 local mode to demultiplex reads by barcodes
 
 # Tools
 # Get a long table of indel
-rearr_barcode_post_process.sh <fastq.barcode_csv.barcode.table
+rearr_barcode_post_process.sh <fastq.table
 # To hist a certain column
-rearr_barcode_post_process.sh <fastq.barcode_csv.barcode.table column
+rearr_barcode_post_process.sh <fastq.table column
