@@ -5,6 +5,9 @@ cd "$(dirname "$0")" || exit
 # install python packages
 pip install -r requirements.txt
 
+# install R packages
+install_R_packages.r
+
 # compile kpLogo for sgRNA analysis
 make -C barcode/kpLogo/src
 

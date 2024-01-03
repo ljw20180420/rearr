@@ -27,3 +27,5 @@ rearr_barcode_post_process.sh <fastq.table
 rearr_barcode_post_process.sh <fastq.table column
 # Count percentage of -4
 trouble_shooting.r path_to_fastq
+# call kpLogo
+run_kpLogo.sh path_to_fastq
