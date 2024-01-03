@@ -2,21 +2,37 @@
 get_indel()
 {
     awk -F "\t" -v OFS="\t" '
-        NR==1{print $0, "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"}
+        NR==1{
+                print $0, "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"
+        }
         NR>1{
-            ldel = ($16 > $8 ? $16 - $8 : 0);
-            rdel = ($11 > $17 ? $11 - $17 : 0);
-            del = ldel + rdel;
-            tlins = ($8 > $16 ? $8 - $16 : 0);
-            trins = ($17 > $11 ? $17 - $11 : 0);
-            rins = length($10);
-            ins = tlins + trins + rins
-            printf("%s\t%d\t%d\t%d\t%d\t%d\t", $0, ldel, rdel, tlins, trins, rins)
-            if (del > 0 && ins > 0) print "indel";
-            else if (del > 0 && ins == 0) print "del";
-            else if (del == 0 && ins > 0) print "ins";
-            else print "WT";
-        }'
+            ref_end1 = $8
+            random_insertion = $10
+            ref_start2 = $11
+            cut1 = $16
+            cut2 = $17
+
+            left_del = (cut1 > ref_end1 ? cut1 - ref_end1 : 0)
+            right_del = (ref_start2 > cut2 ? ref_start2 - cut2 : 0)
+            del = left_del + right_del
+
+            temp_left_ins = (ref_end1 > cut1 ? ref_end1 - cut1 : 0)
+            temp_right_ins = (cut2 > ref_start2 ? cut2 - ref_start2 : 0)
+            random_ins = length(random_insertion)
+            ins = temp_left_ins + temp_right_ins + random_ins
+
+            if (del > 0 && ins > 0) 
+                indel_type = "indel"
+            else if (del > 0 && ins == 0)
+                indel_type = "del"
+            else if (del == 0 && ins > 0)
+                indel_type = "ins"
+            else
+                indel_type = "WT"
+
+            print $0, left_del, right_del, temp_left_ins, temp_right_ins, random_ins, indel_type
+        }
+    '
 }
 
 get_table()

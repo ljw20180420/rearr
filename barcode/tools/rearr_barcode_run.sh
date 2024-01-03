@@ -92,7 +92,7 @@ ext2up=10
 
 while read fq1
 do
-    csvfile=$(infer_csvfile "$fq1")
+    csvfile=$(infer_csvfile.sh "$fq1")
     find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" | rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up" &
 done
 
