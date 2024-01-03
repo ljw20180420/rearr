@@ -1,4 +1,2 @@
-more-itertools
 biopython
 numpy
-plotnine
