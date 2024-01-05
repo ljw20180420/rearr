@@ -6,17 +6,16 @@ cd sx_lcy
 ./install.sh
 
 Usage
-rearr_run.sh input ref1 ref2 sgRNA1 sgRNA2
-
-Example
-rearr_run.sh ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "CTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGCTGTTGCTGTTGCTGGTGCTGATGGTGATGTGTTGAGACTGGTGGGTGGGCGGTGGACTGGGCCCCAGTAGAGGGAGGGAAGGGGCCTGGATGGGCATTGCTGTT" "GGTGATGTGTTGAGACTGGT"
+usage: rearr_run.sh input ref1 ref2 cut1 cut2 NGGCCNtype1 NGGCCNtype2
 
 Parameters
 input: plain/compressed fasta/fastq
 ref1: reference string of locus 1
 ref2: reference string of locus 2 (for single cut, ref2 = ref1)
-sgRNA1: sgRNA for ref1
-sgRNA2: sgRNA for ref2 (for single cut, sgRNA2 = sgRNA1)
+cut1: cut point for ref1
+cut2: cut point for ref2
+NGGCCNtype1: ref1 is on the NGG strand or the CCN strand
+NGGCCNtype2: ref2 is on the NGG strand or the CCN strand
 
 Output
 input.count: the count of duplicates in the input file

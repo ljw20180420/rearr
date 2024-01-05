@@ -73,7 +73,7 @@ sed "s/^/$mode\t$reflen\t$probability\t$readnum\tsimulate\t*\t*\t*\t*\t/" $path/
 echo "rearr"
 rm -rf $path/rearr; mkdir -p $path/rearr
 cp $path/random.fq $path/rearr/random.fq
-get_time_memory "rearr_run.sh $path/rearr/random.fq $ref1 $ref2 $sgRNA1 $sgRNA2"
+get_time_memory "rearr_run.sh $path/rearr/random.fq $ref1 $ref2 $cut1 $cut2 NGG NGG"
 tail -n+2 $path/rearr/random.fq.table.$cut1.$cut2.${#ref1} | awk -F "\t" -v OFS="\t" -v mid=$((${#ref1} - $cut1 + $cut2)) '{$10 -= mid; print $7,$10,$8, $11}' | paste <(cut -f1 $path/rearr/random.fq.count) - | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4{s/^@//; N; s/\n/\t/; p}' $path/rearr/random.fq | sort -k2,2) - | cut -f2- | sort -k1,1V | format_output rearr >&3
 
 echo "RESSO"
