@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, re, more_itertools, subprocess
+import sys, re, more_itertools
 def correct_micro(cut1, cut2, NGGCCNtype1, NGGCCNtype2, fd):
     # modify the alignment within micro homology such that the upstream end is blunt for NGG and downstream end is blunt for CCN if possible
     relow = re.compile("[acgtn]")
