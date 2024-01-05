@@ -15,17 +15,19 @@ brdf <-
 brdf |>
   distinct(mode, reflen, probability, readnum, software, usertime, systime, realtime, memory) |>
   filter(software != "simulate") |>
-  pivot_longer(cols = c(usertime, systime, realtime, memory), names_to = "performance", values_to = "cost") |>
+  # pivot_longer(cols = c(usertime, systime, realtime, memory), names_to = "performance", values_to = "cost") |>
+  pivot_longer(cols = c(realtime, memory), names_to = "performance", values_to = "cost") |>
   mutate(reflen = factor(reflen)) |>
-  mutate(software = factor(software, levels = softwares)) |>
+  mutate(software = factor(software, levels = softwares, labels = c("Our algorithm", "CRISPResso2", "ampliCan", "CrispRVariants", "AmpliconDIVider", "CRISPR-GRANT", "calculate_indel", "SelfTarget"))) |>
   mutate(mode = factor(mode, levels = c("single", "double"))) |>
   mutate(probability = factor(probability)) |>
-  mutate(performance = factor(performance, levels = c("usertime", "systime", "realtime", "memory"))) |>
+  mutate(performance = factor(performance, levels = c("realtime", "memory"), labels = c("time (s)", "space (KB)"))) |>
   ggplot(aes(reflen, cost, color = software, shape = software)) +
   geom_point(size = 3) +
   facet_grid(performance ~ mode + probability, scales = "free_y") +
   scale_color_manual(values = rep(c("black", "red", "blue", "purple"), times = 2)) +
   scale_shape_manual(values = rep(c(1, 2, 3, 4), each = 2)) +
+  scale_x_discrete(name = "reference length (bp)") +
   scale_y_log10() +
   mytheme -> ggfig
 ggsave("performance.png", path = "bench", width = 22, height = 12)
@@ -38,13 +40,14 @@ brdf |>
   filter(!is.na(refup) & !is.na(refdown) & !is.na(queryup) & !is.na(querydown) & software != "simulate") |>
   summarise(count = n(), .by = c(mode, reflen, probability, software)) |>
   mutate(reflen = factor(reflen)) |>
-  mutate(software = factor(software, levels = softwares)) |>
+  mutate(software = factor(software, levels = softwares, labels = c("Our algorithm", "CRISPResso2", "ampliCan", "CrispRVariants", "AmpliconDIVider", "CRISPR-GRANT", "calculate_indel", "SelfTarget"))) |>
   mutate(mode = factor(mode, levels = c("single", "double"))) |>
   mutate(probability = factor(probability)) |>
   ggplot(aes(reflen, software, size = count, color = software)) +
   geom_point() +
   facet_grid(mode ~ probability) +
   scale_size_area(limits = c(0, NA)) +
+  scale_x_discrete(name = "reference length (bp)") +
   mytheme -> ggfig
 ggsave("report_rate.png", path = "bench", width = 22, height = 12)
 
@@ -98,14 +101,15 @@ for (varcomb in varcombs) {
 brdf_tidy_summary |>
   mutate(reflen = factor(reflen, levels = c("100", "200", "300", "400", "500", "all"))) |>
   mutate(probability = factor(probability, levels = c("0.01", "0.02", "0.03", "0.04", "0.05", "all"))) |>
-  mutate(software = factor(software, levels = softwares)) |>
+  mutate(software = factor(software, levels = softwares, labels = c("Our algorithm", "CRISPResso2", "ampliCan", "CrispRVariants", "AmpliconDIVider", "CRISPR-GRANT", "calculate_indel", "SelfTarget"))) |>
   mutate(mode = factor(mode, levels = c("single", "double", "all"))) |>
-  mutate(end = factor(end, levels = c("refup", "refdown", "queryup", "querydown", "all"))) |>
+  mutate(end = factor(end, levels = c("refup", "refdown", "queryup", "querydown", "all"), labels = c("end of upstream\nblock in reference", "start of downstream\nblock in reference", "end of upstream\nblock in query", "start of downstream\nblock in query", "all"))) |>
   ggplot(aes(reflen, diffmean, color = software, shape = software)) +
   geom_point(size = 3) +
   facet_grid(end ~ mode + probability) +
   scale_color_manual(values = rep(c("black", "red", "blue", "purple"), times = 2)) +
   scale_shape_manual(values = rep(c(1, 2, 3, 4), each = 2)) +
-  scale_y_log10() +
+  scale_x_discrete(name = "reference length (bp)", guide = guide_axis(angle = -50)) +
+  scale_y_log10(name = "mean error (bp)") +
   mytheme -> ggfig
 ggsave("accuracy.png", path = "bench", width = 22, height = 12)
