@@ -57,12 +57,12 @@ for label, ax in axs.items():
         riDNA = "".join(numpy.random.choice(['A', 'C', 'G', 'T'], 3))
         while riDNA[0] == DNA[28] or riDNA[-1] == DNA[31]:
             riDNA = "".join(numpy.random.choice(['A', 'C', 'G', 'T'], 3))
-        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {DNA[0:40]+" "*20} \n {" "*20+DNA[20:]} \n {" "*28+DNA[28:32]+" "*28} \n {" "*10+DNA[10:28]+riDNA+"-"+DNA[32:50]+" "*10} \n {" "*10+DNA[10:28]+" "*32} \n {" "*28+riDNA+" "*29} \n {" "*32+DNA[32:50]+" "*10} \n {" "*28+DNA[28:30]+" "*30} \n {" "*30+DNA[30:32]+" "*28} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
-        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n\n\n\n\n\n\n\n\n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
+        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {" "*28+DNA[28:32]+" "*28} \n {" "*10+DNA[10:28]+riDNA+"-"+DNA[32:50]+" "*10} \n {" "*10+DNA[10:28]+" "*32} \n {" "*28+riDNA+" "*29} \n {" "*32+DNA[32:50]+" "*10} \n {" "*28+DNA[28:30]+" "*30} \n {" "*30+DNA[30:32]+" "*28} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
+        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n\n\n\n\n\n\n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
         ax.text(-1, 1, label, va="top", ha="left", fontfamily="arial")
         ax.plot([0,0],[-1,1],c="grey",ls="--")
     elif label == "(an)":
-        ax.text(-1, 0, f''' ref \n ref1 \n ref2 \n deletion \n read \n block1 \n random insertion \n block2 \n upstream templated deletion \n downstream templated deletion ''', fontfamily="arial", va='center', ha='left', linespacing=1)
+        ax.text(-1, 0, f''' ref \n deletion \n read \n block1 \n random insertion \n block2 \n upstream deletion \n downstream deletion ''', fontfamily="arial", va='center', ha='left', linespacing=1)
     elif label == "(b)":
         DNA = numpy.random.choice(['A', 'C', 'G', 'T'], 60)
         DNA[34:36] = "G"
@@ -70,22 +70,22 @@ for label, ax in axs.items():
         riDNA = "".join(numpy.random.choice(['A', 'C', 'G', 'T'], 3))
         while riDNA[0] == DNA[29] or riDNA[-1] == DNA[25]:
             riDNA = "".join(numpy.random.choice(['A', 'C', 'G', 'T'], 3))
-        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {DNA[0:40]+" "*20} \n {" "*20+DNA[20:]} \n {" "*26+DNA[26:29]+" "*31} \n {" "*10+DNA[10:29]+" "*31} \n {" "*29+riDNA+" "*28} \n {" "*26+DNA[26:50]+" "*10} \n {" "*29+DNA[29:30]+" "*30} \n {" "*26+DNA[26:30]+" "*30} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
-        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n\n\n\n\n\n\n\n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
+        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {" "*26+DNA[26:29]+" "*31} \n {" "*10+DNA[10:29]+" "*31} \n {" "*29+riDNA+" "*28} \n {" "*26+DNA[26:50]+" "*10} \n {" "*29+DNA[29:30]+" "*30} \n {" "*26+DNA[26:30]+" "*30} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
+        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n\n\n\n\n\n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
         ax.text(-1, 1, label, va="top", ha="left", fontfamily="arial")
         ax.plot([0,0],[-1,1],c="grey",ls="--")
     elif label == "(bn)":
-        ax.text(-1, 0, f''' ref \n ref1 \n ref2 \n predictable insertion \n block1 \n random insertion \n block2 \n upstream templated deletion \n downstream templated insertion ''', fontfamily="arial", va='center', ha='left', linespacing=1)
+        ax.text(-1, 0, f''' ref \n templated insertion \n block1 \n random insertion \n block2 \n upstream deletion \n downstream templated insertion ''', fontfamily="arial", va='center', ha='left', linespacing=1)
     elif label == "(c)":
         DNA = numpy.random.choice(['A', 'C', 'G', 'T'], 60)
         DNA[34:36] = 'G'
         DNA = "".join(DNA)
-        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {DNA[0:40]+" "*20} \n {" "*20+DNA[20:]} \n {" "*10+DNA[10:23]+"-"+DNA[24:50]+" "*10} \n {" "*10+DNA[10:23]+"-"+DNA[24:30]+" "*30} \n {" "*30+DNA[30:50]+" "*10} \n {" "*10+DNA[10:23]+" "*37} \n {" "*24+DNA[24:50]+" "*10} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
-        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n\n\n\n\n\n\n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
+        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {" "*10+DNA[10:23]+"-"+DNA[24:50]+" "*10} \n {" "*10+DNA[10:23]+"-"+DNA[24:30]+" "*30} \n {" "*30+DNA[30:50]+" "*10} \n {" "*10+DNA[10:23]+" "*37} \n {" "*24+DNA[24:50]+" "*10} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
+        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n\n\n\n\n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
         ax.text(-1, 1, label, va="top", ha="left", fontfamily="arial")
         ax.plot([0,0],[-1,1],c="grey",ls="--")
     elif label == "(cn)":
-        ax.text(-1, 0, f''' ref \n ref1 \n ref2 \n read \n block1 \n block2 \n block1 (false) \n block2 (false) ''', fontfamily="arial", va='center', ha='left', linespacing=1)
+        ax.text(-1, 0, f''' ref \n read \n block1 \n block2 \n block1 (false) \n block2 (false) ''', fontfamily="arial", va='center', ha='left', linespacing=1)
     elif label == "(d)":
         DNA = numpy.random.choice(['A', 'C', 'G', 'T'], 60)
         while DNA[29] == "G" or DNA[25] == DNA[31]:
