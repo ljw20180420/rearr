@@ -54,10 +54,8 @@ else
     read cut ref sgRNA <<<$(generate_reference $reflen 20)
     ref1=$ref
     cut1=$cut
-    sgRNA1=$sgRNA
     ref2=$ref
     cut2=$cut
-    sgRNA2=$sgRNA
 fi
 >$path/bench.log
 sed '1i >ref' <<<$ref >$path/ref.fa
@@ -94,7 +92,7 @@ bench/tools/ARRANGE_RESULTS.py amplican $cut $(expr ${#ref} / 4 - 6) ${#primer} 
 
 echo "CRVS"
 mkdir -p $path/CRVS
-get_time_memory "bash -c \"bwa index -p $path/CRVS/ref $path/ref.fa; bwa mem -v 3 -T -9999 $path/CRVS/ref $path/random.fq | samtools sort -o $path/CRVS/random.bam; samtools index -b $path/CRVS/random.bam; Rscript bench/tools/variants.r $ref $path/CRVS/random.bam $(expr $cut - ${#sgRNA1} + 3) ${#sgRNA} >$path/CRVS/result\""
+get_time_memory "bash -c \"bwa index -p $path/CRVS/ref $path/ref.fa; bwa mem -v 3 -T -9999 $path/CRVS/ref $path/random.fq | samtools sort -o $path/CRVS/random.bam; samtools index -b $path/CRVS/random.bam; Rscript bench/tools/variants.r $ref $path/CRVS/random.bam $(expr $cut - ${#sgRNA} + 3) ${#sgRNA} >$path/CRVS/result\""
 cut -f1 $path/CRVS/result | sort | join -t $'\t' -1 1 -2 1 - <(samtools view $path/CRVS/random.bam | sort -k1,1) | bench/tools/ARRANGE_RESULTS.py CrisprVariants $cut | sort -k1,1V | format_output CRVS >&3
 
 echo "ADIV"
