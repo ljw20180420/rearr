@@ -11,7 +11,7 @@ for bcdline in sys.stdin:
     if barcodegroup != barcode:
         if barcodegroup:
             cf.close()
-            _ = subprocess.run(f'''rearrangement <{fq1}.countfile 3<{fq1}.reference -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.py {ext1up} NGG {ext2up} NGG {len(ref1)} | tee -a {fq1}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={ext1up} -v cut2={len(ref1)+ext2up} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {fq1}.table; echo >> {fq1}.alg''', shell=True, check=True)
+            _ = subprocess.run(f'''rearrangement <{fq1}.countfile 3<{fq1}.reference -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.AWK -- {ext1up} NGG {ext2up} NGG {len(ref1)} | tee -a {fq1}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={ext1up} -v cut2={len(ref1)+ext2up} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {fq1}.table; echo >> {fq1}.alg''', shell=True, check=True)
         barcodegroup = barcode
         with open(f"{fq1}.reference", "w") as rd:
             _ = rd.write(f"0\n{ref1}\n{ext1up}\n{ext2up}\n{ref2}\n{len(ref2)}\n")
@@ -20,6 +20,6 @@ for bcdline in sys.stdin:
     _ = cf.write(f"{naseq[barcode_end + 3:]}\t{count}\n")
         
 cf.close()
-_ = subprocess.run(f'''rearrangement <{fq1}.countfile 3<{fq1}.reference -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.py {ext1up} NGG {ext2up} NGG {len(ref1)} | tee -a {fq1}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={ext1up} -v cut2={len(ref1)+ext2up} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {fq1}.table; echo >> {fq1}.alg''', shell=True, check=True)
+_ = subprocess.run(f'''rearrangement <{fq1}.countfile 3<{fq1}.reference -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.AWK -- {ext1up} NGG {ext2up} NGG {len(ref1)} | tee -a {fq1}.alg | awk -v OFS="\t" -v barcode={barcodegroup} -v cut1={ext1up} -v cut2={len(ref1)+ext2up} 'NR%3==1{{print barcode, $0, cut1, cut2}}' >> {fq1}.table; echo >> {fq1}.alg''', shell=True, check=True)
 os.remove(f"{fq1}.countfile")
 os.remove(f"{fq1}.reference")
