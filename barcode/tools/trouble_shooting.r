@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
 library(tidyverse)
+library(ggseqlogo)
 
 # wt1 <- read_tsv("barcode/sxanalysis/D2-wt1-g1n-1.csv.wfilter", col_names = c("sgRNA", "del", "indel", "ins", "1bp", "<2bp", "<3bp", "<4bp", "<5bp", "<6bp", "<7bp", "<8bp", "<9bp", "<10bp")) |>
 #   mutate(sample = "wt1")
@@ -79,3 +80,6 @@ long_idtable |>
   geom_bar(position = "fill") +
   scale_y_continuous(labels = scales::percent) -> ggfig
 ggsave(sprintf("%s.templated.png", basename(fqfile)), path = dirname(fqfile), width = 22, height = 12)
+
+ggplot +
+  geom_logo()

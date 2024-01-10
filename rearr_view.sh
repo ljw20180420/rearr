@@ -1,6 +1,5 @@
 #!/bin/bash
 # usage: view.sh algfile [readnum]
-# example: view.sh ljhlyz/AN1-SG4-M1B-1-1_R1.fq.gz.alg.75.30.30 50
 
 # display the first readnum (default: 50) read's alignments in ANSI format, the cut points and random insertions are aligned
 
