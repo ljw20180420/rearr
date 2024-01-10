@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# usage
+# rearr_index_barcode.sh "bowtie2_index" "genome_fasta"
+
 get_reference()
 {
     local csvfile=$1
