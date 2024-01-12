@@ -21,7 +21,9 @@ infer_csvfile()
 
 find_barcode()
 {
-    local minscore=30
+    local minscoreR2=30
+    # local minscoreR1=30
+    local minscoreR1=100
     local fq1=$1
     local csvfile=$2
     local bowtie2genome=$3
@@ -30,9 +32,11 @@ find_barcode()
 
     sed -n '2~4p' "$fq2" | paste - <(sed -n '2~4p' "$fq1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fq1.count"
     
-    
+    # cut -f2 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR1 -r -x "barcode/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.sgRNA+scaffold" -U - 2>/dev/null | samtools view | less -SN
 
-    cut -f1 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscore -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $(which python) -c '
+    # cut -f1 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x barcode/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.primer+barcode -U - 2>/dev/null | samtools view | less -SN
+
+    cut -f1 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $(which python) -c '
 import sys, pysam
 for line in sys.stdin:
     flag, barcode, CIGAR = line.split("\t")
@@ -55,9 +59,9 @@ for line in sys.stdin:
         {
             print $1, $2, $3, bn2bc[$2], bn2r12[$2]
         }
-    ' | paste "$fq1.count" <(cut -f1 "$fq1.count" | sed '=' | sed '1~2s/^/>s/' | cutadapt -a GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC - 2> /dev/null | sed '1~2d') - <(cut -f2 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscore -r -x "$csvfile.sgRNA+scaffold" -U - 2>/dev/null | samtools view | cut -f2,3) | awk -F "\t" -v OFS="\t" -v minscore=$minscore -v fq1="$fq1" '
+    ' | paste "$fq1.count" <(cut -f1 "$fq1.count" | sed '=' | sed '1~2s/^/>s/' | cutadapt -a GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC - 2> /dev/null | sed '1~2d') - <(cut -f2 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR1 -r -x "$csvfile.sgRNA+scaffold" -U - 2>/dev/null | samtools view | cut -f2,3) | awk -F "\t" -v OFS="\t" -v minscoreR2=$minscoreR2 -v fq1="$fq1" '
     {
-        if (($5/4)%2 == 1 || ($11/4)%2 == 1 || $6 != $12 || $7 + minscore > length($4))
+        if (($5/4)%2 == 1 || ($11/4)%2 == 1 || $6 != $12 || $7 + minscoreR2 > length($4))
             print $0 > fq1".not_find";
         else
             print $1, $3, $4, $7, $8, $9, $10;
@@ -93,7 +97,7 @@ ext2up=10
 while read fq1
 do
     csvfile=$(infer_csvfile.sh "$fq1")
-    find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" | rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up" &
+    (find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" >"$fq1.barcode"; rearr_barcode_align.py <"$fq1.barcode" "$fq1" "$ext1up" "$ext2up" &)
 done
 
 jobs

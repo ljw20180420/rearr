@@ -6,7 +6,7 @@ loadfonts(device = "all")
 mytheme <- theme_bw() + theme(text = element_text(family = "Arial", colour = "black", size = 15))
 softwares <- c("rearr", "RESSO", "AMP", "CRVS", "ADIV", "CRGR", "ZhangFeng", "SelfTarget")
 brdf <-
-  read_delim("bench/benchresult", col_types = "cidicdddiciiii", na = "*")  
+  read_tsv("bench/benchresult", col_types = "cidicdddiciiii", na = "*")  
 
 #############################################
 # memory and speed
