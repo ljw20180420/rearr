@@ -1,6 +1,8 @@
 # browser()
 
 library(tidyverse)
+library(ggseqlogo)
+library(patchwork)
 
 # args <- commandArgs(trailingOnly = TRUE)
 filename <- "bench/runs/double.200.0.03/rearr/random.fq.alg.100.100.200"
@@ -12,22 +14,22 @@ lineNum <- strtoi(system(sprintf("wc -l <%s", filename), intern = TRUE))
 fd <- file(description = filename, open = "r")
 counts <- reflines <- querylines <- rep(NA, lineNum / 3)
 lposes <- rposes <- vector(mode = "list", length = lineNum / 3)
-for (i in seq(lineNum / 3)){
-    lines <- readLines(con = fd, n = 3)
-    counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
-    reflines[i] <- lines[2] |> toupper()
-    querylines[i] <- lines[3]
-    rposes[[i]] <- cumsum(!(strsplit(reflines[i], "")[[1]] %in% c(" ", "-")))
-    lposes[[i]] <- c(0, rposes[[i]][1:(length(rposes[[i]]) - 1)])
+for (i in seq(lineNum / 3)) {
+  lines <- readLines(con = fd, n = 3)
+  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
+  reflines[i] <- lines[2] |> toupper()
+  querylines[i] <- lines[3]
+  rposes[[i]] <- cumsum(!(strsplit(reflines[i], "")[[1]] %in% c(" ", "-")))
+  lposes[[i]] <- c(0, rposes[[i]][1:(length(rposes[[i]]) - 1)])
 }
 close(fd)
 base_pos_df <- tibble(
-    refbase = unlist(strsplit(reflines, NULL)),
-    querybase = unlist(strsplit(querylines, NULL)),
-    lpos = unlist(lposes),
-    rpos = unlist(rposes),
-    count = rep(counts, times = sapply(querylines, nchar, USE.NAMES = FALSE))
-    )
+  refbase = unlist(strsplit(reflines, NULL)),
+  querybase = unlist(strsplit(querylines, NULL)),
+  lpos = unlist(lposes),
+  rpos = unlist(rposes),
+  count = rep(counts, times = sapply(querylines, nchar, USE.NAMES = FALSE))
+)
 ref1 <- gsub("[- ]", "", reflines[1])
 ref2 <- ref1 |> substr(ref1len + 1, nchar(ref1))
 ref1 <- ref1 |> substr(1, ref1len)
@@ -142,3 +144,22 @@ indel_tsv |>
   ggfig
 ggsave("unmapped.length.pdf", plot = ggfig, path = "figures")
 
+fd <- file(description = filename, open = "r")
+counts <- queryinref <- rep(NA, lineNum / 3)
+for (i in seq(lineNum / 3)) {
+  lines <- readLines(con = fd, n = 3)
+  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
+  queryinref[i] <- str_split(lines[3], "")[[1]][!(str_split(toupper(lines[2]), "")[[1]] %in% c("-", " "))] |> paste(collapse = "")
+  queryinref[i] <- gsub("-", "D", queryinref[i], fixed = TRUE)
+}
+close(fd)
+queryinref <- tibble(sequence = rep(queryinref, time = counts))
+ggfig1 <- ggseqlogo(queryinref, method = "bits", namespace = "ACGTD")
+ggfig2 <- ggseqlogo(queryinref, method = "prob", namespace = "ACGTD")
+ggfig1 / ggfig2
+gridExtra::grid.arrange(p1, p2)
+ggplot() +
+  geom_logo(, method = "bits") +
+  theme_logo() ->
+  ggfig
+ggsave("seqlog.bits.pdf", plot = ggfig, path = "figures")
