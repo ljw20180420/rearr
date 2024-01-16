@@ -1,6 +1,6 @@
 #!/bin/bash
 
-chip=$(cut -d'-' -f2 <<<$1 | head -c2)
+chip=$(awk -F "-" '{print $(NF - 1)}' <<<$1 | head -c2)
 case ${chip^^} in
     G?)
         echo "barcode/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_${chip^^}.csv"
