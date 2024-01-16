@@ -2,15 +2,22 @@
 
 library(tidyverse)
 library(ggseqlogo)
+library(ggforce)
+library(waffle)
 library(patchwork)
 
 # args <- commandArgs(trailingOnly = TRUE)
 filename <- "bench/runs/double.200.0.03/rearr/random.fq.alg.100.100.200"
+tablefile <- sub(".alg.", ".table.", filename)
 fields <- strsplit(filename, ".", fixed = TRUE)[[1]]
 ref1len <- strtoi(last(fields))
 cut1 <- strtoi(fields[length(fields) - 2])
 cut2 <- strtoi(fields[length(fields) - 1])
 lineNum <- strtoi(system(sprintf("wc -l <%s", filename), intern = TRUE))
+
+######################################
+# barplot of positional indel
+######################################
 fd <- file(description = filename, open = "r")
 counts <- reflines <- querylines <- rep(NA, lineNum / 3)
 lposes <- rposes <- vector(mode = "list", length = lineNum / 3)
@@ -49,7 +56,7 @@ base_pos_df |>
   scale_fill_discrete(name = NULL, limits = c("del", "SNP", "match"), labels = c("deletion", "SNP", "match")) +
   scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
-ggsave("indel.pos.ref1.pdf", plot = ggfig, path = "figures")
+ggsave("indel.pos.ref1.png", plot = ggfig, path = "figures")
 
 base_pos_df |>
   mutate(rel2pos = (lpos + rpos) / 2 - nchar(ref1) - cut2) |>
@@ -61,16 +68,22 @@ base_pos_df |>
   scale_fill_discrete(name = NULL, limits = c("del", "SNP", "match"), labels = c("deletion", "SNP", "match")) +
   scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
-ggsave("indel.pos.ref2.pdf", plot = ggfig, path = "figures")
+ggsave("indel.pos.ref2.png", plot = ggfig, path = "figures")
 
+##################################
+# base count of dangle
+##################################
 base_pos_df |>
   ggplot(aes(part, weight = count)) +
   geom_bar() +
   scale_x_discrete(limits = c("updangle", "randomins", "downdangle")) +
   scale_y_log10() ->
   ggfig
-ggsave("indel.pos.dangle.pdf", plot = ggfig, path = "figures")
+ggsave("indel.pos.dangle.png", plot = ggfig, path = "figures")
 
+##################################
+# base substitution
+##################################
 base_pos_df |>
   mutate(trans = factor(sprintf("%s>%s", refbase, querybase),
     levels = c("A>A", "C>C", "G>G", "T>T",
@@ -82,8 +95,11 @@ base_pos_df |>
   geom_bar() +
   scale_y_log10() ->
   ggfig
-ggsave("indel.pos.trans.pdf", plot = ggfig, path = "figures")
+ggsave("indel.pos.trans.png", plot = ggfig, path = "figures")
 
+##################################################
+# show micro-homology
+##################################################
 ref1vec <- strsplit({{ref1}}, "")[[1]]
 ref2vec <- strsplit({{ref2}}, "")[[1]]
 microhomo <- matrix(as.integer(rep(ref1vec, time = length(ref2vec)) == rep(ref2vec, each = length(ref1vec))), nrow = length(ref1vec))
@@ -104,22 +120,33 @@ tibble(pos1 = pos12[, 1], pos2 = pos12[, 2]) |>
   ggplot(aes(pos1, pos2)) +
   geom_point() ->
   ggfig
-ggsave("ref1.ref2.micro.homo.pdf", plot = ggfig, path = "figures")
+ggsave("ref1.ref2.micro.homo.png", plot = ggfig, path = "figures")
 
-
-tablefile <- sub(".alg.", ".table.", filename)
+#########################################
+# indel type (ex) count
+#########################################
 indel_tsv <- read_tsv(tablefile, col_types = "iiiciiiiciiiiciid", na = "NA")
 indel_tsv |>
-  mutate(insertion = (ref_end1 > cut1 | ref_start2 < cut2 | nchar(random_insertion) > 0)) |>
+  mutate(templated = (ref_end1 > cut1 | ref_start2 < cut2)) |>
   mutate(deletion = (ref_end1 < cut1 | ref_start2 > cut2)) |>
+  mutate(random = (nchar(random_insertion) > 0)) |>
+  mutate(insertion = (templated | random)) |>
   mutate(indel_type = factor(ifelse(insertion & !deletion, "insertion",
                              ifelse(deletion & !insertion, "deletion",
                              ifelse(insertion & deletion, "indel", "WT"
-                      ))), levels = c("WT", "deletion", "insertion", "indel"))) ->
+                      ))), levels = c("WT", "deletion", "insertion", "indel"))) |>
+  mutate(indel_type_ex = factor(ifelse(templated & deletion & random, "full",
+                             ifelse(templated & deletion & !random, "tempdel",
+                             ifelse(templated & !deletion & random, "temprand",
+                             ifelse(templated & !deletion & !random, "templated",
+                             ifelse(!templated & deletion & random, "randdel",
+                             ifelse(!templated & deletion & !random, "deletion",
+                             ifelse(!templated & !deletion & random, "random", "WT"
+  ))))))), levels = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full"))) ->
   indel_tsv
 
 indel_tsv |>
-  summarise(count = n(), .by = indel_type) |>
+  summarise(count = sum(count), .by = indel_type) |>
   mutate(percent = count / sum(count), perlabel = scales::percent(percent, accuracy = 0.01)) |>
   mutate(type_count = sprintf("%s: %d", indel_type, count)) |>
   mutate(type_count = factor(type_count, levels = c(type_count[startsWith(type_count, "WT")], type_count[startsWith(type_count, "deletion")], type_count[startsWith(type_count, "insertion")], type_count[startsWith(type_count, "indel")]))) |>
@@ -128,21 +155,72 @@ indel_tsv |>
   geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5)) +
   scale_x_discrete(name = NULL, breaks = NULL) +
   scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = scales::percent) +
+  scale_fill_manual(values = RColorBrewer::brewer.pal(8, "Set1")[c(1, 2, 3, 6)]) +
   coord_polar(theta = "y") ->
-  ggfig
-ggsave("indel.type.pie.pdf", plot = ggfig, path = "figures")
+  ggfig1
 
+indel_tsv |>
+  summarise(count = sum(count), .by = indel_type_ex) |>
+  mutate(percent = count / sum(count), perlabel = scales::percent(percent, accuracy = 0.01)) |>
+  mutate(type_count_ex = sprintf("%s: %d", indel_type_ex, count)) |>
+  mutate(type_count_ex = factor(type_count_ex, levels = c(type_count_ex[startsWith(type_count_ex, "WT")], type_count_ex[startsWith(type_count_ex, "deletion")], type_count_ex[startsWith(type_count_ex, "templated")], type_count_ex[startsWith(type_count_ex, "random")], type_count_ex[startsWith(type_count_ex, "temprand")], type_count_ex[startsWith(type_count_ex, "tempdel")], type_count_ex[startsWith(type_count_ex, "randdel")], type_count_ex[startsWith(type_count_ex, "full")]))) |>
+  ggplot(aes(1, percent, fill = type_count_ex, weight = count)) +
+  geom_col() +
+  geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5)) +
+  scale_x_discrete(name = NULL, breaks = NULL) +
+  scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = scales::percent) +
+  scale_fill_manual(values = RColorBrewer::brewer.pal(8, "Set1")) +
+  coord_polar(theta = "y") ->
+  ggfig2
+
+indel_tsv |>
+  summarise(count = sum(count), .by = indel_type) |>
+  ggplot(aes(fill = indel_type, values = count)) +
+  geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
+  scale_fill_manual(limits = c("WT", "deletion", "insertion", "indel"), values = RColorBrewer::brewer.pal(8, "Set1")[c(1, 2, 3, 6)]) +
+  coord_equal() ->
+  ggfig3
+
+indel_tsv |>
+  summarise(count = sum(count), .by = indel_type_ex) |>
+  ggplot(aes(fill = indel_type_ex, values = count)) +
+  geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
+  scale_fill_manual(limits = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full"), values = RColorBrewer::brewer.pal(8, "Set1")) +
+  coord_equal() ->
+  ggfig4
+
+ggfig <- (ggfig1 | ggfig2) / (ggfig3 | ggfig4)
+ggsave("pie.waffle.indel.type.png", plot = ggfig, path = "figures", width = 18, height = 9)
+
+#######################################
+# dangle length distribution
+#######################################
 indel_tsv |>
   mutate(uplen = nchar(updangle)) |>
   mutate(randlen = nchar(random_insertion)) |>
   mutate(downlen = nchar(downdangle)) |>
   pivot_longer(cols = c(uplen, randlen, downlen), names_to = "unmapped", values_to = "unmapped_length") |>
-  ggplot(aes(unmapped_length, fill = unmapped)) +
+  ggplot(aes(unmapped_length, weight = count, fill = unmapped)) +
   geom_bar() +
   scale_y_log10() +
   scale_fill_discrete(limits = c("uplen", "randlen", "downlen"), labels = c("updangle length", "random insertion length", "downdangle length")) ->
   ggfig
-ggsave("unmapped.length.pdf", plot = ggfig, path = "figures")
+ggsave("unmapped.length.png", plot = ggfig, path = "figures")
+
+########################################
+# score distribution
+########################################
+indel_tsv |>
+  ggplot(aes(score, weight = count)) +
+  stat_bin(aes(y = after_stat(count) / after_stat(width))) +
+  geom_density(aes(y = after_stat(count)), color = "red") +
+  scale_y_continuous(name = "count / bin_width")->
+  ggfig
+ggsave("score.distribution.png", plot = ggfig, path = "figures")
+
+#################################################
+# seqLogo
+#################################################
 
 fd <- file(description = filename, open = "r")
 counts <- queryinref <- rep(NA, lineNum / 3)
@@ -154,12 +232,83 @@ for (i in seq(lineNum / 3)) {
 }
 close(fd)
 queryinref <- tibble(sequence = rep(queryinref, time = counts))
-ggfig1 <- ggseqlogo(queryinref, method = "bits", namespace = "ACGTD")
-ggfig2 <- ggseqlogo(queryinref, method = "prob", namespace = "ACGTD")
-ggfig1 / ggfig2
-gridExtra::grid.arrange(p1, p2)
 ggplot() +
-  geom_logo(, method = "bits") +
+  geom_logo(queryinref, method = "bits", namespace = "ACGTD") +
+  scale_x_continuous(breaks = NULL) +
   theme_logo() ->
+  ggfig1
+ggplot() +
+  geom_logo(queryinref, method = "prob", namespace = "ACGTD") +
+  scale_x_continuous(breaks = NULL) +
+  theme_logo() ->
+  ggfig2
+ggfig <- ggfig1 / ggfig2
+ggsave("seqlogo.bits.prob.png", plot = ggfig, path = "figures", width = 30, height = 2)
+
+write_tsv(queryinref, file = pipe("sed -r 's/D/-/g' | seq2logo-2.0/Seq2Logo.py -o figures/seqlogo.wKL -I 3 -C 0"), col_names = FALSE)
+
+###########################################################################
+# polygon insertion
+###########################################################################
+
+fd <- file(description = filename, open = "r")
+counts <- reflines <- rep(NA, lineNum / 3)
+for (i in seq(lineNum / 3)) {
+  lines <- readLines(con = fd, n = 3)
+  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
+  reflines[i] <- lines[2] |> toupper()
+}
+close(fd)
+
+regs <- gregexpr("-+", reflines)
+inscounts <- rep(counts, time = unlist(lapply(regs, function(reg){if (reg[1] == -1) return(0); return(length(reg))})))
+insposes <- lapply(regs, function(reg) {if (reg[1] == -1) return(NULL); clen <- cumsum(attributes(reg)$match.length); reg - 1 - c(0, clen[seq_len(length(clen)-1)])}) |> unlist()
+inslens <- lapply(regs, function(reg) {if (reg[1] == -1) return(NULL); attributes(reg)$match.length}) |> unlist()
+
+tibble(inscount = inscounts, inspos = insposes, inslen = inslens) |>
+  summarise(count = sum(inscount), .by = c(inspos, inslen)) ->
+  inssumm
+
+polyxs <- rep(inssumm$inspos, each = 4)
+polyxs[seq(3, length(polyxs), 4)] <- polyxs[seq(3, length(polyxs), 4)] + inssumm$inslen
+polyys <- rep(0, time = length(polyxs))
+polyys[2:3 + rep(seq(0, length(polyys) - 1, 4), each = 2)] <- rep(inssumm$count, each = 2)
+tibble(polyx = polyxs, polyy = polyys) |>
+  ggplot(aes(polyx, polyy)) +
+  geom_polygon(color = "black", fill = NA, linewidth = 0.1) +
+  scale_x_continuous(name = "pos") +
+  scale_y_continuous(name = "count") ->
   ggfig
-ggsave("seqlog.bits.pdf", plot = ggfig, path = "figures")
+ggsave("insertion.polygon.png", plot = ggfig, path = "figures", width = 8, height = 1)
+
+############################################
+# arc deletion
+############################################
+
+fd <- file(description = filename, open = "r")
+counts <- querylines <- rep(NA, lineNum / 3)
+lposes <- vector(mode = "list", length = lineNum / 3)
+for (i in seq(lineNum / 3)) {
+  lines <- readLines(con = fd, n = 3)
+  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
+  refline <- lines[2] |> toupper()
+  querylines[i] <- lines[3]
+  rpos <- cumsum(!(strsplit(refline, "")[[1]] %in% c(" ", "-")))
+  lposes[[i]] <- c(0, rpos)
+}
+close(fd)
+
+regs <- gregexpr("-+", querylines)
+delcounts <- rep(counts, time = unlist(lapply(regs, function(reg){if (reg[1] == -1) return(0); return(length(reg))})))
+delstarts <- sapply(seq(length(regs)), function(i){if (regs[[i]][1] == -1) return(NULL); return(lposes[[i]][regs[[i]]])}) |> unlist()
+delends <- sapply(seq(length(regs)), function(i){if (regs[[i]][1] == -1) return(NULL); return(lposes[[i]][regs[[i]] + attributes(regs[[i]])$match.length])}) |> unlist()
+
+tibble(delcount = delcounts, delstart = delstarts, delend = delends) |>
+  summarise(count = sum(delcount), .by = c(delstart, delend)) |>
+  ggplot(aes(x0 = (delstart + delend) / 2, y0 = 0, r = (delend - delstart) / 2, start = - pi / 2, end = pi / 2)) +
+  geom_arc(aes(linewidth = count), alpha = 0.1) +
+  scale_linewidth_continuous(range = c(0.1, 2)) +
+  scale_x_continuous(name = "pos") +
+  scale_y_continuous(name = NULL) ->
+  ggfig
+ggsave("deletion.arc.png", plot = ggfig, path = "figures", width = 8, height = 1)
