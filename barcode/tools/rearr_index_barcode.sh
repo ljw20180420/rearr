@@ -69,13 +69,14 @@ ext1down=10
 ext2up=10
 ext2down=100
 
+csvpath=$(dirname "$(which $0)")/../csvfiles
 for csvfile in final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A1.csv final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A2.csv final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A3.csv final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G2.csv final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G3.csv
 do
-    perl -anF, -E '$pribar=substr($F[1], length($F[1]) - 41, 39); $pribar=~tr/ACGT/TGCA/; say ">BC_" . $F[0], "\n", scalar reverse $pribar' barcode/csvfiles/$csvfile >"barcode/csvfiles/$csvfile.primer+barcode.fa"
-    bowtie2-build -q "barcode/csvfiles/$csvfile.primer+barcode.fa" "barcode/csvfiles/$csvfile.primer+barcode"
+    perl -anF, -E '$pribar=substr($F[1], length($F[1]) - 41, 39); $pribar=~tr/ACGT/TGCA/; say ">BC_" . $F[0], "\n", scalar reverse $pribar' "$csvpath/$csvfile" >"$csvpath/$csvfile.primer+barcode.fa"
+    bowtie2-build -q "$csvpath/$csvfile.primer+barcode.fa" "$csvpath/$csvfile.primer+barcode"
 
-    perl -anF, -E '$rev=scalar reverse $F[1]; $rev=~m/[acgt]/g; say ">BC_" . $F[0], "\n", substr($F[1], 0, length($F[1]) - pos($rev) + 1)' barcode/csvfiles/$csvfile >"barcode/csvfiles/$csvfile.sgRNA+scaffold.fa"
-    bowtie2-build -q "barcode/csvfiles/$csvfile.sgRNA+scaffold.fa" "barcode/csvfiles/$csvfile.sgRNA+scaffold"
+    perl -anF, -E '$rev=scalar reverse $F[1]; $rev=~m/[acgt]/g; say ">BC_" . $F[0], "\n", substr($F[1], 0, length($F[1]) - pos($rev) + 1)' "$csvpath/$csvfile" >"$csvpath/$csvfile.sgRNA+scaffold.fa"
+    bowtie2-build -q "$csvpath/$csvfile.sgRNA+scaffold.fa" "$csvpath/$csvfile.sgRNA+scaffold"
 
-    get_reference "barcode/csvfiles/$csvfile" "$bowtie2genome" "$getfastagenome" $ext1up $ext1down $ext2up $ext2down >"barcode/csvfiles/$csvfile.ref12"
+    get_reference "$csvpath/$csvfile" "$bowtie2genome" "$getfastagenome" $ext1up $ext1down $ext2up $ext2down >"$csvpath/$csvfile.ref12"
 done
