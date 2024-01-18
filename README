@@ -23,5 +23,7 @@ input.alg.cut1.cut2.ref1len: the alignments
 input.table.cut1.cut2.ref1len: the summarization table for indel information
 
 Tools
-rearr_view.sh input.alg.cut1.cut1.ref1len [readnum]
+rearr_view.sh input.alg.cut1.cut2.ref1len [readnum]
 display the first readnum (default: 50) read's alignments in ANSI fomrat, the cut points and random insertions are aligned
+rearr_render.sh input.alg.cut1.cut2.ref1len
+generate the html report
