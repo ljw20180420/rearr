@@ -1,24 +1,32 @@
-# browser()
+---
+title: "Rearrangement report"
+output: html_document
+fig_width: 1920px
+params:
+  algfile: ""
+---
 
+```{r load necessary library, include = FALSE}
 library(tidyverse)
 library(ggseqlogo)
 library(ggforce)
 library(waffle)
 library(patchwork)
+library(reticulate)
+```
 
-# args <- commandArgs(trailingOnly = TRUE)
-filename <- "bench/runs/double.200.0.03/rearr/random.fq.alg.100.100.200"
-tablefile <- sub(".alg.", ".table.", filename)
-fields <- strsplit(filename, ".", fixed = TRUE)[[1]]
+```{r set parameters, include = FALSE}
+algfile <- params$algfile
+tablefile <- sub(".alg.", ".table.", algfile)
+fields <- strsplit(algfile, ".", fixed = TRUE)[[1]]
 ref1len <- strtoi(last(fields))
 cut1 <- strtoi(fields[length(fields) - 2])
 cut2 <- strtoi(fields[length(fields) - 1])
-lineNum <- strtoi(system(sprintf("wc -l <%s", filename), intern = TRUE))
+lineNum <- strtoi(system(sprintf("wc -l <%s", algfile), intern = TRUE))
+```
 
-######################################
-# barplot of positional indel
-######################################
-fd <- file(description = filename, open = "r")
+```{r load alignment file and generate a tibble for single bases with positions, include = FALSE}
+fd <- file(description = algfile, open = "r")
 counts <- reflines <- querylines <- rep(NA, lineNum / 3)
 lposes <- rposes <- vector(mode = "list", length = lineNum / 3)
 for (i in seq(lineNum / 3)) {
@@ -45,7 +53,9 @@ base_pos_df |>
   mutate(part = factor(ifelse(rpos == 0, "updangle", ifelse(lpos == nchar(ref1) + nchar(ref2), "downdangle", ifelse(lpos == nchar(ref1) & rpos == nchar(ref1), "randomins", ifelse(lpos < nchar(ref1), "ref1", "ref2")))), levels = c("updangle", "ref1", "randomins", "ref2", "downdangle"))) |>
   mutate(posstatus = factor(ifelse(refbase == "-", "ins", ifelse(querybase == "-", "del", ifelse(querybase == refbase, "match", "SNP"))), levels = c("ins", "del", "SNP", "match"))) ->
   base_pos_df
+```
 
+```{r barplot of positional indel for ref1, fig.cap = "barplot of positional indel for ref1", echo = FALSE, message = FALSE, warning = FALSE}
 base_pos_df |>
   mutate(rel1pos = (lpos + rpos) / 2 - cut1) |>
   filter(part == "ref1") |>
@@ -56,8 +66,10 @@ base_pos_df |>
   scale_fill_discrete(name = NULL, limits = c("del", "SNP", "match"), labels = c("deletion", "SNP", "match")) +
   scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
-ggsave("indel.pos.ref1.png", plot = ggfig, path = "figures")
-
+print(ggfig)
+# ggsave("indel.pos.ref1.png", plot = ggfig, path = dirname(algfile))
+```
+```{r barplot of positional indel for ref2, fig.cap = "barplot of positional indel for ref2", echo = FALSE, message = FALSE, warning = FALSE}
 base_pos_df |>
   mutate(rel2pos = (lpos + rpos) / 2 - nchar(ref1) - cut2) |>
   filter(part == "ref2") |>
@@ -68,22 +80,22 @@ base_pos_df |>
   scale_fill_discrete(name = NULL, limits = c("del", "SNP", "match"), labels = c("deletion", "SNP", "match")) +
   scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
-ggsave("indel.pos.ref2.png", plot = ggfig, path = "figures")
+print(ggfig)
+# ggsave("indel.pos.ref2.png", plot = ggfig, path = dirname(algfile))
+```
 
-##################################
-# base count of dangle
-##################################
+```{r base count of dangle, fig.cap = "base count of dangle", echo = FALSE, message = FALSE, warning = FALSE}
 base_pos_df |>
   ggplot(aes(part, weight = count)) +
   geom_bar() +
   scale_x_discrete(limits = c("updangle", "randomins", "downdangle")) +
   scale_y_log10() ->
   ggfig
-ggsave("indel.pos.dangle.png", plot = ggfig, path = "figures")
+print(ggfig)
+# ggsave("indel.pos.dangle.png", plot = ggfig, path = dirname(algfile))
+```
 
-##################################
-# base substitution
-##################################
+```{r base substitution, fig.cap = "base substitution", echo = FALSE, message = FALSE, warning = FALSE}
 base_pos_df |>
   mutate(trans = factor(sprintf("%s>%s", refbase, querybase),
     levels = c("A>A", "C>C", "G>G", "T>T",
@@ -95,16 +107,16 @@ base_pos_df |>
   geom_bar() +
   scale_y_log10() ->
   ggfig
-ggsave("indel.pos.trans.png", plot = ggfig, path = "figures")
+print(ggfig)
+# ggsave("indel.pos.trans.png", plot = ggfig, path = dirname(algfile))
+```
 
-##################################################
-# show micro-homology
-##################################################
+```{r show micro-homology, fig.cap = "show micro-homology", echo = FALSE, message = FALSE, warning = FALSE}
 ref1vec <- strsplit({{ref1}}, "")[[1]]
 ref2vec <- strsplit({{ref2}}, "")[[1]]
 microhomo <- matrix(as.integer(rep(ref1vec, time = length(ref2vec)) == rep(ref2vec, each = length(ref1vec))), nrow = length(ref1vec))
-for (i in seq(nrow(microhomo))) {
-  for (j in seq(ncol(microhomo))) {
+for (i in seq_len(nrow(microhomo))) {
+  for (j in seq_len(ncol(microhomo))) {
     if (i > 1 && j > 1)
     {
       if (microhomo[i, j] > 0) {
@@ -114,17 +126,17 @@ for (i in seq(nrow(microhomo))) {
   }
 }
 rc <- which(microhomo > 3, arr.ind = T)
-pos12 <- rc[rep(seq(nrow(rc)), time = microhomo[rc]),] -
+pos12 <- rc[rep(seq_len(nrow(rc)), time = microhomo[rc]),] -
   rep(unlist(sapply(microhomo[rc], function(i) seq(i - 1, 0, by = -1))), time = 2)
 tibble(pos1 = pos12[, 1], pos2 = pos12[, 2]) |>
   ggplot(aes(pos1, pos2)) +
   geom_point() ->
   ggfig
-ggsave("ref1.ref2.micro.homo.png", plot = ggfig, path = "figures")
+print(ggfig)
+# ggsave("ref1.ref2.micro.homo.png", plot = ggfig, path = dirname(algfile))
+```
 
-#########################################
-# indel type (ex) count
-#########################################
+```{r load and preprocess information table for alignments, include = FALSE}
 indel_tsv <- read_tsv(tablefile, col_types = "iiiciiiiciiiiciid", na = "NA")
 indel_tsv |>
   mutate(templated = (ref_end1 > cut1 | ref_start2 < cut2)) |>
@@ -144,7 +156,9 @@ indel_tsv |>
                              ifelse(!templated & !deletion & random, "random", "WT"
   ))))))), levels = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full"))) ->
   indel_tsv
+```
 
+```{r indel type count, fig.cap = "indel type count", echo = FALSE, message = FALSE, warning = FALSE}
 indel_tsv |>
   summarise(count = sum(count), .by = indel_type) |>
   mutate(percent = count / sum(count), perlabel = scales::percent(percent, accuracy = 0.01)) |>
@@ -190,11 +204,11 @@ indel_tsv |>
   ggfig4
 
 ggfig <- (ggfig1 | ggfig2) / (ggfig3 | ggfig4)
-ggsave("pie.waffle.indel.type.png", plot = ggfig, path = "figures", width = 18, height = 9)
+print(ggfig)
+# ggsave("pie.waffle.indel.type.png", plot = ggfig, path = dirname(algfile), width = 18, height = 9)
+```
 
-#######################################
-# dangle length distribution
-#######################################
+```{r dangle length distribution, fig.cap = "dangle length distribution", echo = FALSE, message = FALSE, warning = FALSE}
 indel_tsv |>
   mutate(uplen = nchar(updangle)) |>
   mutate(randlen = nchar(random_insertion)) |>
@@ -205,24 +219,23 @@ indel_tsv |>
   scale_y_log10() +
   scale_fill_discrete(limits = c("uplen", "randlen", "downlen"), labels = c("updangle length", "random insertion length", "downdangle length")) ->
   ggfig
-ggsave("unmapped.length.png", plot = ggfig, path = "figures")
+print(ggfig)
+# ggsave("unmapped.length.png", plot = ggfig, path = dirname(algfile))
+```
 
-########################################
-# score distribution
-########################################
+```{r score distribution, fig.cap = "score distribution", echo = FALSE, message = FALSE, warning = FALSE}
 indel_tsv |>
   ggplot(aes(score, weight = count)) +
   stat_bin(aes(y = after_stat(count) / after_stat(width))) +
   geom_density(aes(y = after_stat(count)), color = "red") +
   scale_y_continuous(name = "count / bin_width")->
   ggfig
-ggsave("score.distribution.png", plot = ggfig, path = "figures")
+print(ggfig)
+# ggsave("score.distribution.png", plot = ggfig, path = dirname(algfile))
+```
 
-#################################################
-# seqLogo
-#################################################
-
-fd <- file(description = filename, open = "r")
+```{r get raw query reads in reference, include = FALSE}
+fd <- file(description = algfile, open = "r")
 counts <- queryinref <- rep(NA, lineNum / 3)
 for (i in seq(lineNum / 3)) {
   lines <- readLines(con = fd, n = 3)
@@ -232,26 +245,36 @@ for (i in seq(lineNum / 3)) {
 }
 close(fd)
 queryinref <- tibble(sequence = rep(queryinref, time = counts))
+```
+
+```{r seqLogo, fig.cap = "seqLogo", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
 ggplot() +
   geom_logo(queryinref, method = "bits", namespace = "ACGTD") +
   scale_x_continuous(breaks = NULL) +
   theme_logo() ->
   ggfig1
+
 ggplot() +
   geom_logo(queryinref, method = "prob", namespace = "ACGTD") +
   scale_x_continuous(breaks = NULL) +
   theme_logo() ->
   ggfig2
-ggfig <- ggfig1 / ggfig2
-ggsave("seqlogo.bits.prob.png", plot = ggfig, path = "figures", width = 30, height = 2)
 
-write_tsv(queryinref, file = pipe("sed -r 's/D/-/g' | seq2logo-2.0/Seq2Logo.py -o figures/seqlogo.wKL -I 3 -C 0"), col_names = FALSE)
+write_tsv(queryinref, file = pipe(sprintf("sed -r 's/D/-/g' | seq2logo-2.0/Seq2Logo.py -o %s/seqlogo.wKL -I 3 -C 0", dirname(algfile))), col_names = FALSE)
+logomat <- read_table(file.path(dirname(algfile), "seqlogo.wKL.txt"), col_names = c("pos", "base", "A", "C", "G", "T"), col_types = "icdddd", skip = 3) |> select(A, C, G, T) |> as.matrix() |> t()
+ggplot() +
+  geom_logo(logomat, method = 'custom', seq_type = 'dna') +
+  scale_x_continuous(breaks = NULL) +
+  scale_y_continuous(name = "wKL") +
+  theme_logo() -> ggfig3
 
-###########################################################################
-# polygon insertion
-###########################################################################
+ggfig <- ggfig1 / ggfig2 / ggfig3
+print(ggfig)
+# ggsave("seqlogo.bits.prob.WLK.png", plot = ggfig, path = dirname(algfile), width = 30, height = 3)
+```
 
-fd <- file(description = filename, open = "r")
+```{r polygon insertion, fig.cap = "polygon insertion", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
+fd <- file(description = algfile, open = "r")
 counts <- reflines <- rep(NA, lineNum / 3)
 for (i in seq(lineNum / 3)) {
   lines <- readLines(con = fd, n = 3)
@@ -279,13 +302,12 @@ tibble(polyx = polyxs, polyy = polyys) |>
   scale_x_continuous(name = "pos") +
   scale_y_continuous(name = "count") ->
   ggfig
-ggsave("insertion.polygon.png", plot = ggfig, path = "figures", width = 8, height = 1)
+print(ggfig)
+# ggsave("insertion.polygon.png", plot = ggfig, path = dirname(algfile), width = 8, height = 1)
+```
 
-############################################
-# arc deletion
-############################################
-
-fd <- file(description = filename, open = "r")
+```{r arc deletion, fig.cap = "arc deletion", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
+fd <- file(description = algfile, open = "r")
 counts <- querylines <- rep(NA, lineNum / 3)
 lposes <- vector(mode = "list", length = lineNum / 3)
 for (i in seq(lineNum / 3)) {
@@ -300,8 +322,8 @@ close(fd)
 
 regs <- gregexpr("-+", querylines)
 delcounts <- rep(counts, time = unlist(lapply(regs, function(reg){if (reg[1] == -1) return(0); return(length(reg))})))
-delstarts <- sapply(seq(length(regs)), function(i){if (regs[[i]][1] == -1) return(NULL); return(lposes[[i]][regs[[i]]])}) |> unlist()
-delends <- sapply(seq(length(regs)), function(i){if (regs[[i]][1] == -1) return(NULL); return(lposes[[i]][regs[[i]] + attributes(regs[[i]])$match.length])}) |> unlist()
+delstarts <- sapply(seq_len(length(regs)), function(i){if (regs[[i]][1] == -1) return(NULL); return(lposes[[i]][regs[[i]]])}) |> unlist()
+delends <- sapply(seq_len(length(regs)), function(i){if (regs[[i]][1] == -1) return(NULL); return(lposes[[i]][regs[[i]] + attributes(regs[[i]])$match.length])}) |> unlist()
 
 tibble(delcount = delcounts, delstart = delstarts, delend = delends) |>
   summarise(count = sum(delcount), .by = c(delstart, delend)) |>
@@ -311,4 +333,6 @@ tibble(delcount = delcounts, delstart = delstarts, delend = delends) |>
   scale_x_continuous(name = "pos") +
   scale_y_continuous(name = NULL) ->
   ggfig
-ggsave("deletion.arc.png", plot = ggfig, path = "figures", width = 8, height = 1)
+print(ggfig)
+# ggsave("deletion.arc.png", plot = ggfig, path = dirname(algfile), width = 8, height = 1)
+```
