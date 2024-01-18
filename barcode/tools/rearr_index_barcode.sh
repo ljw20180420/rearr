@@ -69,7 +69,7 @@ ext1down=10
 ext2up=10
 ext2down=100
 
-csvpath=$(dirname "$(which $0)")/../csvfiles
+csvpath="$(dirname $0)/../csvfiles"
 for csvfile in final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A1.csv final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A2.csv final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A3.csv final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G2.csv final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G3.csv
 do
     perl -anF, -E '$pribar=substr($F[1], length($F[1]) - 41, 39); $pribar=~tr/ACGT/TGCA/; say ">BC_" . $F[0], "\n", scalar reverse $pribar' "$csvpath/$csvfile" >"$csvpath/$csvfile.primer+barcode.fa"
