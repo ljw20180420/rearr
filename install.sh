@@ -6,7 +6,7 @@ cd "$(dirname "$0")" || exit
 pip install -r requirements.txt
 
 # install R packages
-install_R_packages.r
+Rscript -e 'install.packages(c("tidyverse"), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")'
 
 # compile kpLogo for sgRNA analysis
 make -C barcode/kpLogo/src
