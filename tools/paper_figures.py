@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import matplotlib.pyplot, numpy, matplotlib.animation, matplotlib.patches, matplotlib.transforms, matplotlib.patches, matplotlib.path, matplotlib.offsetbox, matplotlib.image, PIL.Image
 
 #####################################

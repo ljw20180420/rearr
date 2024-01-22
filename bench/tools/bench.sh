@@ -4,6 +4,7 @@ mode=${1:-"single"}
 reflen=${2:-100}
 probability=${3:-0.01}
 readnum=${4:-10000}
+script_path="$(dirname $(realpath $0))"
 
 generate_random_DNA()
 {
@@ -31,7 +32,7 @@ get_time_memory()
 
 format_output()
 {
-    sed "s/^/$mode\t$reflen\t$probability\t$readnum\t$1\t$usertime\t$systime\t$realtime\t$memory\t/" | bench/tools/compare_indel.py $ref1 $ref2 $path/random.seq $mode $reflen $probability $readnum $1
+    sed "s/^/$mode\t$reflen\t$probability\t$readnum\t$1\t$usertime\t$systime\t$realtime\t$memory\t/" | $script_path/../../.venv/bin/python $script_path/compare_indel.py $ref1 $ref2 $path/random.seq $mode $reflen $probability $readnum $1
 }
 
 if [ $mode != "single"  ] && [ $mode != "double" ]
@@ -40,7 +41,7 @@ then
     exit 1
 fi
 
-path="bench/runs/$mode.$reflen.$probability"
+path="$script_path/../runs/$mode.$reflen.$probability"
 mkdir -p $path
 echo "generate random reference"
 if [ $mode = "double" ]
@@ -63,7 +64,7 @@ sed '1i >ref1' <<<$ref1 >$path/ref12.fa
 sed '1i >ref2' <<<$ref2 >>$path/ref12.fa
 
 echo "generate random queries"
-bench/tools/random_seq_methods.py $ref1 $ref2 $probability $readnum >$path/random.seq
+$script_path/random_seq_methods.py $ref1 $ref2 $probability $readnum >$path/random.seq
 cut -f1 $path/random.seq | perl -nE 'say "\@seq" . $. . "\n" . $_ . "+\n" . "~" x (length($_) - 1)' >$path/random.fq
 cut -f2- $path/random.seq > $path/random.seq2; mv $path/random.seq2 $path/random.seq
 sed "s/^/$mode\t$reflen\t$probability\t$readnum\tsimulate\t*\t*\t*\t*\t/" $path/random.seq >&3
@@ -78,7 +79,7 @@ echo "RESSO"
 rm -rf $path/RESSO
 get_time_memory "/home/ljw/py310/bin/CRISPResso -r1 $path/random.fq -a $ref -g $sgRNA -o $path/RESSO -amas 0"
 unzip -q -o $(find $path/RESSO -name "*.zip") -d $path/RESSO
-bench/tools/ARRANGE_RESULTS.py <$path/RESSO/Alleles_frequency_table.txt CRISPResso $cut | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4{s/^@//; N; s/\n/\t/; p}' $path/random.fq | sort -k2,2) - | cut -f2- | sort -k1,1V | format_output RESSO >&3
+$script_path/../../.venv/bin/python $script_path/ARRANGE_RESULTS.py <$path/RESSO/Alleles_frequency_table.txt CRISPResso $cut | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4{s/^@//; N; s/\n/\t/; p}' $path/random.fq | sort -k2,2) - | cut -f2- | sort -k1,1V | format_output RESSO >&3
 
 echo "AMP"
 rm -rf $path/AMP; mkdir -p $path/AMP
@@ -87,13 +88,13 @@ sed "2~4{s/^/$primer/}; 4~4{s/^/~~~~~~/}" $path/random.fq >$path/AMP/random.fq.p
 amplicon=$(cut -c $(expr ${#ref} / 4 - 5)-$cut <<<$ref | tr '[:upper:]' '[:lower:]')$(cut -c $(expr $cut + 1) <<<$ref | tr '[:lower:]' '[:upper:]')$(cut -c $(expr $cut + 2)-${#ref} <<<$ref | tr '[:upper:]' '[:lower:]')
 printf "ID,Barcode,Forward_Reads,Reverse_Reads,Group,Control,guideRNA,Forward_Primer,Reverse_Primer,Direction,Amplicon,Donor\n" >$path/AMP/config.csv
 printf "ID_1,barcode_1,random.fq.primer,,group_1,0,%s,%s,,0,%s," $sgRNA $primer $amplicon >>$path/AMP/config.csv
-get_time_memory "Rscript bench/tools/AMP.r $path/AMP/config.csv $path/AMP/ $path/AMP/"
-bench/tools/ARRANGE_RESULTS.py amplican $cut $(expr ${#ref} / 4 - 6) ${#primer} <$path/AMP/alignments/alignments.txt | paste <(sed -n '2~4p' $path/AMP/random.fq.primer | sort | uniq -c | sort -s -k1,1nr | awk '{print $2}') - | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4s/^@//; N; s/\n/\t/p' $path/AMP/random.fq.primer | sort -k2,2) - | cut -f2- | sort -k1,1V | format_output AMP >&3
+get_time_memory "Rscript $script_path/AMP.r $path/AMP/config.csv $path/AMP/ $path/AMP/"
+$script_path/../../.venv/bin/python $script_path/ARRANGE_RESULTS.py amplican $cut $(expr ${#ref} / 4 - 6) ${#primer} <$path/AMP/alignments/alignments.txt | paste <(sed -n '2~4p' $path/AMP/random.fq.primer | sort | uniq -c | sort -s -k1,1nr | awk '{print $2}') - | sort -k1,1 | join -t $'\t' -1 2 -2 1 <(sed -nr '1~4s/^@//; N; s/\n/\t/p' $path/AMP/random.fq.primer | sort -k2,2) - | cut -f2- | sort -k1,1V | format_output AMP >&3
 
 echo "CRVS"
 mkdir -p $path/CRVS
-get_time_memory "bash -c \"bwa index -p $path/CRVS/ref $path/ref.fa; bwa mem -v 3 -T -9999 $path/CRVS/ref $path/random.fq | samtools sort -o $path/CRVS/random.bam; samtools index -b $path/CRVS/random.bam; Rscript bench/tools/variants.r $ref $path/CRVS/random.bam $(expr $cut - ${#sgRNA} + 3) ${#sgRNA} >$path/CRVS/result\""
-cut -f1 $path/CRVS/result | sort | join -t $'\t' -1 1 -2 1 - <(samtools view $path/CRVS/random.bam | sort -k1,1) | bench/tools/ARRANGE_RESULTS.py CrisprVariants $cut | sort -k1,1V | format_output CRVS >&3
+get_time_memory "bash -c \"bwa index -p $path/CRVS/ref $path/ref.fa; bwa mem -v 3 -T -9999 $path/CRVS/ref $path/random.fq | samtools sort -o $path/CRVS/random.bam; samtools index -b $path/CRVS/random.bam; $script_path/variants.r $ref $path/CRVS/random.bam $(expr $cut - ${#sgRNA} + 3) ${#sgRNA} >$path/CRVS/result\""
+cut -f1 $path/CRVS/result | sort | join -t $'\t' -1 1 -2 1 - <(samtools view $path/CRVS/random.bam | sort -k1,1) | $script_path/../../.venv/bin/python $script_path/ARRANGE_RESULTS.py CrisprVariants $cut | sort -k1,1V | format_output CRVS >&3
 
 echo "ADIV"
 rm -rf $path/ADIV; mkdir -p $path/ADIV
@@ -101,30 +102,30 @@ barcode="AAAAAATGTAAAACGACGGCCAGT"
 sed '2~4{s/^/'"$barcode"'/; s/$/aagacac/}; 4~4{s/^/~~~~~~~~~~~~~~~~~~~~~~~~/; s/$/~~~~~~~/}' $path/random.fq >$path/ADIV/random.for.fq
 perl -pE 'if ($. % 4 == 2){tr/acgtACGT/TGCATGCA/} if ($. % 2 == 0){chomp; $_ = scalar reverse; $_ .= "\n"}' $path/ADIV/random.for.fq >$path/ADIV/random.rev.fq
 printf "plate0\tA0\trefin_ref_45-200\tM\t0\tAAAAAA\n" >$path/ADIV/random.bar
-cd $path/ADIV; ADIVexu=$(realpath --relative-to=. $OLDPWD/bench/ampliconDIVider)/ampliconDIVider_driver.sh; cd - >/dev/null
+cd $path/ADIV; ADIVexu=$(realpath --relative-to=. $script_path/../ampliconDIVider)/ampliconDIVider_driver.sh; cd - >/dev/null
 get_time_memory "bash -c \"novoindex $path/ADIV/ref.nix $path/ref.fa; novoalign -t 0,6 -o SAM -d $path/ADIV/ref.nix -f $path/ADIV/random.for.fq $path/ADIV/random.rev.fq | samtools view -o $path/ADIV/random.bam; rm -rf $path/ADIV/Workdir_target_ $path/ADIV/Output_target_; cd $path/ADIV; $ADIVexu -b random.bar -f ../ref.fa -x ref.nix random.bam; cd -\""
-samtools view $path/ADIV/Workdir_target_/random.aligned.bam | bench/tools/ARRANGE_RESULTS.py "ampliconDIVider" $cut | sort -k1,1V | format_output ADIV >&3
+samtools view $path/ADIV/Workdir_target_/random.aligned.bam | $script_path/../../.venv/bin/python $script_path/ARRANGE_RESULTS.py "ampliconDIVider" $cut | sort -k1,1V | format_output ADIV >&3
 
 echo "CRGR"
 rm -rf $path/CRGR; mkdir -p $path/CRGR
 cp $path/random.fq $path/CRGR/random.for.fq
 perl -pE 'if ($. % 4 == 2){tr/acgtACGT/TGCATGCA/} if ($. % 2 == 0){chomp; $_ = scalar reverse; $_ .= "\n"}' $path/CRGR/random.for.fq >$path/CRGR/random.rev.fq
 cp $path/ref.fa $path/CRGR/ref.fa
-get_time_memory "bench/CRISPR-GRANT/bin/indel_analysis -1:$path/CRGR/random.for.fq -2:$path/CRGR/random.rev.fq -r:$path/CRGR/ref.fa -o:$path/CRGR/output"
-samtools sort -n $path/CRGR/output/4.Mapping_sorted.bam | samtools view | bench/tools/ARRANGE_RESULTS.py "CRISPR-GRANT" $cut | format_output CRGR >&3
+get_time_memory "$script_path/../CRISPR-GRANT/bin/indel_analysis -1:$path/CRGR/random.for.fq -2:$path/CRGR/random.rev.fq -r:$path/CRGR/ref.fa -o:$path/CRGR/output"
+samtools sort -n $path/CRGR/output/4.Mapping_sorted.bam | samtools view | $script_path/../../.venv/bin/python $script_path/ARRANGE_RESULTS.py "CRISPR-GRANT" $cut | format_output CRGR >&3
 
 echo "ZhangFeng"
 rm -rf $path/ZhangFeng; mkdir -p $path/ZhangFeng
 ZhangFengRefStart=$(expr ${#ref} / 4)
 printf "random,$path/random.fq,%s,%s\n" $sgRNA $(cut -c$(expr $ZhangFengRefStart + 1)-$(expr ${#ref} / 4 \* 3) <<<$ref) >$path/ZhangFeng/samplefile
-get_time_memory "bench/Screening_Protocols_manuscript/my_calculate_indel.py -i $path/ZhangFeng/samplefile -no-m -o $path/ZhangFeng/calc_indel_out.csv >$path/ZhangFeng/result"
-tail -n+2 $path/ZhangFeng/result | bench/tools/ARRANGE_RESULTS.py ZhangFeng $cut $ZhangFengRefStart | format_output ZhangFeng >&3
+get_time_memory "$script_path/../Screening_Protocols_manuscript/my_calculate_indel.py -i $path/ZhangFeng/samplefile -no-m -o $path/ZhangFeng/calc_indel_out.csv >$path/ZhangFeng/result"
+tail -n+2 $path/ZhangFeng/result | $script_path/../../.venv/bin/python $script_path/ARRANGE_RESULTS.py ZhangFeng $cut $ZhangFengRefStart | format_output ZhangFeng >&3
 
 echo "SelfTarget"
 rm -rf $path/SelfTargetResults; mkdir -p $path/SeltTargetResults
 printf ">ref %d FORWARD\n%s\n" $(expr $cut + 3) $ref >$path/SeltTargetResults/oligo.fa
-get_time_memory "bench/SelfTarget/indel_analysis/indelmap/indelmap $path/random.fq $path/SeltTargetResults/oligo.fa $path/SeltTargetResults/outputfile 0"
-tail -n+2 $path/SeltTargetResults/outputfile | bench/tools/ARRANGE_RESULTS.py SelfTarget $cut | format_output SelfTarget >&3
+get_time_memory "$script_path/../SelfTarget/indel_analysis/indelmap/indelmap $path/random.fq $path/SeltTargetResults/oligo.fa $path/SeltTargetResults/outputfile 0"
+tail -n+2 $path/SeltTargetResults/outputfile | $script_path/../../.venv/bin/python $script_path/ARRANGE_RESULTS.py SelfTarget $cut | format_output SelfTarget >&3
 
 # cd $path/CRISPR_toolkit/Indel_searcher_2; ./Make_user_folder.sh
 # cp ../../ref.fa Input/JaeWoo/Reference

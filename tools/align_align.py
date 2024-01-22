@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import sys, re, more_itertools
 # align the cut points and random insertion of reads
 ref1len, cut1, cut2 = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])

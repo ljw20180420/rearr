@@ -33,6 +33,6 @@ rearrangement <"$input.count" 3<"$input.ref.$cut1.$cut2.${#ref1}" -u -3 -v -9 -s
         print "index", "count", "score", "updangle", "ref_start1", "query_start1", "ref_end1", "query_end1", "random_insertion", "ref_start2","query_start2", "ref_end2", "query_end2", "downdangle", "cut1", "cut2", "percent"
     }
     NR%3==1{
-        printf("%s\t%d\t%d\t%.2f\n", $0, cut1, cut2, $2/total_count*100)
+        printf("%s\t%d\t%d\t%.2f%\n", $0, cut1, cut2, $2/total_count*100)
         }
 ' >"$input.table.$cut1.$cut2.${#ref1}" # align reads (input.alg), correct micro homology (input.correct)

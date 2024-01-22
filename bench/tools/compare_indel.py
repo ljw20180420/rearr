@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys, numpy
 
 def NDsegment_distance(indel1, indel2, range1, range2):

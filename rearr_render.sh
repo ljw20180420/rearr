@@ -3,7 +3,8 @@
 # rearr_render.sh input.alg.cut1.cut2.ref1len
 
 algfile="$(realpath $1)"
-quarto render "$(dirname $0)/tools/draw_figures.qmd" -P "algfile:$algfile"
-mv "$(dirname $0)/tools/draw_figures.html" "$algfile.html"
+script_path=$(dirname $0)
+quarto render "$script_path/tools/draw_figures.qmd" -P "algfile:$algfile"
+mv "$script_path/tools/draw_figures.html" "$algfile.html"
 rm -r "$(dirname $algfile)/draw_figures_files"
-mv "$(dirname $0)/tools/draw_figures_files" "$(dirname $algfile)"
+mv "$script_path/tools/draw_figures_files" "$(dirname $algfile)"
