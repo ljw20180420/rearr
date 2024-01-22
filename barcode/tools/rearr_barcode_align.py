@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import sys, os, subprocess
 _, fq1, ext1up, ext2up = sys.argv
 ext1up, ext2up = int(ext1up), int(ext2up)

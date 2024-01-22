@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import Bio.Align, sys, pysam, more_itertools, re
 
 def coor2indel(refcoor, seqcoor, cut):

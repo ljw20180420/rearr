@@ -91,5 +91,5 @@
         "valarray": "cpp",
         "variant": "cpp"
     },
-    "python.REPL.enableREPLSmartSend": false
+    "python.REPL.enableREPLSmartSend": false,
 }

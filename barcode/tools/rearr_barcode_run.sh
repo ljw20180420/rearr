@@ -74,11 +74,12 @@ bowtie2genome=$1
 getfastagenome=$2
 ext1up=50
 ext2up=10
+script_path=$(dirname $1)
 
 while read fq1
 do
     csvfile=$(infer_csvfile.sh "$fq1")
-    (find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" >"$fq1.barcode"; rearr_barcode_align.py <"$fq1.barcode" "$fq1" "$ext1up" "$ext2up") &
+    (find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" >"$fq1.barcode"; $script_path/../../.venv/bin/python $script_path/rearr_barcode_align.py <"$fq1.barcode" "$fq1" "$ext1up" "$ext2up") &
 done
 
 jobs

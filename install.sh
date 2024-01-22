@@ -3,10 +3,23 @@
 cd "$(dirname "$0")" || exit
 
 # install python packages
-pip install -r requirements.txt
+python -m venv .venv
+.venv/bin/pip install --upgrade pip
+.venv/bin/pip install -r requirements.txt
 
 # install R packages
-Rscript -e 'install.packages(c("tidyverse"), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")'
+Rscript -e '
+  packages <- c(
+    "tidyverse",
+    "ggseqlogo",
+    "ggforce",
+    "waffle",
+    "patchwork",
+    "reticulate"
+    )
+  install.packages(setdiff(packages, rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
+'
+
 
 # compile kpLogo for sgRNA analysis
 make -C barcode/kpLogo/src

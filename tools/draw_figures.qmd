@@ -29,7 +29,7 @@ lineNum <- strtoi(system(sprintf("wc -l <%s", algfile), intern = TRUE))
 fd <- file(description = algfile, open = "r")
 counts <- reflines <- querylines <- rep(NA, lineNum / 3)
 lposes <- rposes <- vector(mode = "list", length = lineNum / 3)
-for (i in seq(lineNum / 3)) {
+for (i in seq_len(lineNum / 3)) {
   lines <- readLines(con = fd, n = 3)
   counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
   reflines[i] <- lines[2] |> toupper()
@@ -38,6 +38,15 @@ for (i in seq(lineNum / 3)) {
   lposes[[i]] <- c(0, rposes[[i]][1:(length(rposes[[i]]) - 1)])
 }
 close(fd)
+
+for (i in seq_len(lineNum / 3)) {
+  if (nchar(reflines[i]) != nchar(querylines[i])) {
+    print(i)
+    print(reflines[i])
+    print(querylines[i])
+    break
+  }
+}
 base_pos_df <- tibble(
   refbase = unlist(strsplit(reflines, NULL)),
   querybase = unlist(strsplit(querylines, NULL)),
@@ -137,7 +146,7 @@ print(ggfig)
 ```
 
 ```{r load and preprocess information table for alignments, include = FALSE}
-indel_tsv <- read_tsv(tablefile, col_types = "iiiciiiiciiiiciid", na = "NA")
+indel_tsv <- read_tsv(tablefile, col_types = "iiiciiiiciiiiciic", na = "NA")
 indel_tsv |>
   mutate(templated = (ref_end1 > cut1 | ref_start2 < cut2)) |>
   mutate(deletion = (ref_end1 < cut1 | ref_start2 > cut2)) |>
@@ -260,7 +269,7 @@ ggplot() +
   theme_logo() ->
   ggfig2
 
-write_tsv(queryinref, file = pipe(sprintf("sed -r 's/D/-/g' | seq2logo-2.0/Seq2Logo.py -o %s/seqlogo.wKL -I 3 -C 0", dirname(algfile))), col_names = FALSE)
+write_tsv(queryinref, file = pipe(sprintf("sed -r 's/D/-/g' | ../seq2logo-2.0/Seq2Logo.py -o %s/seqlogo.wKL -I 3 -C 0", dirname(algfile))), col_names = FALSE)
 logomat <- read_table(file.path(dirname(algfile), "seqlogo.wKL.txt"), col_names = c("pos", "base", "A", "C", "G", "T"), col_types = "icdddd", skip = 3) |> select(A, C, G, T) |> as.matrix() |> t()
 ggplot() +
   geom_logo(logomat, method = 'custom', seq_type = 'dna') +
