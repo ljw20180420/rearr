@@ -141,8 +141,8 @@ for label, ax in axs.items():
         ax.text(-1, 0, f''' reference \n block1 \n random insertion \n block2 \n random insertion (false) \n block2 (false) ''', fontfamily="arial", va='center', ha='left', linespacing=1)
     elif label == "(c)":
         ax.set_title("double cut", y=0.8, fontfamily="arial")
-        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {DNA2[:33]+"   "+DNA2[36:]} \n {DNA[:24]+" "*36} \n {" "*27+DNA[27:30]+" "*30} \n {" "*30+DNA2[30:]} \n {DNA[:30]+DNA2[30:]} \n {" "*27+DNA[27:30]+DNA2[30:]} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
-        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n {" "*33+DNA2[33:36]+" "*24} \n\n\n\n\n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
+        ax.text(0, 0, f''' {DNA[:33]+"   "+DNA[36:]} \n {DNA2[:33]+"   "+DNA2[36:]} \n {DNA[:24]+" "*36} \n {" "*27+DNA[27:30]+" "*30} \n {" "*30+DNA2[30:]} \n {DNA[:30]+DNA2[30:33]+"   "+DNA2[36:]} \n {" "*27+DNA[27:30]+DNA2[30:]} ''', va='center', ha='center', fontfamily='courier new', linespacing=1.1)
+        ax.text(0, 0, f''' {" "*33+DNA[33:36]+" "*24} \n {" "*33+DNA2[33:36]+" "*24} \n\n\n\n {" "*33+DNA2[33:36]+" "*24} \n''', va='center', ha='center', fontfamily='courier new', linespacing=1.1, fontweight="bold")
         ax.text(-1, 1, label, va="top", ha="left", fontfamily="arial")
         ax.plot([0, 0], [-1, 1], c="grey", ls="--")
     elif label == "(cn)":
