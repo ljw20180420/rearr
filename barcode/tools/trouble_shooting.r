@@ -18,10 +18,11 @@ library(this.path)
 # ggsave("percentage.sx.png", path = "barcode/sxanalysis", width = 22, height = 12)
 
 #######################################################
-# Usage: trouble_shooting.r
+# Usage: trouble_shooting.r fqfile score_thres(0 means no filter)
 #######################################################
 args <- commandArgs(trailingOnly = TRUE)
 fqfile <- args[1]
+score_thres <- as.integer(args[2])
 csvfile <- case_match(
   str_to_upper(substring(strsplit(fqfile, "-")[[1]][2], 1, 2)),
   "A1" ~ "final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A1.csv",
@@ -43,6 +44,7 @@ idtable <- read_tsv(sprintf("%s.table", fqfile), col_types = "ciiiciiiiciiiicii"
 
 # all insertions
 idtable |>
+  filter(score >= score_thres) |> # filter score larger than score_thres
   left_join(barcode_sgRNA, by = "barcode") |>
   mutate(m6 = factor(substring(sgRNA, 15, 15), levels = c("A", "T", "C", "G"))) |>
   mutate(m5 = factor(substring(sgRNA, 16, 16), levels = c("A", "T", "C", "G"))) |>

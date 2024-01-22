@@ -117,7 +117,9 @@ DNA2 = numpy.random.choice(['A', 'C', 'G', 'T'], 60)
 DNA2[34:36] = "G"
 DNA2 = "".join(DNA2)
 while DNA2[27] == DNA[27] or DNA2[28] == DNA[28] or DNA2[29] == DNA[29]:
-    DNA2 = "".join(numpy.random.choice(['A', 'C', 'G', 'T'], 60))
+    DNA2 = numpy.random.choice(['A', 'C', 'G', 'T'], 60)
+    DNA2[34:36] = "G"
+    DNA2 = "".join(DNA2)
 
 for label, ax in axs.items():
     ax.set_xlim([-1, 1])
