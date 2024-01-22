@@ -10,7 +10,7 @@ python -m venv .venv
 # install R packages
 Rscript -e '
   packages <- c(
-    "BiocManager",
+    "devtools",
     "tidyverse",
     "ggforce",
     "waffle",
@@ -18,10 +18,9 @@ Rscript -e '
     "reticulate"
     )
   install.packages(setdiff(packages, rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
-  packages <- c(
-    "ggseqlogo"
-  )
-  BiocManager::install(setdiff(packages, rownames(installed.packages())))
+  if (!"ggseqlogo" %in% rownames(installed.packages())){
+    devtools::install_github("omarwagih/ggseqlogo")
+  }
 '
 
 
