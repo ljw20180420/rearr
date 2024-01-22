@@ -4,10 +4,8 @@ ext1up, ext2up = int(ext1up), int(ext2up)
 _ = subprocess.run(f'''> {fq1}.alg''', shell=True, check=True)
 _ = subprocess.run(f'''printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" "barcode" "index" "count" "score" "updangle" "ref_start1" "query_start1" "ref_end1" "query_end1" "random_insertion" "ref_start2" "query_start2" "ref_end2" "query_end2" "downdangle" "cut1" "cut2" > {fq1}.table''', shell=True, check=True, executable="/bin/bash")
 barcodegroup = ""
-total_count = 0
 for bcdline in sys.stdin:
     _, count, naseq, barcode_end, barcode, ref1, ref2 = bcdline.rstrip().split('\t')
-    total_count += int(count)
     barcode_end = int(barcode_end)
     if barcodegroup != barcode:
         if barcodegroup:
