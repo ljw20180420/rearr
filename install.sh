@@ -15,7 +15,8 @@ Rscript -e '
     "ggforce",
     "waffle",
     "patchwork",
-    "reticulate"
+    "reticulate",
+    "this.path"
     )
   install.packages(setdiff(packages, rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
   if (!"ggseqlogo" %in% rownames(installed.packages())){
