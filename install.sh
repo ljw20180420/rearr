@@ -10,14 +10,18 @@ python -m venv .venv
 # install R packages
 Rscript -e '
   packages <- c(
+    "BiocManager",
     "tidyverse",
-    "ggseqlogo",
     "ggforce",
     "waffle",
     "patchwork",
     "reticulate"
     )
   install.packages(setdiff(packages, rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
+  packages <- c(
+    "ggseqlogo"
+  )
+  BiocManager::install(setdiff(packages, rownames(installed.packages())))
 '
 
 
