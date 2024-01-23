@@ -2,3 +2,4 @@ biopython
 numpy
 more_itertools
 pysam
+scipy
