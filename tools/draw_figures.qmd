@@ -13,9 +13,16 @@ library(ggforce)
 library(waffle)
 library(patchwork)
 library(reticulate)
+library(this.path)
 ```
 
-```{r set parameters, include = FALSE}
+```{python}
+import numpy
+import scipy
+import os
+```
+
+```{r set parameters for R, include = FALSE}
 algfile <- params$algfile
 tablefile <- sub(".alg.", ".table.", algfile)
 fields <- strsplit(algfile, ".", fixed = TRUE)[[1]]
@@ -25,118 +32,155 @@ cut2 <- strtoi(fields[length(fields) - 1])
 lineNum <- strtoi(system(sprintf("wc -l <%s", algfile), intern = TRUE))
 ```
 
-```{r load alignment file and generate a tibble for single bases with positions, include = FALSE}
-fd <- file(description = algfile, open = "r")
-counts <- reflines <- querylines <- rep(NA, lineNum / 3)
-lposes <- rposes <- vector(mode = "list", length = lineNum / 3)
-for (i in seq_len(lineNum / 3)) {
-  lines <- readLines(con = fd, n = 3)
-  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
-  reflines[i] <- lines[2] |> toupper()
-  querylines[i] <- lines[3]
-  rposes[[i]] <- cumsum(!(strsplit(reflines[i], "")[[1]] %in% c(" ", "-")))
-  lposes[[i]] <- c(0, rposes[[i]][1:(length(rposes[[i]]) - 1)])
-}
-close(fd)
 
-for (i in seq_len(lineNum / 3)) {
-  if (nchar(reflines[i]) != nchar(querylines[i])) {
-    print(i)
-    print(reflines[i])
-    print(querylines[i])
-    break
-  }
-}
-base_pos_df <- tibble(
-  refbase = unlist(strsplit(reflines, NULL)),
-  querybase = unlist(strsplit(querylines, NULL)),
-  lpos = unlist(lposes),
-  rpos = unlist(rposes),
-  count = rep(counts, times = sapply(querylines, nchar, USE.NAMES = FALSE))
-)
-ref1 <- gsub("[- ]", "", reflines[1])
-ref2 <- ref1 |> substr(ref1len + 1, nchar(ref1))
-ref1 <- ref1 |> substr(1, ref1len)
-
-base_pos_df |>
-  mutate(part = factor(
-    ifelse(rpos == 0,
-      "updangle", 
-      ifelse(lpos == nchar(ref1) + nchar(ref2),
-        "downdangle",
-        ifelse(lpos == nchar(ref1) & rpos == nchar(ref1),
-          "randomins",
-          ifelse(lpos < nchar(ref1),
-            "ref1",
-            "ref2"
-          )
-        )
-      )
-    ), levels = c("updangle", "ref1", "randomins", "ref2", "downdangle"))) |>
-  mutate(posstatus = factor(ifelse(refbase == "-", "ins", ifelse(querybase == "-", "del", ifelse(querybase == refbase, "match", "SNP"))), levels = c("ins", "del", "SNP", "match"))) ->
-  base_pos_df
+```{python set parameters for python, include = FALSE}
+algfile = r.algfile
+tablefile = r.tablefile
+ref1len = r.ref1len
+cut1 = r.cut1
+cut2 = r.cut2
+lineNum = r.lineNum
+with open(algfile, "r") as pf:
+    _ = pf.readline()
+    ref1 = pf.readline().rstrip().upper().replace('-', '')
+ref2 = ref1[ref1len:]
+ref1 = ref1[:ref1len]
+ref1vec = list(ref1)
+ref2vec = list(ref2)
 ```
 
-```{r barplot of positional indel for ref1, fig.cap = "barplot of positional indel for ref1", echo = FALSE, message = FALSE, warning = FALSE}
-base_pos_df |>
-  mutate(rel1pos = (lpos + rpos) / 2 - cut1) |>
-  filter(part == "ref1") |>
-  ggplot(aes(rel1pos, fill = posstatus, weight = count)) +
-  stat_bin(data = ~ filter(.x, posstatus != "ins"), breaks = seq(-cut1, nchar(ref1) - cut1)) +
-  stat_bin(mapping = aes(color = "black"), data = ~ filter(.x, posstatus == "ins"), geom = "step", direction = "mid", breaks = seq(-cut1 + 0.5, nchar(ref1) - cut1 - 0.5)) +
-  scale_x_continuous(name = "position relative to cut1") +
-  scale_fill_discrete(name = NULL, limits = c("del", "SNP", "match"), labels = c("deletion", "SNP", "match")) +
-  scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
+```{python get read counts, include = FALSE}
+with os.popen(f'''awk -F "\t" 'NR % 3 == 1{{print $2}}' {algfile}''', "r") as pf:
+    counts = numpy.reshape(numpy.loadtxt(pf, dtype = numpy.int32), (-1, 1))
+```
+
+```{python calculate base frequency, include = FALSE}
+with os.popen(f'''awk -F "\t" 'NR % 3 != 1{{print $0}}' {algfile}''', "r") as pf:
+    lines = pf.readlines()
+basefreq, alphabet = numpy.zeros((5, len(ref1) + len(ref2)), dtype = numpy.int64), numpy.reshape(numpy.frombuffer(b"ACGT-", dtype = numpy.int8), (5, 1))
+for i in range(0, len(lines), 2):
+    querybases = numpy.frombuffer(lines[i + 1].rstrip().encode(), dtype = numpy.int8)[numpy.frombuffer(lines[i].rstrip().encode(), dtype = numpy.int8) != ord('-')]
+    basefreq += (querybases == alphabet) * counts[i // 2]
+```
+
+```{python}
+with os.popen(f'''awk -F "\t" 'NR % 3 == 2{{print $0}}' {algfile}''', "r") as pf:
+    lines = pf.readlines()
+insertcount = numpy.zeros(len(ref1) + len(ref2) + 1, dtype = numpy.int64)
+for i in range(len(lines)):
+    mask = numpy.frombuffer(lines[i].rstrip().encode(), dtype = numpy.int8) != ord('-')
+    insertcount += numpy.bincount(numpy.cumsum(mask)[mask == False], minlength=len(insertcount)) * counts[i]
+
+with os.popen(f'''awk -F "\t" 'NR % 3 != 1{{print $0}}' {algfile}''', "r") as pf:
+    lines = pf.readlines()
+MSDfreq = numpy.zeros((3, len(ref1) + len(ref2)), dtype = numpy.int64)
+for i in range(0, len(lines), 2):
+    refbases = numpy.frombuffer(lines[i].rstrip().encode(), dtype = numpy.int8)
+    mask = (refbases != ord('-'))
+    querybases = numpy.frombuffer(lines[i + 1].rstrip().encode(), dtype = numpy.int8)[mask]
+    refbases = refbases[mask]
+    MSDfreq[0, :] += (refbases == querybases)
+    MSDfreq[1, :] += numpy.logical_and(querybases != ord('-'), refbases != querybases)
+    MSDfreq[2, :] += (querybases == ord('-'))
+
+_ = 0 # handle block bug
+```
+
+```{python}
+with os.popen(f'''awk -F "\t" 'NR % 3 != 1{{print $0}}' {algfile}''', "r") as pf:
+    lines = pf.readlines()
+poly = scipy.interpolate.lagrange(numpy.array([ord(cc) for cc in ["-", "A", "C", "G", "T"]]), numpy.arange(5))
+TRANfreq, refbases, querybases, repcounts = numpy.zeros((5, 5), dtype = numpy.int64), [], [], []
+for i in range(0, len(lines), 2):
+    refbases.append(numpy.round(poly(numpy.frombuffer(lines[i].rstrip().upper().encode(), dtype = numpy.int8))).astype(numpy.int8))
+    querybases.append(numpy.round(poly(numpy.frombuffer(lines[i + 1].rstrip().encode(), dtype = numpy.int8))).astype(numpy.int8))
+    repcounts.append(len(refbases[-1]))
+TRANfreq = scipy.sparse.csc_array((numpy.repeat(counts, repcounts), (numpy.concatenate(refbases), numpy.concatenate(querybases))), shape = (5, 5)).toarray()
+_ = 0 # handle block bug
+```
+
+```{r barplot of positional base for ref1, fig.cap = "barplot of positional base for ref1", echo = FALSE, message = FALSE, warning = FALSE}
+tibble(count = c(py$basefreq), pos = rep(seq(ncol(py$basefreq)) - 0.5, each = nrow(py$basefreq)), base = rep(c("A", "C", "G", "T", "-"), times = ncol(py$basefreq))) |>
+  filter(pos <= ref1len) |>
+  mutate(base = factor(base, levels = c("-", "A", "C", "G", "T"))) |>
+  mutate(rel1pos = pos - cut1) |>
+  ggplot(aes(rel1pos, count)) +
+  geom_col(aes(fill = base)) +
+  geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
+  scale_x_continuous(name = "position relative to cut1") ->
+  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
   ggfig
 print(ggfig)
 # ggsave("indel.pos.ref1.png", plot = ggfig, path = dirname(algfile))
 ```
+
+```{r barplot of positional base for ref2, fig.cap = "barplot of positional base for ref2", echo = FALSE, message = FALSE, warning = FALSE}
+tibble(count = c(py$basefreq), pos = rep(seq(ncol(py$basefreq)) - 0.5, each = nrow(py$basefreq)), base = rep(c("A", "C", "G", "T", "-"), times = ncol(py$basefreq))) |>
+  filter(pos > ref1len) |>
+  mutate(base = factor(base, levels = c("-", "A", "C", "G", "T"))) |>
+  mutate(rel2pos = pos - ref1len - cut2) |>
+  ggplot(aes(rel2pos, count)) +
+  geom_col(aes(fill = base)) +
+  geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(py$ref1)+nchar(py$ref2)), color = "black", direction = "mid") +
+  scale_x_continuous(name = "position relative to cut2") ->
+  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+  ggfig
+print(ggfig)
+# ggsave("indel.pos.ref2.png", plot = ggfig, path = dirname(algfile))
+```
+
+```{r barplot of positional indel for ref1, fig.cap = "barplot of positional indel for ref1", echo = FALSE, message = FALSE, warning = FALSE}
+tibble(count = c(py$MSDfreq), pos = rep(seq(ncol(py$MSDfreq)) - 0.5, each = nrow(py$MSDfreq)), type = rep(c("match", "SNP", "delete"), times = ncol(py$MSDfreq))) |>
+  filter(pos <= ref1len) |>
+  mutate(type = factor(type, levels = c("delete", "SNP", "match"))) |>
+  mutate(rel1pos = pos - cut1) |>
+  ggplot(aes(rel1pos, count)) +
+  geom_col(aes(fill = type)) +
+  geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
+  scale_x_continuous(name = "position relative to cut1") ->
+  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+  ggfig
+print(ggfig)
+# ggsave("indel.pos.ref1.png", plot = ggfig, path = dirname(algfile))
+```
+
 ```{r barplot of positional indel for ref2, fig.cap = "barplot of positional indel for ref2", echo = FALSE, message = FALSE, warning = FALSE}
-base_pos_df |>
-  mutate(rel2pos = (lpos + rpos) / 2 - nchar(ref1) - cut2) |>
-  filter(part == "ref2") |>
-  ggplot(aes(rel2pos, fill = posstatus, weight = count)) +
-  stat_bin(data = ~ filter(.x, posstatus != "ins"), breaks = seq(-cut1, nchar(ref1) - cut1)) +
-  stat_bin(mapping = aes(color = "black"), data = ~ filter(.x, posstatus == "ins"), geom = "step", direction = "mid", breaks = seq(-cut1 + 0.5, nchar(ref1) - cut1 - 0.5)) +
-  scale_x_continuous(name = "position relative to cut2") +
-  scale_fill_discrete(name = NULL, limits = c("del", "SNP", "match"), labels = c("deletion", "SNP", "match")) +
-  scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
+tibble(count = c(py$MSDfreq), pos = rep(seq(ncol(py$MSDfreq)) - 0.5, each = nrow(py$MSDfreq)), type = rep(c("match", "SNP", "delete"), times = ncol(py$MSDfreq))) |>
+  filter(pos > ref1len) |>
+  mutate(type = factor(type, levels = c("delete", "SNP", "match"))) |>
+  mutate(rel2pos = pos - ref1len - cut2) |>
+  ggplot(aes(rel2pos, count)) +
+  geom_col(aes(fill = type)) +
+  geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(py$ref1)+nchar(py$ref2)), color = "black", direction = "mid") +
+  scale_x_continuous(name = "position relative to cut2") ->
+  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
   ggfig
 print(ggfig)
 # ggsave("indel.pos.ref2.png", plot = ggfig, path = dirname(algfile))
 ```
 
 ```{r base count of dangle, fig.cap = "base count of dangle", echo = FALSE, message = FALSE, warning = FALSE}
-base_pos_df |>
-  ggplot(aes(part, weight = count)) +
-  geom_bar() +
-  scale_x_discrete(limits = c("updangle", "randomins", "downdangle")) +
-  scale_y_log10() ->
+tibble(count = py$insertcount[c(1, ref1len + 1, nchar(py$ref1) + nchar(py$ref2) + 1)], part = c("updangle", "randomins", "downdangle")) |>
+  mutate(part = factor(part, levels = c("updangle", "randomins", "downdangle"))) |>
+  ggplot(aes(part, count)) +
+  geom_col() ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.dangle.png", plot = ggfig, path = dirname(algfile))
 ```
 
 ```{r base substitution, fig.cap = "base substitution", echo = FALSE, message = FALSE, warning = FALSE}
-base_pos_df |>
-  mutate(trans = factor(sprintf("%s>%s", refbase, querybase),
-    levels = c("A>A", "C>C", "G>G", "T>T",
-    "A>C", "A>G", "A>T", "C>A", "C>G", "C>T", "G>A", "G>C", "G>T", "T>A", "T>C", "T>G",
-    "A>-", "C>-", "G>-", "T>-",
-    "->A", "->C", "->G", "->T"
-    ))) |>
-  ggplot(aes(trans, weight = count)) +
-  geom_bar() +
-  scale_y_log10() ->
+trans <- paste(rep(c("-", "A", "C", "G", "T"), times = 5), rep(c("-", "A", "C", "G", "T"), each = 5), sep = ">")
+tibble(count = c(py$TRANfreq), trans = factor(trans, levels = trans)) |>
+  ggplot(aes(trans, count)) +
+  geom_col() ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.trans.png", plot = ggfig, path = dirname(algfile))
 ```
 
-```{r show micro-homology, fig.cap = "show micro-homology", echo = FALSE, message = FALSE, warning = FALSE}
-ref1vec <- strsplit({{ref1}}, "")[[1]]
-ref2vec <- strsplit({{ref2}}, "")[[1]]
-microhomo <- matrix(as.integer(rep(ref1vec, time = length(ref2vec)) == rep(ref2vec, each = length(ref1vec))), nrow = length(ref1vec))
+```{r show micro-homology, fig.cap = "show micro-homology", fig.asp = 1, echo = FALSE, message = FALSE, warning = FALSE}
+microhomo <- matrix(as.integer(rep(py$ref1vec, time = length(py$ref2vec)) == rep(py$ref2vec, each = length(py$ref1vec))), nrow = length(py$ref1vec))
 for (i in seq_len(nrow(microhomo))) {
   for (j in seq_len(ncol(microhomo))) {
     if (i > 1 && j > 1)
@@ -161,14 +205,16 @@ print(ggfig)
 ```{r load and preprocess information table for alignments, include = FALSE}
 indel_tsv <- read_tsv(tablefile, col_types = "iiiciiiiciiiiciic", na = "NA")
 indel_tsv |>
+  mutate(uplen = query_start1, randlen = query_start2 - query_end1, downlen = nchar(downdangle)) |>
+  select(count, score, ref_end1, query_end1, ref_start2, query_start2, downdangle, cut1, cut2, uplen, randlen, downlen) |>
   mutate(templated = (ref_end1 > cut1 | ref_start2 < cut2)) |>
   mutate(deletion = (ref_end1 < cut1 | ref_start2 > cut2)) |>
-  mutate(random = (nchar(random_insertion) > 0)) |>
+  mutate(random = (query_end1 < query_start2)) |>
   mutate(insertion = (templated | random)) |>
   mutate(indel_type = factor(ifelse(insertion & !deletion, "insertion",
                              ifelse(deletion & !insertion, "deletion",
                              ifelse(insertion & deletion, "indel", "WT"
-                      ))), levels = c("WT", "deletion", "insertion", "indel"))) |>
+  ))), levels = c("WT", "deletion", "insertion", "indel"))) |>
   mutate(indel_type_ex = factor(ifelse(templated & deletion & random, "full",
                              ifelse(templated & deletion & !random, "tempdel",
                              ifelse(templated & !deletion & random, "temprand",
@@ -232,13 +278,9 @@ print(ggfig)
 
 ```{r dangle length distribution, fig.cap = "dangle length distribution", echo = FALSE, message = FALSE, warning = FALSE}
 indel_tsv |>
-  mutate(uplen = nchar(updangle)) |>
-  mutate(randlen = nchar(random_insertion)) |>
-  mutate(downlen = nchar(downdangle)) |>
   pivot_longer(cols = c(uplen, randlen, downlen), names_to = "unmapped", values_to = "unmapped_length") |>
   ggplot(aes(unmapped_length, weight = count, fill = unmapped)) +
   geom_bar() +
-  scale_y_log10() +
   scale_fill_discrete(limits = c("uplen", "randlen", "downlen"), labels = c("updangle length", "random insertion length", "downdangle length")) ->
   ggfig
 print(ggfig)
@@ -270,27 +312,21 @@ queryinref <- tibble(sequence = rep(queryinref, time = counts))
 ```
 
 ```{r seqLogo, fig.cap = "seqLogo", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
+basefreq <- py$basefreq
+rownames(basefreq) <- c("A", "C", "G", "T", "D")
 ggplot() +
-  geom_logo(queryinref, method = "bits", namespace = "ACGTD") +
+  geom_logo(basefreq, method = "bits", namespace = "ACGTD") +
   scale_x_continuous(breaks = NULL) +
   theme_logo() ->
   ggfig1
 
 ggplot() +
-  geom_logo(queryinref, method = "prob", namespace = "ACGTD") +
+  geom_logo(basefreq, method = "prob", namespace = "ACGTD") +
   scale_x_continuous(breaks = NULL) +
   theme_logo() ->
   ggfig2
 
-write_tsv(queryinref, file = pipe(sprintf("sed -r 's/D/-/g' | ../seq2logo-2.0/Seq2Logo.py -o %s/seqlogo.wKL -I 3 -C 0", dirname(algfile))), col_names = FALSE)
-logomat <- read_table(file.path(dirname(algfile), "seqlogo.wKL.txt"), col_names = c("pos", "base", "A", "C", "G", "T"), col_types = "icdddd", skip = 3) |> select(A, C, G, T) |> as.matrix() |> t()
-ggplot() +
-  geom_logo(logomat, method = 'custom', seq_type = 'dna') +
-  scale_x_continuous(breaks = NULL) +
-  scale_y_continuous(name = "wKL") +
-  theme_logo() -> ggfig3
-
-ggfig <- ggfig1 / ggfig2 / ggfig3
+ggfig <- ggfig1 / ggfig2
 print(ggfig)
 # ggsave("seqlogo.bits.prob.WLK.png", plot = ggfig, path = dirname(algfile), width = 30, height = 3)
 ```

@@ -18,7 +18,7 @@ library(this.path)
 # ggsave("percentage.sx.png", path = "barcode/sxanalysis", width = 22, height = 12)
 
 #######################################################
-# Usage: trouble_shooting.r fqfile score_thres(0 means no filter)
+# Usage: trouble_shooting.r fqfile score_thres(-inf means no filter)
 #######################################################
 args <- commandArgs(trailingOnly = TRUE)
 fqfile <- args[1]
@@ -40,7 +40,7 @@ barcode_sgRNA <- read_csv(pipe(sprintf("rev %s | cut -c23-40 | tr 'ACGT' 'TGCA'"
   bind_cols(read_csv(pipe(sprintf("sed -r 's/[acgt]+.*$//' %s | rev | cut -c1-20 | rev", csvfile)), col_names = "sgRNA", col_types="c"))
 
 # load table
-idtable <- read_tsv(sprintf("%s.table", fqfile), col_types = "ciiiciiiiciiiicii")
+idtable <- read_tsv(sprintf("%s.table", fqfile), col_types = "ciiiciiiiciiiiciic")
 
 # all insertions
 idtable |>

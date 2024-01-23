@@ -2,22 +2,19 @@
 
 find_barcode()
 {
-    local minscoreR2=30
-    # local minscoreR1=30
     local minscoreR1=100
+    local minscoreR2=30
     local fq1=$1
     local csvfile=$2
     local bowtie2genome=$3
     local getfastagenome=$4
     local fq2=${fq1%.*}.R2.${fq1##*.}
 
-    sed -n '2~4p' "$fq2" | paste - <(sed -n '2~4p' "$fq1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fq1.count"
-    
-    # cut -f2 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR1 -r -x "barcode/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.sgRNA+scaffold" -U - 2>/dev/null | samtools view | less -SN
+    echo "counting duplicates" >&2
+    pv "$fq2" | sed -n '2~4p' | paste - <(sed -n '2~4p' "$fq1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fq1.count"
 
-    # cut -f1 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x barcode/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.primer+barcode -U - 2>/dev/null | samtools view | less -SN
-
-    cut -f1 "$fq1.count" | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $(which python) -c '
+    echo "demultiplexing reads" >&2
+    pv "$fq1.count" | cut -f1 | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $(which python) -c '
 import sys, pysam
 for line in sys.stdin:
     flag, barcode, CIGAR = line.split("\t")
@@ -74,12 +71,20 @@ bowtie2genome=$1
 getfastagenome=$2
 ext1up=50
 ext2up=10
-script_path=$(dirname $1)
+script_path="$(dirname $(realpath $0))"
 
 while read fq1
 do
     csvfile=$(infer_csvfile.sh "$fq1")
-    (find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" >"$fq1.barcode"; $script_path/../../.venv/bin/python $script_path/rearr_barcode_align.py <"$fq1.barcode" "$fq1" "$ext1up" "$ext2up") &
+    (
+        echo "generating barcode" >&2
+        find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" >"$fq1.barcode"
+        echo "aligning" >&2
+        pv "$fq1.barcode" | $script_path/../../.venv/bin/python $script_path/rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up"
+        echo "calculate percent" >&2
+        pv "$fq1.table" | awk -F "\t" -v OFS="\t" -v total="$(tail -n+2 $fq1.table | cut -f3 | awk '{total += $0} END{print total}')" 'NR == 1{print $0, "percent"} NR > 1{printf("%s\t%.2f%\n", $0, $3 / total * 100)}' >"$fq1.table2"
+        mv "$fq1.table2" "$fq1.table"
+    ) &
 done
 
 jobs
