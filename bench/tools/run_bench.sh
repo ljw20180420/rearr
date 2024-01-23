@@ -1,6 +1,6 @@
 #!/bin/bash
 
-script_path=$(dirname $(realpath $0))
+script_path=$(dirname $(which $0))
 printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" mode reflen probability readnum software usertime systime realtime memory query refup refdown queryup querydown >bench/benchresult
 for mode in single double
 do

@@ -71,7 +71,7 @@ bowtie2genome=$1
 getfastagenome=$2
 ext1up=50
 ext2up=10
-script_path="$(dirname $(realpath $0))"
+script_path="$(dirname $(which $0))"
 
 while read fq1
 do

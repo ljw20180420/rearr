@@ -4,7 +4,7 @@ mode=${1:-"single"}
 reflen=${2:-100}
 probability=${3:-0.01}
 readnum=${4:-10000}
-script_path="$(dirname $(realpath $0))"
+script_path="$(dirname $(which $0))"
 
 generate_random_DNA()
 {
