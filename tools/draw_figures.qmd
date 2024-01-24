@@ -32,68 +32,57 @@ cut2 <- strtoi(fields[length(fields) - 1])
 lineNum <- strtoi(system(sprintf("wc -l <%s", algfile), intern = TRUE))
 ```
 
-
-```{python set parameters for python, include = FALSE}
-algfile = r.algfile
-tablefile = r.tablefile
-ref1len = r.ref1len
-cut1 = r.cut1
-cut2 = r.cut2
-lineNum = r.lineNum
-with open(algfile, "r") as pf:
-    _ = pf.readline()
-    ref1 = pf.readline().rstrip().upper().replace('-', '')
-ref2 = ref1[ref1len:]
-ref1 = ref1[:ref1len]
-ref1vec = list(ref1)
-ref2vec = list(ref2)
+```{r load data, include = FALSE}
+counts <- scan(file = pipe(sprintf("sed -n '1~3p' %s | cut -f2", algfile)), what = integer())
+reflines <- readLines(con = pipe(sprintf("sed -nr '2~3p' %s", algfile)))
+querylines <- readLines(con = pipe(sprintf("sed -nr '3~3p' %s", algfile)))
+ref1 <- reflines[1] |> substring(1, ref1len) |> toupper()
+ref2 <- reflines[1] |> substring(ref1len + 1) |> toupper()
+ref1vec <- str_split_1(ref1, "")
+ref2vec <- str_split_1(ref2, "")
 ```
 
-```{python get read counts, include = FALSE}
-with os.popen(f'''awk -F "\t" 'NR % 3 == 1{{print $2}}' {algfile}''', "r") as pf:
-    counts = numpy.reshape(numpy.loadtxt(pf, dtype = numpy.int32), (-1, 1))
+```{python assign data, include = FALSE}
+counts = r.counts
+reflines = r.reflines
+querylines = r.querylines
 ```
 
 ```{python calculate base frequency, include = FALSE}
-with os.popen(f'''awk -F "\t" 'NR % 3 != 1{{print $0}}' {algfile}''', "r") as pf:
-    lines = pf.readlines()
-basefreq, alphabet = numpy.zeros((5, len(ref1) + len(ref2)), dtype = numpy.int64), numpy.reshape(numpy.frombuffer(b"ACGT-", dtype = numpy.int8), (5, 1))
-for i in range(0, len(lines), 2):
-    querybases = numpy.frombuffer(lines[i + 1].rstrip().encode(), dtype = numpy.int8)[numpy.frombuffer(lines[i].rstrip().encode(), dtype = numpy.int8) != ord('-')]
-    basefreq += (querybases == alphabet) * counts[i // 2]
-```
-
-```{python}
-with os.popen(f'''awk -F "\t" 'NR % 3 == 2{{print $0}}' {algfile}''', "r") as pf:
-    lines = pf.readlines()
-insertcount = numpy.zeros(len(ref1) + len(ref2) + 1, dtype = numpy.int64)
-for i in range(len(lines)):
-    mask = numpy.frombuffer(lines[i].rstrip().encode(), dtype = numpy.int8) != ord('-')
-    insertcount += numpy.bincount(numpy.cumsum(mask)[mask == False], minlength=len(insertcount)) * counts[i]
-
-with os.popen(f'''awk -F "\t" 'NR % 3 != 1{{print $0}}' {algfile}''', "r") as pf:
-    lines = pf.readlines()
-MSDfreq = numpy.zeros((3, len(ref1) + len(ref2)), dtype = numpy.int64)
-for i in range(0, len(lines), 2):
-    refbases = numpy.frombuffer(lines[i].rstrip().encode(), dtype = numpy.int8)
-    mask = (refbases != ord('-'))
-    querybases = numpy.frombuffer(lines[i + 1].rstrip().encode(), dtype = numpy.int8)[mask]
-    refbases = refbases[mask]
-    MSDfreq[0, :] += (refbases == querybases)
-    MSDfreq[1, :] += numpy.logical_and(querybases != ord('-'), refbases != querybases)
-    MSDfreq[2, :] += (querybases == ord('-'))
-
+basefreq, alphabet = numpy.zeros((5, len(r.ref1) + len(r.ref2)), dtype = numpy.int64), numpy.reshape(numpy.frombuffer(b"ACGT-", dtype = numpy.int8), (5, 1))
+for i in range(len(counts)):
+    querybases = numpy.frombuffer(querylines[i].encode(), dtype = numpy.int8)[numpy.frombuffer(reflines[i].encode(), dtype = numpy.int8) != ord('-')]
+    basefreq += (querybases == alphabet) * counts[i]
 _ = 0 # handle block bug
 ```
 
-```{python}
-with os.popen(f'''awk -F "\t" 'NR % 3 != 1{{print $0}}' {algfile}''', "r") as pf:
-    lines = pf.readlines()
+```{python calculate insertcount}
+insertcount = numpy.zeros(len(r.ref1) + len(r.ref2) + 1, dtype = numpy.int64)
+for i in range(len(reflines)):
+    mask = numpy.frombuffer(reflines[i].encode(), dtype = numpy.int8) != ord('-')
+    insertcount += numpy.bincount(numpy.cumsum(mask)[mask == False], minlength=len(insertcount)) * counts[i]
+_ = 0 # handle block bug
+```
+
+```{python calculate MSDfreq}
+MSDfreq = numpy.zeros((3, len(r.ref1) + len(r.ref2)), dtype = numpy.int64)
+for i in range(len(counts)):
+    refbases = numpy.frombuffer(reflines[i].upper().encode(), dtype = numpy.int8)
+    mask = (refbases != ord('-'))
+    querybases = numpy.frombuffer(querylines[i].encode(), dtype = numpy.int8)[mask]
+    refbases = refbases[mask]
+    MSDfreq[0, :] += (refbases == querybases) * counts[i]
+    MSDfreq[1, :] += numpy.logical_and(querybases != ord('-'), refbases != querybases) * counts[i]
+    MSDfreq[2, :] += (querybases == ord('-')) * counts[i]
+_ = 0 # handle block bug
+```
+
+```{python calculate TRANfreq}
 poly = scipy.interpolate.lagrange(numpy.array([ord(cc) for cc in ["-", "A", "C", "G", "T"]]), numpy.arange(5))
 TRANfreq, refbases, querybases, repcounts = numpy.zeros((5, 5), dtype = numpy.int64), [], [], []
-for i in range(0, len(lines), 2):
-    refbases.append(numpy.round(poly(numpy.frombuffer(lines[i].rstrip().upper().encode(), dtype = numpy.int8))).astype(numpy.int8))
-    querybases.append(numpy.round(poly(numpy.frombuffer(lines[i + 1].rstrip().encode(), dtype = numpy.int8))).astype(numpy.int8))
+for i in range(len(counts)):
+    refbases.append(numpy.round(poly(numpy.frombuffer(reflines[i].upper().encode(), dtype = numpy.int8))).astype(numpy.int8))
+    querybases.append(numpy.round(poly(numpy.frombuffer(querylines[i].encode(), dtype = numpy.int8))).astype(numpy.int8))
     repcounts.append(len(refbases[-1]))
 TRANfreq = scipy.sparse.csc_array((numpy.repeat(counts, repcounts), (numpy.concatenate(refbases), numpy.concatenate(querybases))), shape = (5, 5)).toarray()
 _ = 0 # handle block bug
@@ -106,7 +95,7 @@ tibble(count = c(py$basefreq), pos = rep(seq(ncol(py$basefreq)) - 0.5, each = nr
   mutate(rel1pos = pos - cut1) |>
   ggplot(aes(rel1pos, count)) +
   geom_col(aes(fill = base)) +
-  geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
+  geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
   scale_x_continuous(name = "position relative to cut1") ->
   # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
   ggfig
@@ -121,7 +110,7 @@ tibble(count = c(py$basefreq), pos = rep(seq(ncol(py$basefreq)) - 0.5, each = nr
   mutate(rel2pos = pos - ref1len - cut2) |>
   ggplot(aes(rel2pos, count)) +
   geom_col(aes(fill = base)) +
-  geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(py$ref1)+nchar(py$ref2)), color = "black", direction = "mid") +
+  geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(ref1)+nchar(ref2)), color = "black", direction = "mid") +
   scale_x_continuous(name = "position relative to cut2") ->
   # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
   ggfig
@@ -136,7 +125,7 @@ tibble(count = c(py$MSDfreq), pos = rep(seq(ncol(py$MSDfreq)) - 0.5, each = nrow
   mutate(rel1pos = pos - cut1) |>
   ggplot(aes(rel1pos, count)) +
   geom_col(aes(fill = type)) +
-  geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
+  geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
   scale_x_continuous(name = "position relative to cut1") ->
   # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
   ggfig
@@ -151,7 +140,7 @@ tibble(count = c(py$MSDfreq), pos = rep(seq(ncol(py$MSDfreq)) - 0.5, each = nrow
   mutate(rel2pos = pos - ref1len - cut2) |>
   ggplot(aes(rel2pos, count)) +
   geom_col(aes(fill = type)) +
-  geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(py$ref1)+nchar(py$ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(py$ref1)+nchar(py$ref2)), color = "black", direction = "mid") +
+  geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(ref1)+nchar(ref2)), color = "black", direction = "mid") +
   scale_x_continuous(name = "position relative to cut2") ->
   # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
   ggfig
@@ -160,7 +149,7 @@ print(ggfig)
 ```
 
 ```{r base count of dangle, fig.cap = "base count of dangle", echo = FALSE, message = FALSE, warning = FALSE}
-tibble(count = py$insertcount[c(1, ref1len + 1, nchar(py$ref1) + nchar(py$ref2) + 1)], part = c("updangle", "randomins", "downdangle")) |>
+tibble(count = py$insertcount[c(1, ref1len + 1, nchar(ref1) + nchar(ref2) + 1)], part = c("updangle", "randomins", "downdangle")) |>
   mutate(part = factor(part, levels = c("updangle", "randomins", "downdangle"))) |>
   ggplot(aes(part, count)) +
   geom_col() ->
@@ -180,7 +169,7 @@ print(ggfig)
 ```
 
 ```{r show micro-homology, fig.cap = "show micro-homology", fig.asp = 1, echo = FALSE, message = FALSE, warning = FALSE}
-microhomo <- matrix(as.integer(rep(py$ref1vec, time = length(py$ref2vec)) == rep(py$ref2vec, each = length(py$ref1vec))), nrow = length(py$ref1vec))
+microhomo <- matrix(as.integer(rep(ref1vec, time = length(ref2vec)) == rep(ref2vec, each = length(ref1vec))), nrow = length(ref1vec))
 for (i in seq_len(nrow(microhomo))) {
   for (j in seq_len(ncol(microhomo))) {
     if (i > 1 && j > 1)
@@ -290,25 +279,12 @@ print(ggfig)
 ```{r score distribution, fig.cap = "score distribution", echo = FALSE, message = FALSE, warning = FALSE}
 indel_tsv |>
   ggplot(aes(score, weight = count)) +
-  stat_bin(aes(y = after_stat(count) / after_stat(width))) +
-  geom_density(aes(y = after_stat(count)), color = "red") +
-  scale_y_continuous(name = "count / bin_width")->
+  stat_bin(aes(y = after_stat(density))) +
+  geom_density(aes(y = after_stat(density)), color = "red") +
+  scale_y_continuous(name = "density")->
   ggfig
 print(ggfig)
 # ggsave("score.distribution.png", plot = ggfig, path = dirname(algfile))
-```
-
-```{r get raw query reads in reference, include = FALSE}
-fd <- file(description = algfile, open = "r")
-counts <- queryinref <- rep(NA, lineNum / 3)
-for (i in seq(lineNum / 3)) {
-  lines <- readLines(con = fd, n = 3)
-  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
-  queryinref[i] <- str_split(lines[3], "")[[1]][!(str_split(toupper(lines[2]), "")[[1]] %in% c("-", " "))] |> paste(collapse = "")
-  queryinref[i] <- gsub("-", "D", queryinref[i], fixed = TRUE)
-}
-close(fd)
-queryinref <- tibble(sequence = rep(queryinref, time = counts))
 ```
 
 ```{r seqLogo, fig.cap = "seqLogo", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
@@ -332,15 +308,6 @@ print(ggfig)
 ```
 
 ```{r polygon insertion, fig.cap = "polygon insertion", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
-fd <- file(description = algfile, open = "r")
-counts <- reflines <- rep(NA, lineNum / 3)
-for (i in seq(lineNum / 3)) {
-  lines <- readLines(con = fd, n = 3)
-  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
-  reflines[i] <- lines[2] |> toupper()
-}
-close(fd)
-
 regs <- gregexpr("-+", reflines)
 inscounts <- rep(counts, time = unlist(lapply(regs, function(reg){if (reg[1] == -1) return(0); return(length(reg))})))
 insposes <- lapply(regs, function(reg) {if (reg[1] == -1) return(NULL); clen <- cumsum(attributes(reg)$match.length); reg - 1 - c(0, clen[seq_len(length(clen)-1)])}) |> unlist()
@@ -365,19 +332,7 @@ print(ggfig)
 ```
 
 ```{r arc deletion, fig.cap = "arc deletion", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
-fd <- file(description = algfile, open = "r")
-counts <- querylines <- rep(NA, lineNum / 3)
-lposes <- vector(mode = "list", length = lineNum / 3)
-for (i in seq(lineNum / 3)) {
-  lines <- readLines(con = fd, n = 3)
-  counts[i] <- strtoi(strsplit(lines[1], "\t")[[1]][2])
-  refline <- lines[2] |> toupper()
-  querylines[i] <- lines[3]
-  rpos <- cumsum(!(strsplit(refline, "")[[1]] %in% c(" ", "-")))
-  lposes[[i]] <- c(0, rpos)
-}
-close(fd)
-
+lposes <- reflines |> strsplit("") |> lapply(function(reg){c(0, cumsum(reg != "-"))})
 regs <- gregexpr("-+", querylines)
 delcounts <- rep(counts, time = unlist(lapply(regs, function(reg){if (reg[1] == -1) return(0); return(length(reg))})))
 delstarts <- sapply(seq_len(length(regs)), function(i){if (regs[[i]][1] == -1) return(NULL); return(lposes[[i]][regs[[i]]])}) |> unlist()

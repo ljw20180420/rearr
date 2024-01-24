@@ -1,4 +1,6 @@
 {
+    "r.rterm.linux": "/home/ljw/R-4.3.2/bin/R",
+    "r.rpath.linux": "/home/ljw/R-4.3.2/bin/R",
     "cmake.sourceDirectory": "${workspaceFolder}/Rearrangement",
     "cmake.buildDirectory": "${workspaceFolder}/Rearrangement/build",
     "files.associations": {
