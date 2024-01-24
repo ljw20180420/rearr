@@ -84,3 +84,4 @@ long_idtable |>
   geom_bar(position = "fill") +
   scale_y_continuous(labels = scales::percent) -> ggfig
 ggsave(sprintf("%s.templated.png", basename(fqfile)), path = dirname(fqfile), width = 22, height = 12)
+
