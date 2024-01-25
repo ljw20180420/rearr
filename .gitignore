@@ -1,5 +1,4 @@
 bench/
-!bench/tools/
 barcode/csvfiles/
 !barcode/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A1.csv
 !barcode/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A2.csv
@@ -21,3 +20,4 @@ test/
 paper/
 paper_figures/
 pictures/
+.venv/
