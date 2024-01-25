@@ -1,13 +1,13 @@
 #!/bin/bash
 
+# Usage: printf "%s\n" fastq1 fastq2 ... | rearr_barcode_run.sh
+
 find_barcode()
 {
     local minscoreR1=100
     local minscoreR2=30
     local fq1=$1
     local csvfile=$2
-    local bowtie2genome=$3
-    local getfastagenome=$4
     local fq2=${fq1%.*}.R2.${fq1##*.}
 
     echo "counting duplicates" >&2
@@ -67,8 +67,6 @@ for line in sys.stdin:
     ' | sort -k5,5 -k2,2nr
 }
 
-bowtie2genome=$1
-getfastagenome=$2
 ext1up=50
 ext2up=10
 project_path="$(dirname $(realpath $0))/../.."
@@ -79,7 +77,7 @@ do
     csvfile=$(infer_csvfile.sh "$fq1")
     (
         echo "generating barcode" >&2
-        find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" >"$fq1.barcode"
+        find_barcode "$fq1" "$csvfile" >"$fq1.barcode"
         echo "aligning" >&2
         pv "$fq1.barcode" | $python_exec $project_path/barcode/tools/rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up"
         echo "calculate percent" >&2

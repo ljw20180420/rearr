@@ -4,12 +4,12 @@ printf "%s\n" \
 "path_to_fastq2" \
 ...
 "path_to_fastqN"
-| rearr_barcode_run.sh "bowtie2_index" "genome_fasta"
+| rearr_barcode_run.sh
 
 # Example
 printf "%s\n" \
 "barcode/test1/D2-g1n-1.fq" \
-| rearr_barcode_run.sh "/home/ljw/hg19_with_bowtie2_index/hg19" "/home/ljw/hg19_with_bowtie2_index/hg19.fa"
+| rearr_barcode_run.sh
 
 # Output
 # fastq.count: the count of duplicates in the input file
