@@ -11,7 +11,7 @@ python -m venv .venv
 
 # install R packages
 Rscript -e '
-  install.packages(setdiff("renv", rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
+  # install.packages(setdiff("renv", rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
   renv::restore()
 '
 
