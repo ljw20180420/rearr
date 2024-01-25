@@ -1,5 +1,3 @@
-biopython
-numpy
-more_itertools
-pysam
-scipy
+more-itertools==10.2.0
+numpy==1.26.3
+scipy==1.12.0
