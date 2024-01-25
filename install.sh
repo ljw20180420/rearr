@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cp .gitignore .renvignore
+
 cd "$(dirname "$0")" || exit
 
 # install python packages
