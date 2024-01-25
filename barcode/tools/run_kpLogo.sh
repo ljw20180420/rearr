@@ -7,7 +7,7 @@ fq1=$1
 csvfile=$(infer_csvfile.sh "$fq1")
 method=$2
 threshold=${3:-40}
-script_path="$(dirname $(which $0))"
+project_path="$(dirname $(realpath $0))/../.."
 
 rearr_barcode_post_process.sh <"$fq1.table" | tail -n+2 | join -t $'\t' -1 1 -2 1 - <(rev "$csvfile" | cut -c23-40 | tr 'ACGT' 'TGCA' | paste - <(sed -r 's/[acgt]+.*$//' "$csvfile" | rev | cut -c1-20 | rev) | sort) | awk -F "\t" -v OFS="\t" -v fq1="$fq1" -v threshold="$threshold" '
     {
@@ -41,12 +41,12 @@ rearr_barcode_post_process.sh <"$fq1.table" | tail -n+2 | join -t $'\t' -1 1 -2 
 
 case $method in
     "thres")
-        $script_path/../kpLogo/bin/kpLogo "$fq1.kpLogo.weight.thres" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
+        $project_path/barcode/kpLogo/bin/kpLogo "$fq1.kpLogo.weight.thres" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
     ;;
     "weighted"|"weight")
-        $script_path/../kpLogo/bin/kpLogo "$fq1.kpLogo.weight" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
+        $project_path/barcode/kpLogo/bin/kpLogo "$fq1.kpLogo.weight" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
     ;;
     "background"|"back"|"bg"|"bgfile")
-        $script_path/../kpLogo/bin/kpLogo "$fq1.kpLogo.insertion" -o "$fq1.kpLogo" -region 15,20 -bgfile "$fq1.kpLogo.total" -k 1
+        $project_path/barcode/kpLogo/bin/kpLogo "$fq1.kpLogo.insertion" -o "$fq1.kpLogo" -region 15,20 -bgfile "$fq1.kpLogo.total" -k 1
     ;;
 esac

@@ -14,7 +14,7 @@ find_barcode()
     pv "$fq2" | sed -n '2~4p' | paste - <(sed -n '2~4p' "$fq1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fq1.count"
 
     echo "demultiplexing reads" >&2
-    pv "$fq1.count" | cut -f1 | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $(which python) -c '
+    pv "$fq1.count" | cut -f1 | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $python_exec -c '
 import sys, pysam
 for line in sys.stdin:
     flag, barcode, CIGAR = line.split("\t")
@@ -71,7 +71,8 @@ bowtie2genome=$1
 getfastagenome=$2
 ext1up=50
 ext2up=10
-script_path="$(dirname $(which $0))"
+project_path="$(dirname $(realpath $0))/../.."
+python_exec="$(find $project_path/renv -type f,l -name python)"
 
 while read fq1
 do
@@ -80,7 +81,7 @@ do
         echo "generating barcode" >&2
         find_barcode "$fq1" "$csvfile" "$bowtie2genome" "$getfastagenome" >"$fq1.barcode"
         echo "aligning" >&2
-        pv "$fq1.barcode" | $script_path/../../.venv/bin/python $script_path/rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up"
+        pv "$fq1.barcode" | $python_exec $project_path/barcode/tools/rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up"
         echo "calculate percent" >&2
         pv "$fq1.table" | awk -F "\t" -v OFS="\t" -v total="$(tail -n+2 $fq1.table | cut -f3 | awk '{total += $0} END{print total}')" 'NR == 1{print $0, "percent"} NR > 1{printf("%s\t%.2f%\n", $0, $3 / total * 100)}' >"$fq1.table2"
         mv "$fq1.table2" "$fq1.table"
