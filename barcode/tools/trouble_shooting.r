@@ -68,7 +68,7 @@ long_idtable |>
   ggplot(aes(base, fill = insertion, weight = count)) +
   facet_wrap(~ pos) +
   geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) -> ggfig
+  scale_y_continuous(labels = scales::percent, expand = c(0,0)) -> ggfig
 ggsave(sprintf("%s.insertion.png", basename(fqfile)), path = dirname(fqfile), width = 22, height = 12)
 
 ## templated
@@ -82,6 +82,6 @@ long_idtable |>
   ggplot(aes(base, fill = templated, weight = count)) +
   facet_wrap(~ pos) +
   geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) -> ggfig
+  scale_y_continuous(labels = scales::percent, , expand = c(0,0)) -> ggfig
 ggsave(sprintf("%s.templated.png", basename(fqfile)), path = dirname(fqfile), width = 22, height = 12)
 
