@@ -16,7 +16,7 @@ library(reticulate)
 library(this.path)
 ```
 
-```{python}
+```{python, include = FALSE}
 import numpy
 import scipy
 import os
@@ -36,8 +36,8 @@ lineNum <- strtoi(system(sprintf("wc -l <%s", algfile), intern = TRUE))
 counts <- scan(file = pipe(sprintf("sed -n '1~3p' %s | cut -f2", algfile)), what = integer())
 reflines <- readLines(con = pipe(sprintf("sed -nr '2~3p' %s", algfile)))
 querylines <- readLines(con = pipe(sprintf("sed -nr '3~3p' %s", algfile)))
-ref1 <- reflines[1] |> substring(1, ref1len) |> toupper()
-ref2 <- reflines[1] |> substring(ref1len + 1) |> toupper()
+ref1 <- reflines[1] |> gsub(pattern = "-", replacement = "", fixed = TRUE) |> substring(1, ref1len) |> toupper()
+ref2 <- reflines[1] |> gsub(pattern = "-", replacement = "", fixed = TRUE) |> substring(ref1len + 1) |> toupper()
 ref1vec <- str_split_1(ref1, "")
 ref2vec <- str_split_1(ref2, "")
 ```
@@ -56,7 +56,7 @@ for i in range(len(counts)):
 _ = 0 # handle block bug
 ```
 
-```{python calculate insertcount}
+```{python calculate insertcount, include = FALSE}
 insertcount = numpy.zeros(len(r.ref1) + len(r.ref2) + 1, dtype = numpy.int64)
 for i in range(len(reflines)):
     mask = numpy.frombuffer(reflines[i].encode(), dtype = numpy.int8) != ord('-')
@@ -64,7 +64,7 @@ for i in range(len(reflines)):
 _ = 0 # handle block bug
 ```
 
-```{python calculate MSDfreq}
+```{python calculate MSDfreq, include = FALSE}
 MSDfreq = numpy.zeros((3, len(r.ref1) + len(r.ref2)), dtype = numpy.int64)
 for i in range(len(counts)):
     refbases = numpy.frombuffer(reflines[i].upper().encode(), dtype = numpy.int8)
@@ -77,7 +77,7 @@ for i in range(len(counts)):
 _ = 0 # handle block bug
 ```
 
-```{python calculate TRANfreq}
+```{python calculate TRANfreq, include = FALSE}
 poly = scipy.interpolate.lagrange(numpy.array([ord(cc) for cc in ["-", "A", "C", "G", "T"]]), numpy.arange(5))
 TRANfreq, refbases, querybases, repcounts = numpy.zeros((5, 5), dtype = numpy.int64), [], [], []
 for i in range(len(counts)):

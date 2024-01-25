@@ -1,5 +1,5 @@
 bench/
-barcode/csvfiles/
+barcode/csvfiles/*
 !barcode/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A1.csv
 !barcode/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A2.csv
 !barcode/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A3.csv
@@ -7,7 +7,7 @@ barcode/csvfiles/
 !barcode/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G2.csv
 !barcode/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G3.csv
 barcode/tests/
-tools/function_table/
+tools/function_table/*
 !tools/function_table/function_table.tex
 !tools/function_table/test_function.sh
 Rearrangement/build/
@@ -16,8 +16,12 @@ references/
 tools/__pycache__/
 .gawkrc
 .gawk_history
-test/
+test/*
+!test/random.fq
+!test/ref12.fa
 paper/
 paper_figures/
 pictures/
-.venv/
+barcode/test/*
+!barcode/test/A2-g1n-3.fq
+!barcode/test/A2-g1n-3.R2.fq
