@@ -11,19 +11,8 @@ python -m venv .venv
 
 # install R packages
 Rscript -e '
-  packages <- c(
-    "devtools",
-    "tidyverse",
-    "ggforce",
-    "waffle",
-    "patchwork",
-    "reticulate",
-    "this.path"
-    )
-  install.packages(setdiff(packages, rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
-  if (!"ggseqlogo" %in% rownames(installed.packages())){
-    devtools::install_github("omarwagih/ggseqlogo")
-  }
+  install.packages(setdiff("renv", rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
+  renv::restore()
 '
 
 
