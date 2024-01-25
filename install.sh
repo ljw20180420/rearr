@@ -1,19 +1,9 @@
 #!/bin/bash
 
-cp .gitignore .renvignore
-
 cd "$(dirname "$0")" || exit
 
-# install python packages
-python -m venv .venv
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
-
 # install R packages
-Rscript -e '
-  # install.packages(setdiff("renv", rownames(installed.packages())), repos = "https://mirrors.sjtug.sjtu.edu.cn/cran/")
-  renv::restore()
-'
+Rscript -e 'renv::restore()'
 
 
 # compile kpLogo for sgRNA analysis
