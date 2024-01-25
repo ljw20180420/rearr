@@ -6,7 +6,7 @@ params:
   algfile: ""
 ---
 
-```{r load necessary library, include = FALSE}
+```{r load R library, include = FALSE}
 library(tidyverse)
 library(ggseqlogo)
 library(ggforce)
@@ -16,7 +16,7 @@ library(reticulate)
 library(this.path)
 ```
 
-```{python, include = FALSE}
+```{python import python package, include = FALSE}
 import numpy
 import scipy
 import os
@@ -95,9 +95,10 @@ tibble(count = c(py$basefreq), pos = rep(seq(ncol(py$basefreq)) - 0.5, each = nr
   mutate(rel1pos = pos - cut1) |>
   ggplot(aes(rel1pos, count)) +
   geom_col(aes(fill = base)) +
-  geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
-  scale_x_continuous(name = "position relative to cut1") ->
-  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+  geom_step(aes(pos - cut1, count, color = "black"), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), direction = "mid") +
+  scale_x_continuous(name = "position relative to cut1", expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.ref1.png", plot = ggfig, path = dirname(algfile))
@@ -110,9 +111,10 @@ tibble(count = c(py$basefreq), pos = rep(seq(ncol(py$basefreq)) - 0.5, each = nr
   mutate(rel2pos = pos - ref1len - cut2) |>
   ggplot(aes(rel2pos, count)) +
   geom_col(aes(fill = base)) +
-  geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(ref1)+nchar(ref2)), color = "black", direction = "mid") +
-  scale_x_continuous(name = "position relative to cut2") ->
-  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+  geom_step(aes(pos - ref1len - cut2, count, color = "black"), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(ref1)+nchar(ref2)), direction = "mid") +
+  scale_x_continuous(name = "position relative to cut2", expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.ref2.png", plot = ggfig, path = dirname(algfile))
@@ -126,8 +128,9 @@ tibble(count = c(py$MSDfreq), pos = rep(seq(ncol(py$MSDfreq)) - 0.5, each = nrow
   ggplot(aes(rel1pos, count)) +
   geom_col(aes(fill = type)) +
   geom_step(aes(pos - cut1, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos >0, pos < ref1len), color = "black", direction = "mid") +
-  scale_x_continuous(name = "position relative to cut1") ->
-  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+  scale_x_continuous(name = "position relative to cut1", expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.ref1.png", plot = ggfig, path = dirname(algfile))
@@ -141,8 +144,9 @@ tibble(count = c(py$MSDfreq), pos = rep(seq(ncol(py$MSDfreq)) - 0.5, each = nrow
   ggplot(aes(rel2pos, count)) +
   geom_col(aes(fill = type)) +
   geom_step(aes(pos - ref1len - cut2, count), data = tibble(pos = 0:(nchar(ref1)+nchar(ref2)), count = py$insertcount) |> filter(pos > ref1len, pos < nchar(ref1)+nchar(ref2)), color = "black", direction = "mid") +
-  scale_x_continuous(name = "position relative to cut2") ->
-  # scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+  scale_x_continuous(name = "position relative to cut2", expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) +
+  scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion") ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.ref2.png", plot = ggfig, path = dirname(algfile))
@@ -152,7 +156,8 @@ print(ggfig)
 tibble(count = py$insertcount[c(1, ref1len + 1, nchar(ref1) + nchar(ref2) + 1)], part = c("updangle", "randomins", "downdangle")) |>
   mutate(part = factor(part, levels = c("updangle", "randomins", "downdangle"))) |>
   ggplot(aes(part, count)) +
-  geom_col() ->
+  geom_col() +
+  scale_y_continuous(expand=c(0,0)) ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.dangle.png", plot = ggfig, path = dirname(algfile))
@@ -162,7 +167,8 @@ print(ggfig)
 trans <- paste(rep(c("-", "A", "C", "G", "T"), times = 5), rep(c("-", "A", "C", "G", "T"), each = 5), sep = ">")
 tibble(count = c(py$TRANfreq), trans = factor(trans, levels = trans)) |>
   ggplot(aes(trans, count)) +
-  geom_col() ->
+  geom_col() +
+  scale_y_continuous(expand=c(0,0)) ->
   ggfig
 print(ggfig)
 # ggsave("indel.pos.trans.png", plot = ggfig, path = dirname(algfile))
@@ -185,7 +191,9 @@ pos12 <- rc[rep(seq_len(nrow(rc)), time = microhomo[rc]),] -
   rep(unlist(sapply(microhomo[rc], function(i) seq(i - 1, 0, by = -1))), time = 2)
 tibble(pos1 = pos12[, 1], pos2 = pos12[, 2]) |>
   ggplot(aes(pos1, pos2)) +
-  geom_point() ->
+  geom_point() +
+  scale_x_continuous(expand=c(0,0)) +
+  scale_y_continuous(expand=c(0,0)) ->
   ggfig
 print(ggfig)
 # ggsave("ref1.ref2.micro.homo.png", plot = ggfig, path = dirname(algfile))
@@ -223,11 +231,12 @@ indel_tsv |>
   mutate(type_count = factor(type_count, levels = c(type_count[startsWith(type_count, "WT")], type_count[startsWith(type_count, "deletion")], type_count[startsWith(type_count, "insertion")], type_count[startsWith(type_count, "indel")]))) |>
   ggplot(aes(1, percent, fill = type_count, weight = count)) +
   geom_col() +
-  geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5)) +
+  geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5), size = 1.5) +
   scale_x_discrete(name = NULL, breaks = NULL) +
   scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = scales::percent) +
   scale_fill_manual(values = RColorBrewer::brewer.pal(8, "Set1")[c(1, 2, 3, 6)]) +
-  coord_polar(theta = "y") ->
+  coord_polar(theta = "y") +
+  theme(text = element_text(size = 5)) ->
   ggfig1
 
 indel_tsv |>
@@ -237,11 +246,12 @@ indel_tsv |>
   mutate(type_count_ex = factor(type_count_ex, levels = c(type_count_ex[startsWith(type_count_ex, "WT")], type_count_ex[startsWith(type_count_ex, "deletion")], type_count_ex[startsWith(type_count_ex, "templated")], type_count_ex[startsWith(type_count_ex, "random")], type_count_ex[startsWith(type_count_ex, "temprand")], type_count_ex[startsWith(type_count_ex, "tempdel")], type_count_ex[startsWith(type_count_ex, "randdel")], type_count_ex[startsWith(type_count_ex, "full")]))) |>
   ggplot(aes(1, percent, fill = type_count_ex, weight = count)) +
   geom_col() +
-  geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5)) +
+  geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5), size = 1.5) +
   scale_x_discrete(name = NULL, breaks = NULL) +
   scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = scales::percent) +
   scale_fill_manual(values = RColorBrewer::brewer.pal(8, "Set1")) +
-  coord_polar(theta = "y") ->
+  coord_polar(theta = "y") +
+  theme(text = element_text(size = 5)) ->
   ggfig2
 
 indel_tsv |>
@@ -249,7 +259,8 @@ indel_tsv |>
   ggplot(aes(fill = indel_type, values = count)) +
   geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
   scale_fill_manual(limits = c("WT", "deletion", "insertion", "indel"), values = RColorBrewer::brewer.pal(8, "Set1")[c(1, 2, 3, 6)]) +
-  coord_equal() ->
+  coord_equal() +
+  theme(text = element_text(size = 5)) ->
   ggfig3
 
 indel_tsv |>
@@ -257,7 +268,8 @@ indel_tsv |>
   ggplot(aes(fill = indel_type_ex, values = count)) +
   geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
   scale_fill_manual(limits = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full"), values = RColorBrewer::brewer.pal(8, "Set1")) +
-  coord_equal() ->
+  coord_equal() +
+  theme(text = element_text(size = 5)) ->
   ggfig4
 
 ggfig <- (ggfig1 | ggfig2) / (ggfig3 | ggfig4)
@@ -270,7 +282,8 @@ indel_tsv |>
   pivot_longer(cols = c(uplen, randlen, downlen), names_to = "unmapped", values_to = "unmapped_length") |>
   ggplot(aes(unmapped_length, weight = count, fill = unmapped)) +
   geom_bar() +
-  scale_fill_discrete(limits = c("uplen", "randlen", "downlen"), labels = c("updangle length", "random insertion length", "downdangle length")) ->
+  scale_fill_discrete(limits = c("uplen", "randlen", "downlen"), labels = c("updangle length", "random insertion length", "downdangle length")) +
+  scale_y_continuous(expand = c(0,0)) ->
   ggfig
 print(ggfig)
 # ggsave("unmapped.length.png", plot = ggfig, path = dirname(algfile))
@@ -281,7 +294,8 @@ indel_tsv |>
   ggplot(aes(score, weight = count)) +
   stat_bin(aes(y = after_stat(density))) +
   geom_density(aes(y = after_stat(density)), color = "red") +
-  scale_y_continuous(name = "density")->
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(name = "density", expand = c(0,0)) ->
   ggfig
 print(ggfig)
 # ggsave("score.distribution.png", plot = ggfig, path = dirname(algfile))
@@ -324,8 +338,8 @@ polyys[2:3 + rep(seq(0, length(polyys) - 1, 4), each = 2)] <- rep(inssumm$count,
 tibble(polyx = polyxs, polyy = polyys) |>
   ggplot(aes(polyx, polyy)) +
   geom_polygon(color = "black", fill = NA, linewidth = 0.1) +
-  scale_x_continuous(name = "pos") +
-  scale_y_continuous(name = "count") ->
+  scale_x_continuous(name = "pos", expand = c(0,0)) +
+  scale_y_continuous(name = "count", expand = c(0,0)) ->
   ggfig
 print(ggfig)
 # ggsave("insertion.polygon.png", plot = ggfig, path = dirname(algfile), width = 8, height = 1)
@@ -343,8 +357,8 @@ tibble(delcount = delcounts, delstart = delstarts, delend = delends) |>
   ggplot(aes(x0 = (delstart + delend) / 2, y0 = 0, r = (delend - delstart) / 2, start = - pi / 2, end = pi / 2)) +
   geom_arc(aes(linewidth = count), alpha = 0.1) +
   scale_linewidth_continuous(range = c(0.1, 2)) +
-  scale_x_continuous(name = "pos") +
-  scale_y_continuous(name = NULL) ->
+  scale_x_continuous(name = "pos", expand = c(0,0)) +
+  scale_y_continuous(name = NULL, expand = c(0,0)) ->
   ggfig
 print(ggfig)
 # ggsave("deletion.arc.png", plot = ggfig, path = dirname(algfile), width = 8, height = 1)
