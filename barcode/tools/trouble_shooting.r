@@ -18,11 +18,14 @@ library(this.path)
 # ggsave("percentage.sx.png", path = "barcode/sxanalysis", width = 22, height = 12)
 
 #######################################################
-# Usage: trouble_shooting.r fqfile score_thres(-inf means no filter)
+# Usage: trouble_shooting.r fqfile score_thres(default: -Inf)
 #######################################################
 args <- commandArgs(trailingOnly = TRUE)
 fqfile <- args[1]
-score_thres <- as.integer(args[2])
+score_thres <- -Inf
+if (length(args) > 1) {
+  score_thres <- as.double(args[2])
+}
 csvfile <- case_match(
   str_to_upper(substring(strsplit(fqfile, "-")[[1]][2], 1, 2)),
   "A1" ~ "final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A1.csv",
