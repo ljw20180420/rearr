@@ -3,13 +3,14 @@
 # usage
 # run_kpLogo.sh path_to_fastq method(thres|weight|back) threshold
 
+project_path="$(dirname $(realpath $0))/../.."
 fq1=$1
-csvfile=$(infer_csvfile.sh "$fq1")
+csvfile="$($project_path/barcode/tools/infer_csvfile.sh $fq1)"
 method=$2
 threshold=${3:-40}
-project_path="$(dirname $(realpath $0))/../.."
 
-rearr_barcode_post_process.sh <"$fq1.table" | tail -n+2 | join -t $'\t' -1 1 -2 1 - <(rev "$csvfile" | cut -c23-40 | tr 'ACGT' 'TGCA' | paste - <(sed -r 's/[acgt]+.*$//' "$csvfile" | rev | cut -c1-20 | rev) | sort) | awk -F "\t" -v OFS="\t" -v fq1="$fq1" -v threshold="$threshold" '
+
+$project_path/barcode/tools/rearr_barcode_post_process.sh <"$fq1.table" | tail -n+2 | join -t $'\t' -1 1 -2 1 - <(rev "$csvfile" | cut -c23-40 | tr 'ACGT' 'TGCA' | paste - <(sed -r 's/[acgt]+.*$//' "$csvfile" | rev | cut -c1-20 | rev) | sort) | awk -F "\t" -v OFS="\t" -v fq1="$fq1" -v threshold="$threshold" '
     {
         if ($25 != sgRNA && sgRNA)
         {

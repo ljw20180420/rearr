@@ -72,7 +72,7 @@ python_exec="$(find $project_path/renv -type f,l -name python)"
 
 while read fq1
 do
-    csvfile=$(infer_csvfile.sh "$fq1")
+    csvfile="$($project_path/barcode/tools/infer_csvfile.sh $fq1)"
     (
         find_barcode "$fq1" "$csvfile" >"$fq1.barcode"
         pv -N "align $fq1" "$fq1.barcode" | $python_exec $project_path/barcode/tools/rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up"
