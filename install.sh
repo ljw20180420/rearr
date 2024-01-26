@@ -10,7 +10,11 @@ project_path="$(dirname $(realpath $0))"
 cd "$project_path" || exit
 
 # install R packages
-Rscript -e 'renv::restore()'
+Rscript -e '
+args=commandArgs(trailingOnly = TRUE)
+renv::use_python(python=args[1])
+renv::restore()
+' "$(which python3.10)"
 
 # compile kpLogo for sgRNA analysis
 make -C barcode/kpLogo/src
