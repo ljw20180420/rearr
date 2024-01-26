@@ -3,7 +3,7 @@
 #install dependencies
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev python3-dev
+sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev
 
 project_path="$(dirname $(realpath $0))"
 
