@@ -4,6 +4,8 @@
 # input can be (compressed) fasta/fastq
 # ref and sgRNA are given in command line
 
+project_path="$(dirname $(realpath $0))"
+
 input=$1 # the input file
 case $input in # count duplicate reads, support fasta, fastq, and their compressions
     *.fq.gz|*.fastq.gz)
@@ -28,7 +30,7 @@ NGGCCNtype2=$7 # NGGCCNtype of reference2
 
 printf "0\n%s\n%d\n%d\n%s\n%d\n" "$ref1" "$cut1" "$cut2" "$ref2" ${#ref2} >"$input.ref.$cut1.$cut2.${#ref1}"
 
-rearrangement <"$input.count" 3<"$input.ref.$cut1.$cut2.${#ref1}" -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | correct_micro_homology.AWK -- "$cut1" "$NGGCCNtype1" "$cut2" "$NGGCCNtype2" ${#ref1} | tee "$input.alg.$cut1.$cut2.${#ref1}" | awk -F "\t" -v OFS="\t" -v cut1="$cut1" -v cut2=$((${#ref1} + "$cut2")) -v total_count="$(awk -F "\t" '{count += $2} END{print count}' $input.count)" '
+$project_path/Rearrangement/build/rearrangement <"$input.count" 3<"$input.ref.$cut1.$cut2.${#ref1}" -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | $project_path/tools/correct_micro_homology.AWK -- "$cut1" "$NGGCCNtype1" "$cut2" "$NGGCCNtype2" ${#ref1} | tee "$input.alg.$cut1.$cut2.${#ref1}" | awk -F "\t" -v OFS="\t" -v cut1="$cut1" -v cut2=$((${#ref1} + "$cut2")) -v total_count="$(awk -F "\t" '{count += $2} END{print count}' $input.count)" '
     BEGIN{
         print "index", "count", "score", "updangle", "ref_start1", "query_start1", "ref_end1", "query_end1", "random_insertion", "ref_start2","query_start2", "ref_end2", "query_end2", "downdangle", "cut1", "cut2", "percent"
     }
