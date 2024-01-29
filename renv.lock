@@ -3,6 +3,26 @@
     "Version": "4.3.2",
     "Repositories": [
       {
+        "Name": "BioCsoft",
+        "URL": "https://mirror.sjtu.edu.cn/bioconductor/packages/3.18/bioc"
+      },
+      {
+        "Name": "BioCann",
+        "URL": "https://mirror.sjtu.edu.cn/bioconductor/packages/3.18/data/annotation"
+      },
+      {
+        "Name": "BioCexp",
+        "URL": "https://mirror.sjtu.edu.cn/bioconductor/packages/3.18/data/experiment"
+      },
+      {
+        "Name": "BioCworkflows",
+        "URL": "https://mirror.sjtu.edu.cn/bioconductor/packages/3.18/workflows"
+      },
+      {
+        "Name": "BioCbooks",
+        "URL": "https://mirror.sjtu.edu.cn/bioconductor/packages/3.18/books"
+      },
+      {
         "Name": "CRAN",
         "URL": "https://mirrors.sjtug.sjtu.edu.cn/cran"
       }
