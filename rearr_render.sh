@@ -4,7 +4,15 @@
 
 algfile="$(realpath $1)"
 project_path="$(dirname $(realpath $0))"
-quarto render "$project_path/tools/draw_figures.qmd" -P "algfile:$algfile"
-mv "$project_path/tools/draw_figures.html" "$algfile.html"
-rm -r "$(dirname $algfile)/draw_figures_files"
-mv "$project_path/tools/draw_figures_files" "$(dirname $algfile)"
+$project_path/Rscript --verbose -e '
+    args = commandArgs(trailingOnly = TRUE)
+    rmarkdown::render(
+        input = file.path(args[1], "tools/draw_figures.Rmd"),
+        output_format = "html_document",
+        output_file = paste(basename(args[2]), "html", sep = "."),
+        output_dir = dirname(args[2]),
+        intermediates_dir = dirname(args[2]),
+        knit_root_dir = dirname(args[2]),
+        params = list(algfile = args[2])
+    )
+' $project_path $algfile
