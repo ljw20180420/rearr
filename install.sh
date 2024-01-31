@@ -21,6 +21,13 @@ then
     make
 fi
 
+# install kpLogo
+if [ ! -x "$project_path/barcode/kpLogo-1.1/bin/kpLogo" ]
+then
+    tar xzf "$project_path/kpLogo-1.1.tar.gz" -C "$project_path/barcode"
+    make -C "$project_path/barcode/kpLogo-1.1/src"
+fi
+
 # install dependencies
 sudo apt-get -y update && \
 sudo apt-get -y upgrade && \
@@ -35,9 +42,6 @@ Rscript --vanilla -e '
     renv::use_python(python = args[1])
     renv::restore()
 ' "$(which python3.10)"
-
-# compile kpLogo for sgRNA analysis
-make -C barcode/kpLogo/src
 
 # simply append three paths to ~/.bashrc
 if [[ $(grep -c "$(pwd)" ~/.bashrc) -eq 0 ]]
