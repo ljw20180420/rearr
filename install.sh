@@ -30,7 +30,7 @@ fi
 # install dependencies
 sudo apt-get -y update && \
 sudo apt-get -y upgrade && \
-sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev && \
+sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev imagemagick && \
 sudo apt-get -y autoremove
 
 cd $project_path
@@ -56,4 +56,4 @@ fi
 # compile aligner
 mkdir -p Rearrangement/build
 cmake -DCMAKE_BUILD_TYPE=Release -S Rearrangement -B Rearrangement/build
-make -C Rearrangement/build
+make -C Rearrangement/build 
