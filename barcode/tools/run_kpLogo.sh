@@ -12,7 +12,7 @@ threshold=${3:-40}
 
 $project_path/barcode/tools/rearr_barcode_post_process.sh <"$fq1.table" | tail -n+2 | join -t $'\t' -1 1 -2 1 - <(rev "$csvfile" | cut -c23-40 | tr 'ACGT' 'TGCA' | paste - <(sed -r 's/[acgt]+.*$//' "$csvfile" | rev | cut -c1-20 | rev) | sort) | awk -F "\t" -v OFS="\t" -v fq1="$fq1" -v threshold="$threshold" '
     {
-        if ($25 != sgRNA && sgRNA)
+        if ($24 != sgRNA && sgRNA)
         {
             for (i = 0; i < inscount; ++i)
                 print sgRNA
@@ -24,9 +24,9 @@ $project_path/barcode/tools/rearr_barcode_post_process.sh <"$fq1.table" | tail -
             count = 0
             inscount = 0
         }
-        sgRNA = $25
+        sgRNA = $24
         count += $3
-        if ($24 == "ins" || $24 == "indel")
+        if ($23 == "ins" || $23== "indel")
             inscount += $3
     }
     END{
