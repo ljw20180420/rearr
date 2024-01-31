@@ -2,7 +2,6 @@
 
 project_path="$(dirname $(realpath $0))"
 
-
 # install pv
 if [ ! -x "$project_path/pv-1.8.5/pv" ]
 then
@@ -54,9 +53,7 @@ then
     printf "\n%s\n" "export PATH=\"$(pwd)/barcode/tools\":"'$PATH' >> ~/.bashrc
 fi
 
+# compile aligner
 mkdir -p Rearrangement/build
 cmake -DCMAKE_BUILD_TYPE=Release -S Rearrangement -B Rearrangement/build
 make -C Rearrangement/build
-
-sudo ln -sf "$project_path/rearr_web.sh" /usr/local/bin
-sudo ln -sf "$(realpath Rscript)" $project_path

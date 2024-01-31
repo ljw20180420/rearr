@@ -14,7 +14,8 @@ library(waffle)
 library(patchwork)
 library(reticulate)
 library(this.path)
-use_python(file.path(dirname(this.path()), "../renv/python/virtualenvs/renv-python-3.10/bin/python"))
+
+this.path() |> dirname() |> file.path("../renv") |> sprintf('find %s -type f,l -name "python*" | head -n1') |> pipe() |> readLines() |> use_python()
 ```
 
 ```{python import python package, include = FALSE}
