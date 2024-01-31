@@ -1,13 +1,24 @@
 #!/bin/bash
 
-#install dependencies
-sudo apt-get -y update && \
-sudo apt-get -y upgrade && \
-sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev
-
 project_path="$(dirname $(realpath $0))"
 
-cd "$project_path" || exit
+
+# install pv
+if [ ! -x "$project_path/pv-1.8.5/pv" ]
+then
+    tar xzf "$project_path/pv-1.8.5.tar.gz"
+    cd "$project_path/pv-1.8.5" || exit
+    ./configure --prefix="$project_path"
+    make
+fi
+
+# install dependencies
+sudo apt-get -y update && \
+sudo apt-get -y upgrade && \
+sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev && \
+sudo apt-get -y autoremove
+
+cd $project_path
 
 # install R packages
 Rscript --vanilla -e '
