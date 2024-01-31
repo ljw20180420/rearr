@@ -42,12 +42,12 @@ $project_path/barcode/tools/rearr_barcode_post_process.sh <"$fq1.table" | tail -
 
 case $method in
     "thres")
-        $project_path/barcode/kpLogo/bin/kpLogo "$fq1.kpLogo.weight.thres" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
+        $project_path/barcode/kpLogo-1.1/bin/kpLogo "$fq1.kpLogo.weight.thres" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
     ;;
     "weighted"|"weight")
-        $project_path/barcode/kpLogo/bin/kpLogo "$fq1.kpLogo.weight" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
+        $project_path/barcode/kpLogo-1.1/bin/kpLogo "$fq1.kpLogo.weight" -o "$fq1.kpLogo" -region 15,20 -weighted -k 1
     ;;
     "background"|"back"|"bg"|"bgfile")
-        $project_path/barcode/kpLogo/bin/kpLogo "$fq1.kpLogo.insertion" -o "$fq1.kpLogo" -region 15,20 -bgfile "$fq1.kpLogo.total" -k 1
+        $project_path/barcode/kpLogo-1.1/bin/kpLogo "$fq1.kpLogo.insertion" -o "$fq1.kpLogo" -region 15,20 -bgfile "$fq1.kpLogo.total" -k 1
     ;;
 esac
