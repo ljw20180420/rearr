@@ -10,9 +10,9 @@ find_barcode()
     local csvfile=$2
     local fq2=${fq1%.*}.R2.${fq1##*.}
 
-    pv -N "count $fq1" "$fq2" | sed -n '2~4p' | paste - <(sed -n '2~4p' "$fq1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fq1.count"
+    pv-1.8.5/pv -c -N "count $fq1" "$fq2" | sed -n '2~4p' | paste - <(sed -n '2~4p' "$fq1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fq1.count"
 
-    pv -N "demultiplex $fq1" "$fq1.count" | cut -f1 | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $python_exec -c '
+    pv-1.8.5/pv -c -N "demultiplex $fq1" "$fq1.count" | cut -f1 | bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$csvfile.primer+barcode" -U - 2>/dev/null | samtools view | cut -f2,3,6 | $python_exec -c '
 import sys, pysam
 for line in sys.stdin:
     flag, barcode, CIGAR = line.split("\t")
@@ -75,8 +75,8 @@ do
     csvfile="$($project_path/barcode/tools/infer_csvfile.sh $fq1)"
     (
         find_barcode "$fq1" "$csvfile" >"$fq1.barcode"
-        pv -N "align $fq1" "$fq1.barcode" | $python_exec $project_path/barcode/tools/rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up"
-        pv -N "cal percent $fq1" "$fq1.table" | awk -F "\t" -v OFS="\t" -v total="$(tail -n+2 $fq1.table | cut -f3 | awk '{total += $0} END{print total}')" 'NR == 1{print $0, "percent"} NR > 1{printf("%s\t%.2f%\n", $0, $3 / total * 100)}' >"$fq1.table2"
+        pv-1.8.5/pv -c -N "align $fq1" "$fq1.barcode" | $python_exec $project_path/barcode/tools/rearr_barcode_align.py "$fq1" "$ext1up" "$ext2up"
+        pv-1.8.5/pv -c -N "cal percent $fq1" "$fq1.table" | awk -F "\t" -v OFS="\t" -v total="$(tail -n+2 $fq1.table | cut -f3 | awk '{total += $0} END{print total}')" 'NR == 1{print $0, "percent"} NR > 1{printf("%s\t%.2f%\n", $0, $3 / total * 100)}' >"$fq1.table2"
         mv "$fq1.table2" "$fq1.table"
     ) &
 done

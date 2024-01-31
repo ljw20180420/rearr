@@ -25,3 +25,8 @@ pictures/
 barcode/test/*
 !barcode/test/A2-g1n-3.fq
 !barcode/test/A2-g1n-3.R2.fq
+done
+exit_with_error
+pv-1.8.5/
+Rscript
+renv/.gitignore
