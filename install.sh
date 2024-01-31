@@ -8,7 +8,16 @@ if [ ! -x "$project_path/pv-1.8.5/pv" ]
 then
     tar xzf "$project_path/pv-1.8.5.tar.gz"
     cd "$project_path/pv-1.8.5" || exit
-    ./configure --prefix="$project_path"
+    ./configure
+    make
+fi
+
+# install less
+if [ ! -x "$project_path/less-643/less" ]
+then
+    unzip "$project_path/less-643.zip"
+    cd "$project_path/less-643" || exit
+    ./configure
     make
 fi
 
@@ -46,4 +55,4 @@ cmake -DCMAKE_BUILD_TYPE=Release -S Rearrangement -B Rearrangement/build
 make -C Rearrangement/build
 
 sudo ln -sf "$project_path/rearr_web.sh" /usr/local/bin
-sudo ln -sf "$(which Rscript)" $project_path
+sudo ln -sf "$(realpath Rscript)" $project_path
