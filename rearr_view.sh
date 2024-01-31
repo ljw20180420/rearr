@@ -1,5 +1,5 @@
 #!/bin/bash
-# usage: view.sh algfile [readnum]
+# usage: rearr_view.sh algfile [readnum]
 
 # display the first readnum (default: 50) read's alignments in ANSI format, the cut points and random insertions are aligned
 
