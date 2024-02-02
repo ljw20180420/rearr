@@ -22,7 +22,7 @@ if [ ! -x "$project_path/py312/bin/python3.12" ]
 then
     tar xzf "$project_path/Python-3.12.1.tgz"
     cd "$project_path/Python-3.12.1" || exit
-    ./configure --enable-optimizations --enable-shared --prefix="$project_path/py312"
+    ./configure --enable-optimizations --enable-shared --prefix="$project_path/py312" LDFLAGS="-Wl,-rpath $project_path/py312/lib"
     make
     make install
 fi
@@ -73,7 +73,6 @@ $project_path/R-4.3.2/bin/Rscript -e '
 '
 
 # install python packages
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$project_path/py312/lib
 $project_path/py312/bin/pip3.12 install --upgrade pip
 $project_path/py312/bin/pip3.12 install -r $project_path/requirements.txt
 
