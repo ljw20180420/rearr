@@ -4,7 +4,7 @@
 
 algfile="$(realpath $1)"
 project_path="$(dirname $(realpath $0))"
-Rscript --verbose -e '
+$project_path/R-4.3.2/bin/Rscript --verbose -e '
     args = commandArgs(trailingOnly = TRUE)
     rmarkdown::render(
         input = file.path(args[1], "tools/draw_figures.Rmd"),

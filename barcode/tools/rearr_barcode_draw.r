@@ -3,9 +3,7 @@ library(patchwork)
 library(ggtext)
 library(Cairo)
 library(reticulate)
-library(dplyr)
-library(tidyr)
-library(stringr)
+library(tidyverse)
 library(lintr)
 
 ##############
