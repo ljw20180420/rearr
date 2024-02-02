@@ -10,35 +10,50 @@
         <style>
             h1 {text-align: center;}
         </style>
-        <script>
-            function run() {
-                var exec = require('child_process').exec;
-
-                exec('touch abc',
-                    function (error, stdout, stderr) {
-                        console.log('stdout: ' + stdout);
-                        console.log('stderr: ' + stderr);
-                        if (error !== null) {
-                            console.log('exec error: ' + error);
-                        }
-                    });
-            }
-            function hello() {
-                var msg = document.getElementById("hello display");
-                msg.innerHTML = "hello world"
-            }
-        </script>
     </head>
 
     <body>
         <h1>
             rearrangement (version: 1.0)
         </h1>
-        <form>
-            <input type="button" value="hello world" onclick="hello();"><br>
-            <span id="hello display"></span><br>
-            <input type="button" value="run" onclick="run();">
-            <input type="reset" value="reset"><br>
+        <form class="fileup_form" method="post" enctype="multipart/form-data"a action="cgi-bin/save_file.sh">
+            <input type="file" multiple><br>
+            <input type="submit">
         </form>
+
+        <!-- <script>
+            function sendData() {
+                const XHR = new XMLHttpRequest();
+
+                // Bind the FormData object and the form element
+                const FD = new FormData(form);
+
+                // Define what happens on successful data submission
+                XHR.addEventListener("load", function (event) {
+                    alert(event.target.responseText);
+                });
+
+                // Define what happens in case of error
+                XHR.addEventListener("error", function (event) {
+                    alert('Oops! Something went wrong.');
+                });
+
+                // Set up our request
+                XHR.open("POST", "http://localhost:8000/cgi-bin/save_file.sh");
+
+                // The data sent is what the user provided in the form
+                XHR.send(FD);
+            }
+
+            // Access the form element...
+            const form = document.getElementById("upfileform");
+
+            // ...and take over its submit event.
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                sendData();
+            });
+        </script> -->
     </body>
 </html>

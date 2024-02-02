@@ -8,5 +8,5 @@ tablefile=$(sed -r 's/.alg./.table./' <<<"$algfile")
 read cut1 cut2 ref1len <<<"$(awk -F "." -v OFS=" " '{print $(NF-2), $(NF-1), $NF}' <<<$algfile)"
 readnum=${2:-50} # read number to display (default: 50)
 project_path="$(dirname $(realpath $0))"
-python_exec="$(find $project_path/renv -type f,l -name python)"
-head -n$(("$readnum" * 3)) <"$algfile" | $python_exec $project_path/tools/align_align.py "$ref1len" "$cut1" $(("$ref1len" + "$cut2")) | paste - <(head -n$(("$readnum" + 1)) "$tablefile" | awk -F "\t" 'NR==1{for(i=1;i<=NF;++i) if($i=="percent"){pf=i;break} print ""} NR>1{printf("%s\n",$pf)}') | column -ts $'\t' | $project_path/less-643/less -SNR --header 1 --no-number-headers # view the first 50 (150/3) read alignments
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$project_path/py312/lib
+head -n$(("$readnum" * 3)) <"$algfile" | $project_path/py312/bin/python3.12 $project_path/tools/align_align.py "$ref1len" "$cut1" $(("$ref1len" + "$cut2")) | paste - <(head -n$(("$readnum" + 1)) "$tablefile" | awk -F "\t" 'NR==1{for(i=1;i<=NF;++i) if($i=="percent"){pf=i;break} print ""} NR>1{printf("%s\n",$pf)}') | column -ts $'\t' | $project_path/less-643/less -SNR --header 1 --no-number-headers # view the first 50 (150/3) read alignments

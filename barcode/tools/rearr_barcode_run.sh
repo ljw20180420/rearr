@@ -68,7 +68,7 @@ for line in sys.stdin:
 ext1up=50
 ext2up=10
 project_path="$(dirname $(realpath $0))/../.."
-python_exec="$(find $project_path/renv -type f,l -name python)"
+python_exec="$project_path/py312/bin/python3.12"
 
 while read fq1
 do

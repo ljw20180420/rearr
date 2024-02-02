@@ -1,5 +1,6 @@
 #!/bin/bash
 
+project_path="$(dirname $(realpath $0))/../.."
 path="tools/function_table/single.100.0.01"
 ref="$(sed '1d' tools/function_table/single.100.0.01/ref.fa)"
 cut=$((${#ref} / 2))
@@ -19,14 +20,14 @@ gzip $path/AMP/random.fq.primer
 amplicon=$(cut -c $(expr ${#ref} / 4 - 5)-$cut <<<$ref | tr '[:upper:]' '[:lower:]')$(cut -c $(expr $cut + 1) <<<$ref | tr '[:lower:]' '[:upper:]')$(cut -c $(expr $cut + 2)-${#ref} <<<$ref | tr '[:upper:]' '[:lower:]')
 printf "ID,Barcode,Forward_Reads,Reverse_Reads,Group,Control,guideRNA,Forward_Primer,Reverse_Primer,Direction,Amplicon,Donor\n" >$path/AMP/config.csv
 printf "ID_1,barcode_1,random.fq.primer.gz,,group_1,0,%s,%s,,0,%s," $sgRNA $primer $amplicon >>$path/AMP/config.csv
-Rscript bench/tools/AMP.r $path/AMP/config.csv $path/AMP/ $path/AMP/
+$project_path/Rscript bench/tools/AMP.r $path/AMP/config.csv $path/AMP/ $path/AMP/
 
 echo "CRVS"
 mkdir -p $path/CRVS
 bwa index -p $path/CRVS/ref $path/ref.fa
 bwa mem -v 3 -T -9999 $path/CRVS/ref $path/random.fq.gz | samtools sort -o $path/CRVS/random.bam
 samtools index -b $path/CRVS/random.bam
-Rscript bench/tools/variants.r $ref $path/CRVS/random.bam $(expr $cut - ${#sgRNA} + 3) ${#sgRNA} >$path/CRVS/result
+$project_path/Rscript bench/tools/variants.r $ref $path/CRVS/random.bam $(expr $cut - ${#sgRNA} + 3) ${#sgRNA} >$path/CRVS/result
 
 echo "ADIV"
 rm -rf $path/ADIV; mkdir -p $path/ADIV
