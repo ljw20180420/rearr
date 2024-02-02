@@ -3,3 +3,4 @@ more-itertools
 numpy
 pysam
 scipy
+flask
