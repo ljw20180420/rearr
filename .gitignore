@@ -35,3 +35,5 @@ barcode/kpLogo-1.1/
 Python-3.12.1/
 R-4.3.2/
 py312/
+web/users/
+web/__pycache__/
