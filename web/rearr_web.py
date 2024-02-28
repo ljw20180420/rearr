@@ -90,3 +90,6 @@ def runRearr(subpath):
         return str(results)
     except Exception as err:
         return str(err)
+    
+if __name__ == "__main__":
+    app.run()
