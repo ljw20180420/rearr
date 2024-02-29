@@ -3,10 +3,15 @@
 project_path="$(dirname $(realpath $0))"
 
 # install dependencies
-# sudo apt-get -y update && \
-# sudo apt-get -y upgrade && \
-# sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev imagemagick && \
-# sudo apt-get -y autoremove
+sudo apt-get -y update && \
+sudo apt-get -y upgrade && \
+sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev imagemagick && \
+sudo apt-get install pkg-config
+sudo apt-get install build-essential gdb lcov pkg-config \
+      libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+      libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev \
+      lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+sudo apt-get -y autoremove
 
 # install R
 if [ ! -x "$project_path/R-4.3.2/bin/R" ]
@@ -76,7 +81,7 @@ $project_path/R-4.3.2/bin/Rscript -e '
 $project_path/py312/bin/pip3.12 install --upgrade pip
 $project_path/py312/bin/pip3.12 install -r $project_path/requirements.txt
 
-# simply append three paths to ~/.bashrc
+# simply append two paths to ~/.bashrc
 if [[ $(grep -c "$(pwd)" ~/.bashrc) -eq 0 ]]
 then
     printf "\n%s\n" "export PATH=\"$(pwd)\":"'$PATH' >> ~/.bashrc
