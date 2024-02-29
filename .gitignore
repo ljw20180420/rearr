@@ -37,3 +37,4 @@ R-4.3.2/
 py312/
 web/users/
 web/__pycache__/
+web/running_query/
