@@ -1,8 +1,6 @@
 #!/bin/bash
 # usage: rearr_run.sh input ref1 ref2 cut1 cut2 NGGCCNtype1 NGGCCNtype2
-
 # input can be (compressed) fasta/fastq
-# ref and sgRNA are given in command line
 
 project_path="$(dirname $(realpath $0))"
 

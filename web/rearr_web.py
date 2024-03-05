@@ -3,6 +3,7 @@ import concurrent.futures
 from flask import Flask, render_template, request, send_file, jsonify
 from werkzeug.utils import secure_filename
 # from flask_autoindex import AutoIndex
+# from flaskwebgui import FlaskUI
 
 # change Jinja2 delimiter to solve the comflicts with vue3
 class CustomFlask(Flask):
@@ -22,7 +23,10 @@ executor = concurrent.futures.ThreadPoolExecutor(max_workers=cpulimit)
 sep = "--xy9b92jiKcrG--"
 
 app = CustomFlask(__name__)
-# AutoIndex(app)   
+# AutoIndex(app)
+# firefox = subprocess.run("which firefox", capture_output=True, shell=True).stdout.decode().rstrip()
+# ui = FlaskUI(app=app, server="flask", browser_path=firefox, width=500, height=500)
+
 
 @app.route("/")
 def home_page():
@@ -143,6 +147,13 @@ def runRearr(subpath):
         return str(results)
     except Exception as err:
         return str(err)
-    
+
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
+    # app.run(debug=True)
+    # if len(sys.argv) > 1 and sys.argv[1] == "UI":
+    #     ui.run()
+    # else:
+    #     app.run()
