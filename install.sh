@@ -3,8 +3,8 @@
 project_path="$(dirname $(realpath $0))"
 
 # install dependencies
-sudo apt-get -y update && \
-sudo apt-get -y upgrade && \
+sudo apt-get -y update && sudo apt-get -y upgrade
+sudo sed -i.bak "/^#.*deb-src.*universe$/s/^# //g" /etc/apt/sources.list
 sudo apt-get -y install libcairo2-dev libtiff-dev fftw3-dev libharfbuzz-dev libfribidi-dev imagemagick && \
 sudo apt-get install pkg-config
 sudo apt-get install build-essential gdb lcov pkg-config \
