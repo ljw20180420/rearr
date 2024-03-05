@@ -14,7 +14,6 @@ library(waffle)
 library(patchwork)
 library(reticulate)
 library(this.path)
-this.path() |> dirname() |> dirname() |> file.path("py312/bin/python3.12") |> use_python()
 ```
 
 ```{python import python package, include = FALSE}
@@ -39,8 +38,8 @@ reflines <- readLines(con = pipe(sprintf("sed -nr '2~3p' %s", algfile)))
 querylines <- readLines(con = pipe(sprintf("sed -nr '3~3p' %s", algfile)))
 ref1 <- reflines[1] |> gsub(pattern = "-", replacement = "", fixed = TRUE) |> substring(1, ref1len) |> toupper()
 ref2 <- reflines[1] |> gsub(pattern = "-", replacement = "", fixed = TRUE) |> substring(ref1len + 1) |> toupper()
-ref1vec <- str_split_1(ref1, "")
-ref2vec <- str_split_1(ref2, "")
+ref1vec <- str_split(ref1, "")[[1]]
+ref2vec <- str_split(ref2, "")[[1]]
 ```
 
 ```{python assign data, include = FALSE}
