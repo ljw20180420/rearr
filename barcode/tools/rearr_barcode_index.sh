@@ -1,17 +1,17 @@
 #!/bin/bash
 
 # usage
-# rearr_barcode_index.sh "bowtie2_index" "genome_fasta"
+# rearr_barcode_index.sh "genome_fasta"
 
 get_reference()
 {
     local csvfile=$1
-    local bowtie2genome=$2
-    local getfastagenome=$3
-    local ext1up=$4
-    local ext1down=$5
-    local ext2up=$6
-    local ext2down=$7
+    local getfastagenome=$2
+    local bowtie2genome=${getfastagenome%.*}
+    local ext1up=$3
+    local ext1down=$4
+    local ext2up=$5
+    local ext2down=$6
     perl -anF, -E '
         $rev = scalar reverse $F[1];
         $rev=~m/[acgt]/g;
@@ -62,8 +62,7 @@ get_reference()
     ' -- -ext1up="$ext1up" -ext2up="$ext2up" -AG="${csvfile: -6:1}"
 }
 
-bowtie2genome=$1
-getfastagenome=$2
+getfastagenome=$1
 ext1up=50
 ext1down=10
 ext2up=10
@@ -78,5 +77,5 @@ do
     perl -anF, -E '$rev=scalar reverse $F[1]; $rev=~m/[acgt]/g; say ">BC_" . $F[0], "\n", substr($F[1], 0, length($F[1]) - pos($rev) + 1)' "$csvpath/$csvfile" >"$csvpath/$csvfile.sgRNA+scaffold.fa"
     bowtie2-build -q "$csvpath/$csvfile.sgRNA+scaffold.fa" "$csvpath/$csvfile.sgRNA+scaffold"
 
-    get_reference "$csvpath/$csvfile" "$bowtie2genome" "$getfastagenome" $ext1up $ext1down $ext2up $ext2down >"$csvpath/$csvfile.ref12"
+    get_reference "$csvpath/$csvfile" "$getfastagenome" $ext1up $ext1down $ext2up $ext2down >"$csvpath/$csvfile.ref12"
 done
