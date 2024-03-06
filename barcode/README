@@ -18,7 +18,7 @@ printf "%s\n" \
 # fastq.table: informative table of alignments of non-duplicate reads with barcode
 
 # Index barcode
-rearr_barcode_index.sh "bowtie2_index" "genome_fasta": this step is necessary for using bowtie2 local mode to demultiplex reads by barcodes
+rearr_barcode_index.sh "genome_fasta": this step is necessary for using bowtie2 local mode to demultiplex reads by barcodes
 
 # Tools
 # Get a long table of indel
