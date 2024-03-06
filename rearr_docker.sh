@@ -7,9 +7,4 @@ inputfile=$2
 shift 2
 inputpath=$(dirname $(realpath $inputfile))
 
-if [[ $shell_script == *rearr_view.sh ]]
-then
-    docker run -it --rm --mount type=bind,src="$inputpath",dst="/app/data" rearr:auto ./$shell_script ./data/$(basename $inputfile) $@
-else
-    docker run --rm --mount type=bind,src="$inputpath",dst="/app/data" rearr:auto ./$shell_script ./data/$(basename $inputfile) $@
-fi
+docker run -it --rm --mount type=bind,src="$inputpath",dst="/app/data" rearr:auto ./$shell_script ./data/$(basename $inputfile) $@
