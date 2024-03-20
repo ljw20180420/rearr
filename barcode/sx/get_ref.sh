@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: get_ref.sh csvfile fasta_genome ext1up ext1down ext2up ext2down
+# Usage: get_ref.sh csvfile fasta_genome [ext1up ext1down ext2up ext2down]
 csvfile=$1
 getfastagenome=$2
 bowtie2genome=${getfastagenome%.*}
