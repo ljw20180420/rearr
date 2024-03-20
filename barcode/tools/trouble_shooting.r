@@ -37,7 +37,6 @@ csvfile <- case_match(
 )
 csvfile <- file.path(dirname(this.path()), "../csvfiles", csvfile)
 
-
 # read barcode and sgRNA
 barcode_sgRNA <- read_csv(pipe(sprintf("rev %s | cut -c23-40 | tr 'ACGT' 'TGCA'", csvfile)), col_names = "barcode", col_types = "c") |>
   bind_cols(read_csv(pipe(sprintf("sed -r 's/[acgt]+.*$//' %s | rev | cut -c1-20 | rev", csvfile)), col_names = "sgRNA", col_types="c"))
