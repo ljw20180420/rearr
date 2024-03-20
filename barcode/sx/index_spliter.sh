@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage
-# rearr_barcode_index.sh fasta_genome
+# index_spliter.sh fasta_genome
 
 scriptPath="$(dirname $(realpath $0))"
 csvpath="$scriptPath/csvfiles"
