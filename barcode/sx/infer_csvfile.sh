@@ -1,6 +1,6 @@
 #!/bin/bash
 
-csvpath="$(dirname $(realpath $0))/../csvfiles"
+csvpath="$(dirname $(realpath $0))/csvfiles"
 chip=$(awk -F "-" '{print $(NF - 1)}' <<<$1 | head -c2)
 case ${chip^^} in
     G?)
