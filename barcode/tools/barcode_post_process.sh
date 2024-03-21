@@ -1,9 +1,9 @@
 #!/bin/bash
 # Usage
 # Get a long table of indel
-# rearr_barcode_post_process.sh <fastq.table
+# rearr_barcode_post_process.sh <fqR1.table
 # To hist a certain column
-# rearr_barcode_post_process.sh <fastq.table column
+# rearr_barcode_post_process.sh <fqR1.table column
 
 get_indel()
 {

@@ -1,6 +1,5 @@
 #!/bin/bash
-# Usage
-# barcode_render.sh fqR1 ext1up ext2up ref1len
+# Usage: barcode_render.sh fqR1 ext1up ext2up ref1len
 
 fqR1=$1
 ext1up=$2

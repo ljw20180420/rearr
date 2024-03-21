@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # usage
-# run_kpLogo.sh path_to_fastq method(thres|weight|back) threshold
+# run_kpLogo.sh fqR1 method(thres|weight|back) threshold
 
 project_path="$(dirname $(realpath $0))/../.."
 fqR1=$1
