@@ -1,33 +1,18 @@
 # Usage
-printf "%s\n" \
-"path_to_fastq1" \
-"path_to_fastq2" \
-...
-"path_to_fastqN"
-| rearr_barcode_run.sh
-
-# Example
-printf "%s\n" \
-"barcode/test1/D2-g1n-1.fq" \
-| rearr_barcode_run.sh
+## demultiplex reads
+demultiplex.sh fqR1 fqR2 spliter1 spliter2 sgRNAfile minscoreR1 minscoreR2 ref12 minQueryR2 >fqR1.demultiplex
+## align reads over spliter2 (spliters are used to demultiplex reads)
+barcode_align.sh fqR1 ext1up ext2up totalCount <fqR1.demultiplex >fqR1.alg 3>fqR1.table
+## call kpLogo
+run_kpLogo.sh fqR1 method(thres|weight|back) threshold
+## Count percentage of -4
+trouble_shooting.r fqR1 score_thres(default: -Inf)
+## render html
+barcode_render.sh fqR1 ext1up ext2up ref1len
 
 # Output
-# fastq.count: the count of duplicates in the input file
-# fastq.not_find: non-duplicate reads cannot find barcode
-# fastq.alg: alignments of non-duplicate reads with barcode
-# fastq.table: informative table of alignments of non-duplicate reads with barcode
-
-# Index barcode
-rearr_barcode_index.sh "genome_fasta": this step is necessary for using bowtie2 local mode to demultiplex reads by barcodes
-
-# Tools
-# Get a long table of indel
-rearr_barcode_post_process.sh <fastq.table
-# To hist a certain column
-rearr_barcode_post_process.sh <fastq.table column
-# Count percentage of -4
-trouble_shooting.r path_to_fastq
-# call kpLogo
-run_kpLogo.sh path_to_fastq method(thres|weight|back) threshold
-# render html
-rearr_barcode_render.sh path_to_fastq
+fqR1.count: the count of duplicates in the input file
+fqR1.not_find: non-duplicate reads cannot find spliter1/2, or has unpaired spliter1/2, or has too short query
+fqR1.demultiplex: non-duplicate reads labeled by spliter2
+fqR1.alg: alignments of non-duplicate reads over spliter2
+fqR1.table: informative table of alignments of non-duplicate reads over spliter2
