@@ -21,14 +21,24 @@ R2map()
     # Map R2 to spliter2, and retrieve flag, matched spliter2, and the end position of spliter2 in R2
     # Input: R2reads
     # Output: flag|spliter2|endOfSpliter2InR2
-    bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$spliter2" -U - 2>/dev/null | samtools view | cut -f2,3,6 | python -c '
-import sys, pysam
-for line in sys.stdin:
-    flag, barcode, CIGAR = line.split("\t")
-    pAS = pysam.AlignedSegment()
-    pAS.cigarstring = CIGAR
-    sys.stdout.write(f"{flag}\t{barcode}\t{pAS.query_alignment_end}\n")
-'
+    bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$spliter2" -U - 2>/dev/null | samtools view | awk -F "\t" -v OFS="\t" '
+    {
+        if ($6 == "*")
+            print $2, $3, 0
+        else
+        {
+            n = patsplit($6, cigarSegs, /[0-9]+[MIDNSHPX=]/)
+            endOfSpliter2InR2 = 0
+            for (i = 1; i <= n; ++i)
+            {
+                patsplit(cigarSegs[i], num, /[0-9]+/, labels)
+                if (labels[1] ~ /[MI=X]/ || labels[1] ~ /[SH]/ && i == 1)
+                    endOfSpliter2InR2 += num[1]
+            }
+            print $2, $3, endOfSpliter2InR2
+        }
+    }
+    '
 }
 
 appendSpliter2SeqRef12()
