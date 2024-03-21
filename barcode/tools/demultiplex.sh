@@ -87,9 +87,15 @@ FilterSpilters()
     awk -F "\t" -v OFS="\t" -v minQueryR2=$minQueryR2 -v fqR1="$fqR1" '
     {
         if (($5/4)%2 == 1 || ($11/4)%2 == 1 || $6 != $12 || $7 + minQueryR2 > length($4))
-            print $0 > fqR1".not_find";
+            print $0 > fqR1 ".not_find";
         else
+        {
             print $1, $3, $4, $7, $8, $9, $10;
+            totalCount += $3
+        }
+    }
+    END{
+        print totalCount > fqR1 ".total";
     }
     ' 
 }
