@@ -19,7 +19,7 @@ function execRearr(ref1len, spliter2seqGroup)
 
 BEGIN{
     cmd = project_path "/Rearrangement/build/rearrangement <" fqR1 ".countfile 3<" fqR1 ".reference -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | " project_path "/tools/correct_micro_homology.AWK -- " ext1up " NGG " ext2up " NGG "
-    printf("barcode\tindex\tcount\tscore\tupdangle\tref_start1\tquery_start1\tref_end1\tquery_end1\trandom_insertion\tref_start2\tquery_start2\tref_end2\tquery_end2\tdowndangle\tcut1\tcut2\tpercent\n") > "/dev/fd/3"
+    printf("spliter2\tindex\tcount\tscore\tupdangle\tref_start1\tquery_start1\tref_end1\tquery_end1\trandom_insertion\tref_start2\tquery_start2\tref_end2\tquery_end2\tdowndangle\tcut1\tcut2\tpercent\n") > "/dev/fd/3"
 }
 
 {

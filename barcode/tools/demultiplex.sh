@@ -4,7 +4,6 @@
 # minscoreR1/2 thres the match between fqR1/2 and spliter1/2
 # ref12 is a file with side-by-side ref1 and ref2
 # Remove spliter2 from 5' and adapter from 3' of R2. The remain must contain at least minQueryR2 bases.
-# TODO: spliter2=primer+barcode while only barcode is used to label queries. Change it to the full spliter2 in appendsSpliter2SeqRef12
 
 cutadaptPlain()
 {
@@ -52,7 +51,6 @@ appendSpliter2SeqRef12()
         while (getline spliter2name <spliter2fa)
         {
             getline spliter2seq <spliter2fa;
-            spliter2seq = substr(spliter2seq, 22)
             name2seq[substr(spliter2name, 2)] = spliter2seq;
             getline r12 <ref12;
             name2r12[substr(spliter2name, 2)] = r12
