@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: demultiplex.sh fqR1 fqR2 spliter1 spliter2 minscoreR1 minscoreR2 ref12 minQueryR2
+# Usage: demultiplex.sh fqR1 fqR2 spliter1 spliter2 sgRNAfile minscoreR1 minscoreR2 ref12 minQueryR2 >fqR1.demultiplex
 # spliter1/2 is the library to split fqR1/2
 # minscoreR1/2 thres the match between fqR1/2 and spliter1/2
 # ref12 is a file with side-by-side ref1 and ref2
@@ -43,21 +43,24 @@ R2map()
 appendSpliter2SeqRef12()
 {
     # Usage: appendSpliter2SeqRef12 <R2map
-    # Append the sequence of spliter2, as well as ref1 and ref2
+    # Append the sequence of spliter2, as well as ref1 and ref2 and sgRNA
     # Input: flag|spliter2|alignmentEndInQuery
-    # Output: flag|spliter2|alignmentEndInQuery|spilter2seq|ref1|ref2
-    awk -F "\t" -v spliter2fa="${spliter2}.fa" -v ref12="$ref12" -v OFS="\t" '
+    # Output: flag|spliter2|alignmentEndInQuery|spilter2seq|ref1|ref2|sgRNA
+    awk -F "\t" -v spliter2fa="${spliter2}.fa" -v ref12="$ref12" -v sgRNAfile=${sgRNAfile} -v OFS="\t" '
     BEGIN{
         while (getline spliter2name <spliter2fa)
         {
-            getline spliter2seq <spliter2fa;
-            name2seq[substr(spliter2name, 2)] = spliter2seq;
-            getline r12 <ref12;
-            name2r12[substr(spliter2name, 2)] = r12
+            getline spliter2seq <spliter2fa
+            name = substr(spliter2name, 2)
+            name2seq[name] = spliter2seq
+            getline r12 <ref12
+            name2r12[name] = r12
+            getline sgRNA <sgRNAfile
+            name2sgRNA[name] = sgRNA
         }
     }
     {
-        print $1, $2, $3, name2seq[$2], name2r12[$2]
+        print $1, $2, $3, toupper(name2seq[$2]), toupper(name2r12[$2]), toupper(name2sgRNA[$2])
     }
     '
 }
@@ -73,10 +76,10 @@ R1map()
 
 FilterSpilters()
 {
-    # Usage: FilterSpilters <R2|R1|count|R2CutAdapt|flag2|spliter2|endOfSpliter2InR2|spliter2seq|ref1|ref2|flag1|spliter1
-    # Input: R2|R1|count|R2CutAdapt|flag2|spliter2|endOfSpliter2InR2|spliter2seq|ref1|ref2|flag1|spliter1
-    # Output: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2
-    # $1:R2|$3:count|$4:R2CutAdapt|$5:flag2|$6:spliter2|$7:endOfSpliter2InR2|$8:spliter2seq|$9:ref1|$10:ref2|$11:flag1|$12:spliter1
+    # Usage: FilterSpilters <R2|R1|count|R2CutAdapt|flag2|spliter2|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA|flag1|spliter1
+    # Input: R2|R1|count|R2CutAdapt|flag2|spliter2|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA|flag1|spliter1
+    # Output: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA
+    # $1:R2|$3:count|$4:R2CutAdapt|$5:flag2|$6:spliter2|$7:endOfSpliter2InR2|$8:spliter2seq|$9:ref1|$10:ref2|$11:sgRNA|$12:flag1|$13:spliter1
     # filter the read pair if one of the following happens:
     # 1. R2 does not match any record in spliter2
     # 2. R1 does not match any record in spliter1
@@ -84,11 +87,11 @@ FilterSpilters()
     # 4. After removing 5' spliter2 and 3' adapter, R2 is shorter than minQueryR2
     awk -F "\t" -v OFS="\t" -v minQueryR2=$minQueryR2 -v fqR1="$fqR1" '
     {
-        if (($5/4)%2 == 1 || ($11/4)%2 == 1 || $6 != $12 || $7 + minQueryR2 > length($4))
+        if (($5/4)%2 == 1 || ($12/4)%2 == 1 || $6 != $13 || $7 + minQueryR2 > length($4))
             print $0 > fqR1 ".not_find";
         else
         {
-            print $1, $3, $4, $7, $8, $9, $10;
+            print $1, $3, $4, $7, $8, $9, $10, $11;
             totalCount += $3
         }
     }
@@ -100,29 +103,30 @@ FilterSpilters()
 
 cumulate_R2_sort()
 {
-    # Usage: cumulate_R2 <R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2
-    # Input: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2
-    # Output: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2
+    # Usage: cumulate_R2 <R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA
+    # Input: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA
+    # Output: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA
     # Cumulate the adjacent duplicate R2 count. Sort the result first by the dict order of spliter2seq, and then by the descent order of count
     awk -F "\t" -v OFS="\t" '
     {
         if ($1 != R2)
         {
             if (NR > 1)
-                print R2, count, R2CutAdapt, endOfSpliter2InR2, spliter2seq, ref1, ref2;
-            R2 = $1;
-            count = $2;
-            R2CutAdapt = $3;
-            endOfSpliter2InR2 = $4;
-            spliter2seq = $5;
-            ref1 = $6;
+                print R2, count, R2CutAdapt, endOfSpliter2InR2, spliter2seq, ref1, ref2, sgRNA
+            R2 = $1
+            count = $2
+            R2CutAdapt = $3
+            endOfSpliter2InR2 = $4
+            spliter2seq = $5
+            ref1 = $6
             ref2 = $7
+            sgRNA = $8
         }
         else
-            count += $2;
+            count += $2
     }
     END{
-        print R2, count, R2CutAdapt, endOfSpliter2InR2, spliter2seq, ref1, ref2;
+        print R2, count, R2CutAdapt, endOfSpliter2InR2, spliter2seq, ref1, ref2, sgRNA
     }
     ' | sort -k5,5 -k2,2nr
 }
@@ -131,10 +135,11 @@ fqR1=$1
 fqR2=$2
 spliter1=$3
 spliter2=$4
-minscoreR1=$5
-minscoreR2=$6
-ref12=$7
-minQueryR2=$8
+sgRNAfile=$5
+minscoreR1=$6
+minscoreR2=$7
+ref12=$8
+minQueryR2=$9
 project_path="$(dirname $(realpath $0))/../.."
 
 # list R2 and R1 side-by-side, and count duplicates: R2\tR1\tcount
