@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage
-# rearr_barcode_render.sh fqfile
+# barcode_render.sh fqfile
 
 algfile=$1.alg
 tablefile=$1.table

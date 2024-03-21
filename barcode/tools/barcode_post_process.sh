@@ -1,4 +1,10 @@
 #!/bin/bash
+# Usage
+# Get a long table of indel
+# rearr_barcode_post_process.sh <fastq.table
+# To hist a certain column
+# rearr_barcode_post_process.sh <fastq.table column
+
 get_indel()
 {
     awk -F "\t" -v OFS="\t" '
