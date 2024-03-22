@@ -1,6 +1,0 @@
-# Normalization is done row based. The first row contains the P(aa|A) and so one..
-A	C	G	T
-0.25	0.25	0.25	0.25
-0.25	0.25	0.25	0.25
-0.25	0.25	0.25	0.25
-0.25	0.25	0.25	0.25
