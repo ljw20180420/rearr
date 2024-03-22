@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # usage
-# index_spliter.sh fasta_genome
+# index_spliter.sh fasta_genome csvfiles
 
 scriptPath="$(dirname $(realpath $0))"
-csvpath="$scriptPath/csvfiles"
-for csvfile in $(ls $csvpath/*csv)
+fasta_genome=$1
+shift
+for csvfile in "$@"
 do
     paste -d "" <("$scriptPath/get_primer.sh" <"$csvfile") <("$scriptPath/get_barcode.sh" <"$csvfile") | paste -d "\n" <("$scriptPath/get_faHead.sh" <"$csvfile") - >"$csvfile.primer+barcode.fa"
     bowtie2-build -q "$csvfile.primer+barcode.fa" "$csvfile.primer+barcode"
@@ -15,5 +16,5 @@ do
 
     "${scriptPath}/get_sgRNA.sh" <"${csvfile}" >"${csvfile}.sgRNA"
 
-    "${scriptPath}/get_ref.sh" "${csvfile}" $1 >"${csvfile}.ref12"
+    "${scriptPath}/get_ref.sh" "${csvfile}" ${fasta_genome} >"${csvfile}.ref12"
 done
