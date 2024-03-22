@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: demultiplex.sh fqR1 fqR2 spliter1 spliter2 sgRNAfile minscoreR1 minscoreR2 ref12 minQueryR2 >fqR1.demultiplex
+# Usage: demultiplex.sh fqR1 fqR2 spliter1 spliter2 sgRNAfile ref12 minscoreR1 minscoreR2 minQueryR2
 # spliter1/2 is the library to split fqR1/2
 # minscoreR1/2 thres the match between fqR1/2 and spliter1/2
 # ref12 is a file with side-by-side ref1 and ref2
@@ -136,13 +136,13 @@ fqR2=$2
 spliter1=$3
 spliter2=$4
 sgRNAfile=$5
-minscoreR1=$6
-minscoreR2=$7
-ref12=$8
+ref12=$6
+minscoreR1=$7
+minscoreR2=$8
 minQueryR2=$9
 project_path="$(dirname $(realpath $0))/../.."
 
 # list R2 and R1 side-by-side, and count duplicates: R2\tR1\tcount
 $project_path/pv-1.8.5/pv -c -N "count $fqR1" "$fqR2" | sed -n '2~4p' | paste - <(sed -n '2~4p' "$fqR1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fqR1.count"
 
-$project_path/pv-1.8.5/pv -c -N "demultiplex $fqR1" "$fqR1.count" | cut -f1 | R2map | appendSpliter2SeqRef12 | paste "$fqR1.count" <(cut -f1 "$fqR1.count" | cutadaptPlain GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC) - <(cut -f2 "$fqR1.count" | R1map) | FilterSpilters | cumulate_R2_sort
+$project_path/pv-1.8.5/pv -c -N "demultiplex $fqR1" "$fqR1.count" | cut -f1 | R2map | appendSpliter2SeqRef12 | paste "$fqR1.count" <(cut -f1 "$fqR1.count" | cutadaptPlain GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC) - <(cut -f2 "$fqR1.count" | R1map) | FilterSpilters | cumulate_R2_sort >"${fqR1}.demultiplex"

@@ -1,8 +1,8 @@
 # Usage
 ## demultiplex reads
-demultiplex.sh fqR1 fqR2 spliter1 spliter2 sgRNAfile minscoreR1 minscoreR2 ref12 minQueryR2 >fqR1.demultiplex
+demultiplex.sh fqR1 fqR2 spliter1 spliter2 sgRNAfile ref12 minscoreR1 minscoreR2 minQueryR2
 ## align reads over spliter2 (spliters are used to demultiplex reads)
-barcode_align.sh fqR1 ext1up ext2up totalCount <fqR1.demultiplex >fqR1.alg 3>fqR1.table
+barcode_align.sh fqR1 ext1up ext2up totalCount
 ## call kpLogo
 run_kpLogo.sh fqR1 method(thres|weight|back) threshold
 ## Count percentage of -4

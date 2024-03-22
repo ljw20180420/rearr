@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: barcode_align.sh fqR1 ext1up ext2up totalCount <fqR1.demultiplex >fqR1.alg 3>fqR1.table
+# Usage: barcode_align.sh fqR1 ext1up ext2up totalCount
 
 awk -F "\t" -v OFS="\t" -v project_path="$(dirname $(realpath $0))/../.." -v fqR1="$1" -v ext1up="$2" -v ext2up="$3" -v totalCount=$4 '
 function execRearr(ref1len, spliter2seqGroup)
@@ -12,14 +12,14 @@ function execRearr(ref1len, spliter2seqGroup)
         if (rn % 3 != 1)
             continue
         split(result, fields, "\t")
-        print spliter2seqGroup, result, ext1up, ref1len + ext2up, sprintf("%.2f%", fields[2] / totalCount * 100) > "/dev/fd/3"
+        print spliter2seqGroup, result, ext1up, ref1len + ext2up, sprintf("%.2f%", fields[2] / totalCount * 100) > fqR1 ".table"
     }
     close(cmd ref1len)
 }
 
 BEGIN{
     cmd = project_path "/Rearrangement/build/rearrangement <" fqR1 ".countfile 3<" fqR1 ".reference -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | " project_path "/tools/correct_micro_homology.AWK -- " ext1up " NGG " ext2up " NGG "
-    printf("spliter2\tindex\tcount\tscore\tupdangle\tref_start1\tquery_start1\tref_end1\tquery_end1\trandom_insertion\tref_start2\tquery_start2\tref_end2\tquery_end2\tdowndangle\tcut1\tcut2\tpercent\n") > "/dev/fd/3"
+    printf("spliter2\tindex\tcount\tscore\tupdangle\tref_start1\tquery_start1\tref_end1\tquery_end1\trandom_insertion\tref_start2\tquery_start2\tref_end2\tquery_end2\tdowndangle\tcut1\tcut2\tpercent\n") > fqR1 ".table"
 }
 
 {
@@ -51,4 +51,4 @@ END{
     system("rm " fqR1 ".countfile")
     system("rm " fqR1 ".reference")
 }
-'
+' "$1.demultiplex" >"$1.alg"
