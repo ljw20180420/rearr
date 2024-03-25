@@ -30,7 +30,7 @@ exit_with_error
 pv-1.8.5/
 renv/.gitignore
 less-643/
-.RData
+gawk-5.3.0/
 Python-3.12.1/
 R-4.3.2/
 py312/

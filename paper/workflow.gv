@@ -1,0 +1,17 @@
+# export by: dot -Tpdf -o paper/figures/workflow.pdf paper/workflow.gv
+
+digraph workflow
+{
+    graph [layout = dot]
+
+    node [shape = rectangle, width = 4, fillcolor = Biege]
+    a [label = "automatically uncompress fasta/fastq.gz input"]
+    b [label = "do chimeric alignments for query reads"]
+    c [label = "correct the alignments up to micro-homology"]
+    d [label = "summarise alignment information in a table"]
+    e [label = "browser alignments with highlighted color"]
+    f [label = "generate visual reports"]
+
+    a -> b -> c -> d -> e
+    d -> f
+}
