@@ -14,14 +14,10 @@ Rearrangement/build/
 barcode/kpLogo/bin/
 references/
 tools/__pycache__/
-.gawkrc
-.gawk_history
 test/*
 !test/random.fq
 !test/ref12.fa
 paper/
-paper_figures/
-pictures/
 barcode/test/*
 !barcode/test/A2-g1n-3.fq
 !barcode/test/A2-g1n-3.R2.fq

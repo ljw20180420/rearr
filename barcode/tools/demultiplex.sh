@@ -20,7 +20,7 @@ R2map()
     # Map R2 to spliter2, and retrieve flag, matched spliter2, and the end position of spliter2 in R2
     # Input: R2reads
     # Output: flag|spliter2|endOfSpliter2InR2
-    bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$spliter2" -U - 2>/dev/null | samtools view | awk -F "\t" -v OFS="\t" '
+    bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,$minscoreR2 -r -x "$spliter2" -U - 2>/dev/null | samtools view | gawk -F "\t" -v OFS="\t" '
     {
         if ($6 == "*")
             print $2, $3, 0
@@ -46,7 +46,7 @@ appendSpliter2SeqRef12()
     # Append the sequence of spliter2, as well as ref1 and ref2 and sgRNA
     # Input: flag|spliter2|alignmentEndInQuery
     # Output: flag|spliter2|alignmentEndInQuery|spilter2seq|ref1|ref2|sgRNA
-    awk -F "\t" -v spliter2fa="${spliter2}.fa" -v ref12="$ref12" -v sgRNAfile=${sgRNAfile} -v OFS="\t" '
+    gawk -F "\t" -v spliter2fa="${spliter2}.fa" -v ref12="$ref12" -v sgRNAfile=${sgRNAfile} -v OFS="\t" '
     BEGIN{
         while (getline spliter2name <spliter2fa)
         {
@@ -85,7 +85,7 @@ FilterSpilters()
     # 2. R1 does not match any record in spliter1
     # 3. spliter1 matching R1 and spliter2 matching R2 are not paired
     # 4. After removing 5' spliter2 and 3' adapter, R2 is shorter than minQueryR2
-    awk -F "\t" -v OFS="\t" -v minQueryR2=$minQueryR2 -v fqR1="$fqR1" '
+    gawk -F "\t" -v OFS="\t" -v minQueryR2=$minQueryR2 -v fqR1="$fqR1" '
     {
         if (($5/4)%2 == 1 || ($12/4)%2 == 1 || $6 != $13 || $7 + minQueryR2 > length($4))
             print $0 > fqR1 ".not_find";
@@ -107,7 +107,7 @@ cumulate_R2_sort()
     # Input: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA
     # Output: R2|count|R2CutAdapt|endOfSpliter2InR2|spliter2seq|ref1|ref2|sgRNA
     # Cumulate the adjacent duplicate R2 count. Sort the result first by the dict order of spliter2seq, and then by the descent order of count
-    awk -F "\t" -v OFS="\t" '
+    gawk -F "\t" -v OFS="\t" '
     {
         if ($1 != R2)
         {
@@ -143,6 +143,6 @@ minQueryR2=$9
 project_path="$(dirname $(realpath $0))/../.."
 
 # list R2 and R1 side-by-side, and count duplicates: R2\tR1\tcount
-$project_path/pv-1.8.5/pv -c -N "count $fqR1" "$fqR2" | sed -n '2~4p' | paste - <(sed -n '2~4p' "$fqR1") | sort | uniq -c | awk -v OFS="\t" '{print $2, $3, $1}' >"$fqR1.count"
+$project_path/pv-1.8.5/pv -c -N "count $fqR1" "$fqR2" | sed -n '2~4p' | paste - <(sed -n '2~4p' "$fqR1") | sort | uniq -c | gawk -v OFS="\t" '{print $2, $3, $1}' >"$fqR1.count"
 
 $project_path/pv-1.8.5/pv -c -N "demultiplex $fqR1" "$fqR1.count" | cut -f1 | R2map | appendSpliter2SeqRef12 | paste "$fqR1.count" <(cut -f1 "$fqR1.count" | cutadaptPlain GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC) - <(cut -f2 "$fqR1.count" | R1map) | FilterSpilters | cumulate_R2_sort >"${fqR1}.demultiplex"
