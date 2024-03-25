@@ -8,7 +8,7 @@ fqR1=$1
 method=$2
 threshold=${3:-40}
 
-"${project_path}/barcode/tools/barcode_post_process.sh" <"${fqR1}.table" | tail -n+2 | paste - <(cut -f8 "${fqR1}.demultiplex") | gawk -F "\t" -v OFS="\t" -v fqR1="${fqR1}" -v threshold="$threshold" '
+"${project_path}/barcode/tools/barcode_post_process.sh" <"${fqR1}.table" | tail -n+2 | paste - <(cut -f8 "${fqR1}.demultiplex") | "${project_path}/gawk-5.3.0/gawk" -F "\t" -v OFS="\t" -v fqR1="${fqR1}" -v threshold="$threshold" '
 {
     if (($1 != spliter2 || $25 != sgRNA) && sgRNA)
     {
@@ -41,12 +41,12 @@ END{
 
 case $method in
     "thres")
-        $project_path/barcode/kpLogo-1.1/bin/kpLogo "${fqR1}.kpLogo.weight.thres" -o "${fqR1}.kpLogo" -region 15,20 -weighted -k 1
+        $project_path/kpLogo-1.1/bin/kpLogo "${fqR1}.kpLogo.weight.thres" -o "${fqR1}.kpLogo" -region 15,20 -weighted -k 1
     ;;
     "weighted"|"weight")
-        $project_path/barcode/kpLogo-1.1/bin/kpLogo "${fqR1}.kpLogo.weight" -o "${fqR1}.kpLogo" -region 15,20 -weighted -k 1
+        $project_path/kpLogo-1.1/bin/kpLogo "${fqR1}.kpLogo.weight" -o "${fqR1}.kpLogo" -region 15,20 -weighted -k 1
     ;;
     "background"|"back"|"bg"|"bgfile")
-        $project_path/barcode/kpLogo-1.1/bin/kpLogo "${fqR1}.kpLogo.insertion" -o "${fqR1}.kpLogo" -region 15,20 -bgfile "${fqR1}.kpLogo.total" -k 1
+        $project_path/kpLogo-1.1/bin/kpLogo "${fqR1}.kpLogo.insertion" -o "${fqR1}.kpLogo" -region 15,20 -bgfile "${fqR1}.kpLogo.total" -k 1
     ;;
 esac

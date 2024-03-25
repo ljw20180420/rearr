@@ -1,7 +1,8 @@
 #!/bin/bash
 # Usage: barcode_align.sh fqR1 ext1up ext2up totalCount
 
-gawk -F "\t" -v OFS="\t" -v project_path="$(dirname $(realpath $0))/../.." -v fqR1="$1" -v ext1up="$2" -v ext2up="$3" -v totalCount=$4 '
+project_path="$(dirname $(realpath $0))/../.."
+"${project_path}/gawk-5.3.0/gawk" -F "\t" -v OFS="\t" -v project_path="${project_path}" -v fqR1="$1" -v ext1up="$2" -v ext2up="$3" -v totalCount=$4 '
 function execRearr(ref1len, spliter2seqGroup)
 {
     rn = 0

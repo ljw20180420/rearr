@@ -10,8 +10,13 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev
 ## build less
 COPY ["./less-643.zip", "/app/"]
-RUN unzip less-643.zip 
-RUN cd "less-643" && ./configure LDFLAGS="-static" && make
+RUN unzip "less-643.zip" && cd "less-643" && ./configure LDFLAGS="-static" && make
+## build gawk
+COPY ["./gawk-5.3.0.zip", "/app/"]
+RUN unzip "gawk-5.3.0.zip" && cd "gawk-5.3.0" && ./configure LDFLAGS="-static" && make
+## build kpLogo
+COPY ["kpLogo-1.1.zip", "/app/"]
+RUN unzip kpLogo-1.1.zip && sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && make -C "kpLogo-1.1/src"
 # install python
 # RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip
 # RUN pip install -U pip && pip install pyinstaller numpy scipy flask
@@ -26,9 +31,6 @@ RUN cd "less-643" && ./configure LDFLAGS="-static" && make
 # COPY ["Rearrangement/headers", "/app/Rearrangement/headers"]
 # # build aligner c++ source code
 # RUN cmake -DCMAKE_BUILD_TYPE=Release -S Rearrangement -B Rearrangement/build && make -C Rearrangement/build
-# # build kpLogo
-# COPY ["kpLogo-1.1.zip", "/app/barcode/"]
-# RUN unzip barcode/kpLogo-1.1.zip -d barcode && make -C "barcode/kpLogo-1.1/src"
 # # build pv
 # COPY ["pv-1.8.5.zip", "/app/"]
 # RUN unzip pv-1.8.5.zip && cd pv-1.8.5 && ./configure && make

@@ -7,7 +7,7 @@
 
 get_indel()
 {
-    gawk -F "\t" -v OFS="\t" '
+    "${project_path}/gawk-5.3.0/gawk" -F "\t" -v OFS="\t" '
         NR==1{
                 print $0, "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"
         }
@@ -43,7 +43,7 @@ get_indel()
 
 get_table()
 {
-    gawk -v FS="\t" -v tg=$1 'NR>1{count[$1][$tg] += $3; tgvs[$tg] = 0;}
+    gawk-5.3.0/gawk -v FS="\t" -v tg=$1 'NR>1{count[$1][$tg] += $3; tgvs[$tg] = 0;}
     END{
         PROCINFO["sorted_in"] = "@ind_str_asc";
         printf("barcode");
@@ -59,6 +59,8 @@ get_table()
         }
     }'
 }
+
+project_path="$(dirname $(realpath $0))/../.."
 
 if [ -n "$1" ]
 then
