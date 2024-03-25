@@ -1,27 +1,31 @@
 # TODO: not use root user
 # TODO: use minimal executable
 
-# Analysis of CRISPR/Cas sequencing to get editing events
-FROM ubuntu:22.04 AS ubuntu-python3
+# build static binary tools for ubuntu:22.04
+FROM ubuntu:22.04 AS ubuntu-bin
 LABEL maintainer="ljw2017@sjtu.edu.cn"
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip
-RUN pip install -U pip && pip install pyinstaller numpy scipy flask
+## set working directory
+WORKDIR /app
+## install system enviroments for build
+RUN apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev
+## build less
+COPY ["./less-643.zip", "/app/"]
+RUN unzip less-643.zip 
+RUN cd "less-643" && ./configure LDFLAGS="-static" && make
+# install python
+# RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip
+# RUN pip install -U pip && pip install pyinstaller numpy scipy flask
 # # install system enviroments
-# RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev r-base build-essential libcurl4-openssl-dev libssl-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev cmake bash gawk bsdmainutils libncurses5-dev libncursesw5-dev pandoc samtools bedtools bowtie2 cutadapt ghostscript imagemagick
+# RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev r-base libcurl4-openssl-dev libssl-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev cmake bash gawk bsdmainutils libncursesw5-dev pandoc samtools bedtools bowtie2 cutadapt ghostscript imagemagick
 # # fix policy problem of imagemagick
 # RUN sed -i -r 's#<policy domain="coder" rights="none" pattern="(PS|PS2|PS3|EPS|PDF|XPS)" />#<!-- policy domain="coder" rights="none" pattern="\1" />#g' /etc/ImageMagick-6/policy.xml
 # # install R packages
 # RUN apt-get install -y --no-install-recommends r-cran-jsonlite r-cran-ggforce r-cran-reticulate r-cran-ggtext r-cran-cairo r-cran-ggseqlogo && Rscript -e 'install.packages(c("tidyverse", "patchwork", "this.path", "waffle"))'
-# # set working directory
-# WORKDIR /app
 # # copy aligner c++ source code
 # COPY ["Rearrangement/CMakeLists.txt", "Rearrangement/main.cpp", "/app/Rearrangement/"]
 # COPY ["Rearrangement/headers", "/app/Rearrangement/headers"]
 # # build aligner c++ source code
 # RUN cmake -DCMAKE_BUILD_TYPE=Release -S Rearrangement -B Rearrangement/build && make -C Rearrangement/build
-# # build less
-# COPY ["./less-643.zip", "/app/"]
-# RUN unzip less-643.zip && cd "less-643" && ./configure && make
 # # build kpLogo
 # COPY ["kpLogo-1.1.zip", "/app/barcode/"]
 # RUN unzip barcode/kpLogo-1.1.zip -d barcode && make -C "barcode/kpLogo-1.1/src"

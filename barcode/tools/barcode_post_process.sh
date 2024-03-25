@@ -7,7 +7,7 @@
 
 get_indel()
 {
-    awk -F "\t" -v OFS="\t" '
+    gawk -F "\t" -v OFS="\t" '
         NR==1{
                 print $0, "left_del", "right_del", "temp_left_ins", "temp_right_ins", "random_ins", "indel_type"
         }
@@ -43,7 +43,7 @@ get_indel()
 
 get_table()
 {
-    awk -v FS="\t" -v tg=$1 'NR>1{count[$1][$tg] += $3; tgvs[$tg] = 0;}
+    gawk -v FS="\t" -v tg=$1 'NR>1{count[$1][$tg] += $3; tgvs[$tg] = 0;}
     END{
         PROCINFO["sorted_in"] = "@ind_str_asc";
         printf("barcode");

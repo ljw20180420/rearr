@@ -8,7 +8,7 @@ fqR1=$1
 method=$2
 threshold=${3:-40}
 
-"${project_path}/barcode/tools/barcode_post_process.sh" <"${fqR1}.table" | tail -n+2 | paste - <(cut -f8 "${fqR1}.demultiplex") | awk -F "\t" -v OFS="\t" -v fqR1="${fqR1}" -v threshold="$threshold" '
+"${project_path}/barcode/tools/barcode_post_process.sh" <"${fqR1}.table" | tail -n+2 | paste - <(cut -f8 "${fqR1}.demultiplex") | gawk -F "\t" -v OFS="\t" -v fqR1="${fqR1}" -v threshold="$threshold" '
 {
     if (($1 != spliter2 || $25 != sgRNA) && sgRNA)
     {
