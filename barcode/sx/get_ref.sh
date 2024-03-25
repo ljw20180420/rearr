@@ -7,6 +7,7 @@ ext1up=${3:-50}
 ext1down=${4:-10}
 ext2up=${5:-10}
 ext2down=${6:-100}
+project_path="$(dirname $(realpath $0))/../.."
 
 # For NAA csvfiles, 17~18bp of target is "TT", which should be replaced by "CC" in order to map genome. After find the genome location, the retrieved reference need replace "GG" (target and reference always have opposite strands, so "CC" becomes "GG") back to "AA".
 perl -anF, -E '
@@ -15,7 +16,7 @@ perl -anF, -E '
     $target=substr($F[1], length($F[1]) - pos($rev) + 1, 44);
     substr($target, 16, 2)="CC";
     say $target;
-' "$csvfile" | bowtie2 --quiet --mm -x "$bowtie2genome" -r -U - 2> /dev/null | samtools view | gawk -F "\t" -v OFS="\t" -v ext1up="$ext1up" -v ext1down="$ext1down" -v ext2up="$ext2up" -v ext2down="$ext2down" '
+' "$csvfile" | bowtie2 --quiet --mm -x "$bowtie2genome" -r -U - 2> /dev/null | samtools view | "${project_path}/gawk-5.3.0/gawk" -F "\t" -v OFS="\t" -v ext1up="$ext1up" -v ext1down="$ext1down" -v ext2up="$ext2up" -v ext2down="$ext2down" '
     {
         qname = $1
         flag = $2

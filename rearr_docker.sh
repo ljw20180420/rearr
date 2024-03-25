@@ -3,8 +3,8 @@
 project_path=$(dirname $(realpath $0))
 exec=./$(realpath --relative-base=${project_path} $(find ${project_path} -name "$1"))
 shift
-files=$(echo $@ | gawk -F "--" '{print $1}')
-vars=$(echo $@ | gawk -F "--" '{print $2}')
+files=$(echo $@ | ${project_path}/gawk-5.3.0/gawk -F "--" '{print $1}')
+vars=$(echo $@ | ${project_path}/gawk-5.3.0/gawk -F "--" '{print $2}')
 declare -a srcs
 for file in $files
 do
