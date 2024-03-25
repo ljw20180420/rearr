@@ -5,7 +5,7 @@
 FROM ubuntu:22.04 AS ubuntu-python3
 LABEL maintainer="ljw2017@sjtu.edu.cn"
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip
-RUN pip install -U pip && pip install pyinstaller biopython more-itertools numpy scipy flask
+RUN pip install -U pip && pip install pyinstaller numpy scipy flask
 # # install system enviroments
 # RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev r-base build-essential libcurl4-openssl-dev libssl-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev cmake bash gawk bsdmainutils libncurses5-dev libncursesw5-dev pandoc samtools bedtools bowtie2 cutadapt ghostscript imagemagick
 # # fix policy problem of imagemagick
@@ -29,7 +29,7 @@ RUN pip install -U pip && pip install pyinstaller biopython more-itertools numpy
 # COPY ["pv-1.8.5.zip", "/app/"]
 # RUN unzip pv-1.8.5.zip && cd pv-1.8.5 && ./configure && make
 # # copy scripts for single target alignment
-# COPY ["rearr_run.sh", "rearr_render.sh", "rearr_view.sh", "/app/"]
+# COPY ["rearr_run.sh", "rearr_render.r", "rearr_view.sh", "/app/"]
 # COPY ["tools/correct_micro_homology.AWK", "tools/align_align.py", "tools/draw_figures.Rmd", "/app/tools/"]
 # # copy barcode library
 # COPY ["barcode/sx/get*.sh", "barcode/sx/index_spliter.sh", "barcode/sx/infer_csvfile.sh", "/app/barcode/sx/"]
