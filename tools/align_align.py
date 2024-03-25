@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-import sys, re, more_itertools
+import sys, re
 # align the cut points and random insertion of reads
 ref1len, cut1, cut2 = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 relow = re.compile("[acgtn]")
 reup = re.compile("[ACGTN]")
 reflines, querylines, jposs, midlens, cpos1s, cpos2s = [], [], [], [], [], []
-for header, refline, queryline in more_itertools.batched(sys.stdin, 3):
+while True:
+    header = sys.stdin.readline()
+    if not header:
+        break
+    refline, queryline = sys.stdin.readline(), sys.stdin.readline()
     reflines.append(refline)
     _, _, _, _, us, _, ue, _, mid, ds, _, de, _ = header.split("\t", 12)
     midlens.append(len(mid))
