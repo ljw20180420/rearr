@@ -1,4 +1,5 @@
-#!/bin/gawk -f
+#!/app/gawk-5.3.0/gawk -f
+# Usage: correct_micro_homology.AWK -- ext1up NGGCCNtype1 ext2up NGGCCNtype2 ref1len
 
 BEGIN{
     FS = "\t"
