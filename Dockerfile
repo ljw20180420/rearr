@@ -17,6 +17,9 @@ RUN unzip "gawk-5.3.0.zip" && cd "gawk-5.3.0" && ./configure LDFLAGS="-static" &
 ## build kpLogo
 COPY ["kpLogo-1.1.zip", "/app/"]
 RUN unzip kpLogo-1.1.zip && sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && make -C "kpLogo-1.1/src"
+## build pv
+COPY ["pv-1.8.5.zip", "/app/"]
+RUN unzip pv-1.8.5.zip && cd pv-1.8.5 && ./configure LDFLAGS="-static" && make
 # install python
 # RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip
 # RUN pip install -U pip && pip install pyinstaller numpy scipy flask
@@ -31,9 +34,6 @@ RUN unzip kpLogo-1.1.zip && sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/
 # COPY ["Rearrangement/headers", "/app/Rearrangement/headers"]
 # # build aligner c++ source code
 # RUN cmake -DCMAKE_BUILD_TYPE=Release -S Rearrangement -B Rearrangement/build && make -C Rearrangement/build
-# # build pv
-# COPY ["pv-1.8.5.zip", "/app/"]
-# RUN unzip pv-1.8.5.zip && cd pv-1.8.5 && ./configure && make
 # # copy scripts for single target alignment
 # COPY ["rearr_run.sh", "rearr_render.r", "rearr_view.sh", "/app/"]
 # COPY ["tools/correct_micro_homology.AWK", "tools/align_align.py", "tools/draw_figures.Rmd", "/app/tools/"]
