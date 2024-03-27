@@ -2,6 +2,12 @@
 # Usage: align_align.AWK -- ref1len cut1 cut2
 # stdin: fqR1.alg
 # align the cut points and random insertion of alignments
+# cpos1/2 and jpos are gapped positions (including random insertion gap of length midlen)
+# there are exactly cut1/2 bases upstream to cpos1/2
+# cpos1 is pushed as upstream as possible; cpos2 is pushed as downstream as possible
+# nNNNN-NNNNNNNN|||||NNNN-NNNNn||||-------nNNNN-NNNN|||||NNNN-NNNNNNNNn
+#               cpos1          jpos midlen          cpos2
+
 
 function repeatChar(repchar, repn)
 {

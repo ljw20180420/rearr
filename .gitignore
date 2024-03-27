@@ -25,15 +25,11 @@ test/*
 barcode/test/*
 !barcode/test/A2-g1n-3.fq
 !barcode/test/A2-g1n-3.R2.fq
-done
 exit_with_error
 pv-1.8.5/
 renv/.gitignore
 less-643/
 gawk-5.3.0/
-Python-3.12.1/
-R-4.3.2/
-py312/
 web/users/
 web/__pycache__/
 web/running_query/

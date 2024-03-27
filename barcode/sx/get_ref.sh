@@ -16,7 +16,7 @@ perl -anF, -E '
     $target=substr($F[1], length($F[1]) - pos($rev) + 1, 44);
     substr($target, 16, 2)="CC";
     say $target;
-' "$csvfile" | bowtie2 --quiet --mm -x "$bowtie2genome" -r -U - 2> /dev/null | samtools view | "${project_path}/gawk-5.3.0/gawk" -F "\t" -v OFS="\t" -v ext1up="$ext1up" -v ext1down="$ext1down" -v ext2up="$ext2up" -v ext2down="$ext2down" '
+' "$csvfile" | bowtie2 --quiet --mm -x "$bowtie2genome" -r -U - 2> /dev/null | samtools view | gawk -F "\t" -v OFS="\t" -v ext1up="$ext1up" -v ext1down="$ext1down" -v ext2up="$ext2up" -v ext2down="$ext2down" '
     {
         qname = $1
         flag = $2

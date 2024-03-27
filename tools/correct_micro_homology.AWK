@@ -1,5 +1,6 @@
-#!/app/gawk-5.3.0/gawk -f
+#!/usr/bin/env -S gawk -f
 # Usage: correct_micro_homology.AWK -- ext1up NGGCCNtype1 ext2up NGGCCNtype2 ref1len
+# correct the microhomology to fit the 5' overhang
 
 BEGIN{
     FS = "\t"
