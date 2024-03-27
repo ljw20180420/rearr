@@ -1,0 +1,11 @@
+#!/bin/bash
+project_path=$(dirname $(realpath $0))
+rm -rf "${project_path}/kpLogo-1.1"
+unzip kpLogo-1.1.zip
+cp "${project_path}/Makefile.am.kpLogo" "${project_path}/kpLogo-1.1/src/Makefile.am"
+cd "${project_path}/kpLogo-1.1/src"
+rm makefile
+autoscan
+mv configure.scan configure.ac
+sed -i '/AC_INIT/a AM_INIT_AUTOMAKE([foreign])' configure.ac
+aclocal && autoheader && automake --add-missing && autoconf

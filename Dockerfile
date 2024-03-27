@@ -10,16 +10,16 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev
 ## build less
 COPY ["./less-643.zip", "/app/"]
-RUN unzip "less-643.zip" && cd "less-643" && ./configure LDFLAGS="-static" && make
+RUN unzip "less-643.zip" && cd "less-643" && ./configure LDFLAGS="-static" && make && make install
 ## build gawk
 COPY ["./gawk-5.3.0.zip", "/app/"]
-RUN unzip "gawk-5.3.0.zip" && cd "gawk-5.3.0" && ./configure LDFLAGS="-static" && make
+RUN unzip "gawk-5.3.0.zip" && cd "gawk-5.3.0" && ./configure LDFLAGS="-static" && make && make install
 ## build kpLogo
 COPY ["kpLogo-1.1.zip", "/app/"]
-RUN unzip kpLogo-1.1.zip && sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && make -C "kpLogo-1.1/src"
+RUN unzip kpLogo-1.1.zip && sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && make -C "kpLogo-1.1/src" && cp kpLogo-1.1/bin/kpLogo /usr/local/bin/
 ## build pv
 COPY ["pv-1.8.5.zip", "/app/"]
-RUN unzip pv-1.8.5.zip && cd pv-1.8.5 && ./configure LDFLAGS="-static" && make
+RUN unzip pv-1.8.5.zip && cd pv-1.8.5 && ./configure LDFLAGS="-static" && make && make install
 # install python
 # RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip
 # RUN pip install -U pip && pip install pyinstaller numpy scipy flask

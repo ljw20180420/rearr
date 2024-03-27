@@ -1,0 +1,20 @@
+## Makefile.am -- Process this file with automake to produce Makefile.in
+
+bin_PROGRAMS = kpLogo
+
+kpLogo_SOURCES = \
+ushuffle.c \
+container.cpp \
+markov.cpp \
+sequence.cpp \
+stat.cpp \
+utility.cpp \
+kpLogo.cpp \
+positional_kmer.cpp \
+text.cpp
+
+AM_CPPFLAGS = -I../include
+
+kpLogo_LDFLAGS = -static
+
+kpLogo_LDADD = -lm
