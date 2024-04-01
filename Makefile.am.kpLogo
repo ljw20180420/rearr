@@ -13,8 +13,8 @@ kpLogo.cpp \
 positional_kmer.cpp \
 text.cpp
 
-AM_CPPFLAGS = -I../include
+AM_CPPFLAGS = -I$(top_srcdir)/../include
 
-kpLogo_LDFLAGS = -static
+kpLogo_LDFLAGS = -all-static
 
-kpLogo_LDADD = -lm
+ACLOCAL_AMFLAGS = -I m4
