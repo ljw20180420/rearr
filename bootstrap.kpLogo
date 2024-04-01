@@ -1,11 +1,17 @@
 #!/bin/bash
 project_path=$(dirname $(realpath $0))
 rm -rf "${project_path}/kpLogo-1.1"
-unzip kpLogo-1.1.zip
+unzip ${project_path}/kpLogo-1.1.zip -d ${project_path}
 cp "${project_path}/Makefile.am.kpLogo" "${project_path}/kpLogo-1.1/src/Makefile.am"
+rm "${project_path}/kpLogo-1.1/src/makefile"
 cd "${project_path}/kpLogo-1.1/src"
-rm makefile
+mkdir -p m4
 autoscan
 mv configure.scan configure.ac
+sed -i '/AC_INIT/a LT_INIT' configure.ac # AC_PROG_LIBTOOL and AM_PROG_LIBTOOL are deprecated names of LT_INIT
+sed -i '/LT_INIT/a AC_CONFIG_MACRO_DIRS([m4])' configure.ac
 sed -i '/AC_INIT/a AM_INIT_AUTOMAKE([foreign])' configure.ac
-aclocal && autoheader && automake --add-missing && autoconf
+sed -i '/AC_PROG_RANLIB/d' configure.ac # libtool will handle ranlib
+autoreconf -i
+cd ../bin
+../src/configure && make
