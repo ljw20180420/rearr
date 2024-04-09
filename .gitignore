@@ -29,6 +29,6 @@ pv-1.8.5/
 renv/.gitignore
 less-643/
 gawk-5.3.0/
-web/users/
-web/__pycache__/
-web/running_query/
+flask_project/__pycache__/
+flask_project/celery_project/__pycache__/
+flask_project/jobs/
