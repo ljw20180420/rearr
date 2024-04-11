@@ -1,0 +1,29 @@
+services:
+  flower:
+    depends_on:
+      - rabbitmq
+    container_name: celery_flower
+    image: mher/flower:latest
+    ports:
+      - "5555:5555"
+    volumes:
+      - "./flask_project:/data"
+    command: ["celery", "-A", "celery_project.app", "--broker=amqp://rabbitmq:5672", "flower"]
+
+  rabbitmq:
+    container_name: celery_rabbitmq
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+
+  worker:
+    depends_on:
+      - rabbitmq
+    container_name: celery_worker
+    build:
+      context: .
+      dockerfile: ./celery_worker.df
+    image: my_celery_worker
+    volumes:
+      - "./:/app"
+    command: ["celery", "-A", "celery_project.app", "--broker=amqp://rabbitmq:5672", "worker"]

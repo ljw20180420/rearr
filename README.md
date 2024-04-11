@@ -44,10 +44,14 @@ rearr_render.r fastq.alg.cut1.cut2.ref1len
 
 # TODO
 ```[tasklist]
-- [ ] Rewrite post_process in R
 - [ ] Alignment browser with folded insertion lines
-- [ ] Minimize docker image size, pre-build images and deployed to docker hub
 - [ ] Shiny interactive plots
-- [ ] Sequence heatmap, and more visualizations
 - [ ] Single page webUI (reply results to the page instead of saving it on the server)
+- [ ] Rewrite post_process in R
+- [ ] Remove python code from draw_figures.Rmd
+- [ ] Sequence heatmap, and more visualizations
+- [ ] Make single target version a special case of screening case (merge normal mode with barcode mode)
+- [ ] Modulerize native installation
+- [ ] Substitute native installation into Dockerfiles
+- [ ] Minimize docker image size, pre-build images and deployed to docker hub
 ```
