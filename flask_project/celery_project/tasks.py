@@ -1,8 +1,8 @@
-from celery import shared_task
+from .app import celeryApp
 import os
 import subprocess
 
-@shared_task(bind=True)
+@celeryApp.task(bind=True)
 def celeryAlignReads(self, fileName=None, ref1=None, ref2=None, cut1=None, cut2=None, PAM1='NGG', PAM2='NGG', jobPath=None, exePath=None, downloadURL=None):
     savePath = os.path.join(jobPath, self.request.id)
     fastqFile = os.path.join(savePath, fileName) 

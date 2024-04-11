@@ -1,0 +1,18 @@
+[Unit]
+Description=Celery Service
+After=network.target
+After=rabbitmq-server.service
+Requires=rabbitmq-server.service
+
+[Service]
+Type=forking
+User=ljw
+Group=ljw
+WorkingDirectory=/home/ljw/wuqiang/sx/sx_lcy/flask_project
+ExecStart=/home/ljw/py310/bin/celery -A celery_project.app multi start w1 --pidfile=/home/ljw/wuqiang/sx/sx_lcy/flask_project/run/%n.pid --logfile=/home/ljw/wuqiang/sx/sx_lcy/flask_project/log/%n%I.log --loglevel=INFO
+ExecStop=/home/ljw/py310/bin/celery multi stopwait w1 --pidfile=/home/ljw/wuqiang/sx/sx_lcy/flask_project/run/%n.pid --logfile=/home/ljw/wuqiang/sx/sx_lcy/flask_project/log/%n%I.log --loglevel=INFO
+ExecReload=/home/ljw/py310/bin/celery -A celery_project.app multirestartw1 --pidfile=/home/ljw/wuqiang/sx/sx_lcy/flask_project/run/%n.pid --logfile=/home/ljw/wuqiang/sx/sx_lcy/flask_project/log/%n%I.log --loglevel=INFO
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

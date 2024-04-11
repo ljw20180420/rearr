@@ -1,0 +1,18 @@
+[Unit]
+Description=Celery Service
+After=network.target
+After=rabbitmq-server.service
+Requires=rabbitmq-server.service
+
+[Service]
+Type=forking
+User=
+Group=
+WorkingDirectory=
+ExecStart=
+ExecStop=
+ExecReload=
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
