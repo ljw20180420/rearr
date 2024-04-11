@@ -38,9 +38,8 @@ def alignReads():
     task_id = uuid()
     file = request.files['files[]']
     fileName = secure_filename(file.filename)
-    savePath = os.path.join(flaskApp.root_path, "jobs", task_id)
-    os.makedirs(savePath, exist_ok=True)
-    file.save(os.path.join(savePath, fileName))
+    os.makedirs(os.path.join(flaskApp.root_path, "jobs", task_id), exist_ok=True)
+    file.save(os.path.join(flaskApp.root_path, "jobs", task_id, fileName))
 
     result = celeryAlignReads.apply_async(kwargs={
             'fileName': fileName,
@@ -50,9 +49,9 @@ def alignReads():
             'cut2': request.form['cut2'],
             'PAM1': request.form['PAM1'],
             'PAM2': request.form['PAM2'],
-            'jobPath': os.path.join(flaskApp.root_path, "jobs"),
-            'exePath': os.path.join(flaskApp.root_path, ".."),
-            'downloadURL': url_for('downloadResult', task_id=task_id, _external=True)
+            'jobPath': "jobs",
+            'exePath': "..",
+            'downloadURL': url_for('downloadResult', task_id=task_id, _external=True),
         }, task_id=task_id)
     return f'''{task_id} {result.status}'''
 
