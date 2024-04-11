@@ -4,7 +4,7 @@ csvfile=$1
 getfastagenome=$2
 bowtie2genome=${getfastagenome%.*}
 ext1up=${3:-50}
-ext1down=${4:-10}
+ext1down=${4:0}
 ext2up=${5:-10}
 ext2down=${6:-100}
 
