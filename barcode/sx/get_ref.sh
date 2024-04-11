@@ -47,7 +47,14 @@ perl -anF, -E '
         else{
             $spos = $ext2up + 4
         }
-        substr($_, $spos, 2) = "AA"
+        if (length($_) > $spos + 1){
+            if (length($_) == $spos + 2){
+                substr($_, $spos, 1) = "A"
+            }
+            else{
+                substr($_, $spos, 1) = "AA"
+            }
+        }
     }
     if ($. % 2){
         chomp;
