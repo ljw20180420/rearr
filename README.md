@@ -53,5 +53,24 @@ rearr_render.r fastq.alg.cut1.cut2.ref1len
 - [ ] Make single target version a special case of screening case (merge normal mode with barcode mode)
 - [ ] Modulerize native installation
 - [ ] Substitute native installation into Dockerfiles
+- [ ] Optimize DockerFiles by merge install commands
+- [ ] Move sed/awk/perl codes embedded in bash scripts to individual files for easier debugging and reusing
+- [ ] stage docker build process (say a celery image can be used for both flask image and worker image)
 - [ ] Minimize docker image size, pre-build images and deployed to docker hub
+- [ ] Add nginx
+- [ ] Add waitress
+- [ ] Add tls
+- [ ] Install necessary dependencies to shiny server
+- [ ] Organize the whole project to a more extensible form (easily add now function both natively, in docker, or online)
+- [ ] Add 3D structure prediction shiny App
+- [ ] Add large language model for DNA
+- [ ] Use explicit base in shiny app microHomology
+- [ ] Add shiny app to predict indel events
+- [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
+- [ ] Move all downstream analyses to shiny App
+```
+
+# TODO (Long term)
+```[tasklist]
+- [ ] Use GNU autotools to install Rearrangement
 ```
