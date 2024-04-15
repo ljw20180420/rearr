@@ -57,7 +57,11 @@ def alignReads():
 
 @flaskApp.get("/flower")
 def flower():
-    return redirect('localhost:5555', code=301)
+    return redirect('http://localhost:5555', code=301)
+
+@flaskApp.get("/shiny")
+def shiny():
+    return redirect('http://localhost:3838', code=301)
 
 @flaskApp.get("/inspect/<string:task_id>")
 def inspect(task_id):

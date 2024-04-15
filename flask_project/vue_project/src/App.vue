@@ -12,6 +12,11 @@ import AlignReads from './AlignReads.vue'
     <h1>Monitor Progresses</h1>
     <a href="/flower" target="_blank">Celery Flower</a>
   </div>
+
+  <div class="outer">
+    <h1>Shiny Applications</h1>
+    <a href="/shiny" target="_blank">Shiny Server</a>
+  </div>
 </template>
 
 <style>

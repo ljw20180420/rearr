@@ -27,3 +27,14 @@ services:
     volumes:
       - "./:/app"
     command: ["celery", "-A", "celery_project.app", "--broker=amqp://rabbitmq:5672", "worker"]
+
+  shiny:
+    container_name: shiny_server
+    build:
+      context: .
+      dockerfile: ./shiny_server.df
+    image: my_shiny_server
+    ports:
+      - "3838:3838"
+    volumes:
+      - "./shinyApps:/srv/shiny-server"

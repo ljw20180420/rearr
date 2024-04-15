@@ -1,0 +1,23 @@
+# export by: dot -Tpdf -o netStruct.pdf netStruct.gv
+
+digraph netStruct
+{
+    graph [layout = dot]
+
+    node [shape = rectangle, width = 4, fillcolor = Biege]
+    flask [label = "Flask"]
+    celery [label = "Celery"]
+    rabbitmq [label = "RabbitMQ"]
+    rpc [label = "RPC"]
+    amqp [label = "AMQP"]
+    worker [label = "Worker"]
+    flower [label = "Flower"]
+    shinyServer [label = "Shiny server"]
+    shinyApp [label = "Shiny applications"]
+    waitress [label = "Waitress"]
+    nginx [label = "Nginx"]
+
+    rabbitmq -> amqp -> celery -> worker -> flask -> waitress -> nginx
+    rabbitmq -> rpc -> celery -> flower -> worker
+    shinyApp -> shinyServer -> flask
+}
