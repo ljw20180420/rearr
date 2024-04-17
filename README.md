@@ -66,11 +66,25 @@ rearr_render.r fastq.alg.cut1.cut2.ref1len
 - [ ] Add large language model for DNA
 - [ ] Use explicit base in shiny app microHomology
 - [ ] Add shiny app to predict indel events
+- [ ] Add shiny app for kpLogo
+- [ ] Avoid using system command in shiny app for better portability
+- [ ] Deploy to JCloud
 - [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
 - [ ] Move all downstream analyses to shiny App
+- [ ] Automatic document
+- [ ] Build a docker with only binary program, awk, sed, perl, bash scripts
+- [ ] Python program all run in shiny, so only need a python shiny docker
+- [ ] R program all run in shiny, so only need rocker/shiny-verse image
 ```
 
 # TODO (Long term)
 ```[tasklist]
 - [ ] Use GNU autotools to install Rearrangement
+- [ ] Hi-C apps
+- [ ] Uniprot database
+- [ ] RNA structure prediction
+- [ ] Protein structure prediction (Alphafold2)
+- [ ] DeepFri
+- [ ] PDB structure prediction
+- [ ] molecular dynamics simulation
 ```
