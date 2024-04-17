@@ -32,16 +32,6 @@ fastq.alg.cut1.cut2.ref1len: the alignments
 fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 ```
 
-# Tools
-Display the first readnum (default: 50) read's alignments in ANSI fomrat, the cut points and random insertions are aligned
-```{bash}
-rearr_view.sh fastq.alg.cut1.cut2.ref1len [readnum]
-```
-Generate the html report
-```{bash}
-rearr_render.r fastq.alg.cut1.cut2.ref1len
-```
-
 # TODO
 ```[tasklist]
 - [X] Alignment browser with folded insertion lines
@@ -66,7 +56,7 @@ rearr_render.r fastq.alg.cut1.cut2.ref1len
 - [ ] Use explicit base in shiny app microHomology
 - [ ] Add shiny app to predict indel events
 - [ ] Add shiny app for kpLogo
-- [ ] Avoid using system command in shiny app for better portability
+- [X] Avoid using system command in shiny app for better portability
 - [ ] Deploy to JCloud
 - [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
 - [ ] Move all downstream analyses to shiny App

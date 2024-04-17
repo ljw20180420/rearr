@@ -1,21 +1,29 @@
 #!/usr/bin/env -S gawk -f
 
-# Usage: correct_micro_homology.AWK -- ext1up NGGCCNtype1 ext2up NGGCCNtype2 ref1len
+# Usage: correct_micro_homology.AWK -- refFile NGGCCNtype1 NGGCCNtype2
 # correct the microhomology to fit the 5' overhang
 
 BEGIN{
     FS = "\t"
-    cut1 = ARGV[1]
+    refFile = ARGV[1]
     NGGCCNtype1 = ARGV[2]
-    cut2 = ARGV[3] + ARGV[5]
-    NGGCNNtype2 = ARGV[4]
-    for (i = 1; i <=5; ++i)
+    NGGCNNtype2 = ARGV[3]
+    ref_id = 0
+    while (getline ref < refFile)
+    {
+        split(ref, arr, "\t")
+        cut1s[ref_id] = arr[3]
+        cut2s[ref_id] = length(arr[2]) + arr[4]
+        ++ref_id
+    }
+    for (i = 1; i <= 3; ++i)
         delete ARGV[i]
 }
 {
     idx = $1
     count = $2
     score = $3
+    ref_id = $4
     getline refline
     getline queryline
 
@@ -126,5 +134,5 @@ BEGIN{
         for (s = 1; s <= length(queryarr); ++s)
             queryline = queryline queryarr[s]
     }
-    printf("%d\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%s\n%s\n%s\n", idx, count, score, substr(queryline, 1, refstart), us1, uw1, us2, uw2, substr(queryline, jpos + 1, jpos2 - jpos), ds1, dw1, ds2, dw2, substr(queryline, refend + 1), refline, queryline)
+    printf("%d\t%d\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%s\t%d\t%d\n%s\n%s\n", idx, count, score, ref_id, substr(queryline, 1, refstart), us1, uw1, us2, uw2, substr(queryline, jpos + 1, jpos2 - jpos), ds1, dw1, ds2, dw2, substr(queryline, refend + 1), cut1s[ref_id], cut2s[ref_id], refline, queryline)
 }
