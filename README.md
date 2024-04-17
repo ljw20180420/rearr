@@ -44,8 +44,7 @@ rearr_render.r fastq.alg.cut1.cut2.ref1len
 
 # TODO
 ```[tasklist]
-- [ ] Alignment browser with folded insertion lines
-- [ ] Shiny interactive plots
+- [X] Alignment browser with folded insertion lines
 - [ ] Single page webUI (reply results to the page instead of saving it on the server)
 - [ ] Rewrite post_process in R
 - [ ] Remove python code from draw_figures.Rmd

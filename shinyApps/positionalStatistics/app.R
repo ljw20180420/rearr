@@ -25,29 +25,28 @@ ui <- page_sidebar(
 
 # Define server logic ----
 server <- function(input, output) {
-    counts <- reactive({
+    algLines <- reactive({
         req(input$algfile)
-        scan(file = pipe(sprintf("sed -n '1~3p' %s | cut -f2", input$algfile$datapath)), what = integer())
+        readLines(input$algfile$datapath)
     })
-    refLines <- reactive({
-        req(input$algfile)
-        readLines(con = pipe(sprintf("sed -nr '2~3p' %s", input$algfile$datapath)))
+    counts <- reactive({
+        algLines()[seq(1, length(algLines()), 3)] |> strsplit("\t") |> vapply(function(x) as.integer(x[2]), 0)
     })
     ref <- reactive({
-        str_replace_all(refLines()[1], "-", "")
+        str_replace_all(algLines()[2], "-", "")
     })
     ref1Len <- reactive({
         gregexpr("[acgtn]", ref())[[1]][2]
     })
     maxLen <- reactive({
-        max(vapply(refLines(), nchar, 0, USE.NAMES=FALSE))
+        max(vapply(algLines()[seq(2, length(algLines()), 3)], nchar, 0, USE.NAMES=FALSE))
     })
     refMat <- reactive({
-        refLines() |> str_pad(width = maxLen(), side = 'right', pad = "-") |> strsplit("") |> unlist() |> matrix(ncol = maxLen(), byrow = TRUE)
+        algLines()[seq(2, length(algLines()), 3)] |> str_pad(width = maxLen(), side = 'right', pad = "-") |> strsplit("") |> unlist() |> matrix(ncol = maxLen(), byrow = TRUE)
     })
     queryMat <- reactive({
         req(input$algfile)
-        tmpMat <- readLines(con = pipe(sprintf("sed -nr '3~3p' %s", input$algfile$datapath))) |> str_pad(width = maxLen(), side = 'right', pad = "-") |> strsplit("") |> unlist() |> matrix(ncol = maxLen(), byrow = TRUE)
+        tmpMat <- algLines()[seq(3, length(algLines()), 3)] |> str_pad(width = maxLen(), side = 'right', pad = "-") |> strsplit("") |> unlist() |> matrix(ncol = maxLen(), byrow = TRUE)
         tmpMat[refMat() != '-'] |> matrix(ncol = nchar(ref()))
     })
     baseFreq <- reactive({
@@ -68,7 +67,7 @@ server <- function(input, output) {
         )
     })
     insertCount <- reactive({
-        refList <- refLines() |> strsplit("")
+        refList <- algLines()[seq(2, length(algLines()), 3)] |> strsplit("")
         insertList <- vector("list", length(refList))
         for (i in seq_len(length(refList))) {
             mask <- refList[[i]] != "-"
