@@ -91,7 +91,9 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "slist": "cpp",
+        "*.ipp": "cpp"
     },
     "python.REPL.enableREPLSmartSend": false,
     "r.lsp.promptToInstall": false,
