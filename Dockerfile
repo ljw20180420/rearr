@@ -8,9 +8,6 @@ LABEL maintainer="ljw2017@sjtu.edu.cn"
 WORKDIR /app
 ## install system enviroments for build
 RUN apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev
-## build less
-COPY ["./less-643.zip", "/app/"]
-RUN unzip "less-643.zip" && cd "less-643" && ./configure LDFLAGS="-static" && make && make install
 ## build gawk
 COPY ["./gawk-5.3.0.zip", "/app/"]
 RUN unzip "gawk-5.3.0.zip" && cd "gawk-5.3.0" && ./configure LDFLAGS="-static" && make && make install
