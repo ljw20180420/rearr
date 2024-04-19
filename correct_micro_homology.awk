@@ -54,7 +54,7 @@ BEGIN{
         ds2 = ds1 + length(target)
         if (uw1 == uw2)
         {
-            us1 = us2 = (ds1 < cut2 ? (cut1 - (cut2 - ds1)) : cut1)
+            us1 = us2 = (ds1 < cut2s[ref_id] ? (cut1s[ref_id] - (cut2s[ref_id] - ds1)) : cut1s[ref_id])
             segu1 = segu2 = us1 + refstart
         }
     }
@@ -70,7 +70,7 @@ BEGIN{
         us2 = us1 + length(target)
         if (dw1 == dw2)
         {
-            ds1 = ds2 = (us2 > cut1 ? (cut2 + (us2 - cut1)) : cut2)
+            ds1 = ds2 = (us2 > cut1s[ref_id] ? (cut2s[ref_id] + (us2 - cut1s[ref_id])) : cut2s[ref_id])
             target = refline
             gsub(/[- ]/, "", target)
             reflen = length(target)
@@ -82,14 +82,14 @@ BEGIN{
         split(refline, refarr, "")
         split(queryline, queryarr, "")
         if (NGGCCNtype1 == "NGG")
-            itersize = (us2 > cut1 ? (us2 - cut1) : (cut1 - us2))
+            itersize = (us2 > cut1s[ref_id] ? (us2 - cut1s[ref_id]) : (cut1s[ref_id] - us2))
         else if (NGGCCNtype2 == "CCN")
-            itersize = (ds1 > cut2 ? (ds1 - cut2) : (cut2 - ds1))
+            itersize = (ds1 > cut2s[ref_id] ? (ds1 - cut2s[ref_id]) : (cut2s[ref_id] - ds1))
         else
             itersize = 0
         for (i = 0; i < itersize; ++i)
         {
-            if (NGGCCNtype1 == "NGG" && us2 < cut1 || NGGCCNtype1 == "CCN" && NGGCCNtype2 == "CCN" && ds1 < cut2)
+            if (NGGCCNtype1 == "NGG" && us2 < cut1s[ref_id] || NGGCCNtype1 == "CCN" && NGGCCNtype2 == "CCN" && ds1 < cut2s[ref_id])
             {
                 if (dw1 < dw2 && segu2 < jpos && toupper(refarr[segu2 + 1]) == toupper(refarr[segd1 + 1]))
                 {
@@ -105,11 +105,11 @@ BEGIN{
                 else
                 {
                     if (dw1 == dw2)
-                        ds1 = ds2 = (us2 > cut1 ? (cut2 + (us2 - cut1)) : cut2)
+                        ds1 = ds2 = (us2 > cut1s[ref_id] ? (cut2s[ref_id] + (us2 - cut1s[ref_id])) : cut2s[ref_id])
                     break
                 }
             }
-            if (NGGCCNtype1 == "NGG" && us2 > cut1 || NGGCCNtype1 == "CCN" && NGGCCNtype2 == "CCN" && ds1 > cut2)
+            if (NGGCCNtype1 == "NGG" && us2 > cut1s[ref_id] || NGGCCNtype1 == "CCN" && NGGCCNtype2 == "CCN" && ds1 > cut2s[ref_id])
             {
                 if (uw1 < uw2 && segd1 > jpos && toupper(refarr[segu2]) == toupper(refarr[segd1]))
                 {
@@ -125,7 +125,7 @@ BEGIN{
                 else
                 {
                     if (uw1 == uw2)
-                        us1 = us2 = (ds1 < cut2 ? (cut1 - (cut2 - ds1)) : cut1)
+                        us1 = us2 = (ds1 < cut2s[ref_id] ? (cut1s[ref_id] - (cut2s[ref_id] - ds1)) : cut1s[ref_id])
                     break
                 }
             }
