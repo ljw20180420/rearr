@@ -35,6 +35,7 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 # TODO
 ```[tasklist]
 - [X] Alignment browser with folded insertion lines
+- [ ] CDN
 - [ ] Single page webUI (reply results to the page instead of saving it on the server)
 - [ ] Rewrite post_process in R
 - [ ] Remove python code from draw_figures.Rmd
@@ -76,4 +77,5 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 - [ ] DeepFri
 - [ ] PDB structure prediction
 - [ ] molecular dynamics simulation
+- [ ] Call TADs
 ```
