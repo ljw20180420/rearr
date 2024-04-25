@@ -29,11 +29,13 @@ ui <- page_sidebar(
         sliderInput("loopWidthRange", label = "loop width range", min = 0, max = 0, value = c(0, 0), step = 1),
 
         sliderInput("loopCountRange", label = "loop count range", min = 1, max = 1, value = c(1, 1), step = 1),
-        
+
+        fileInput("hicFiles", label = "hic files", multiple = TRUE),
+
         actionButton("addFilter", "add filter"),
         actionButton("clearFilter", "clear filter"),
 
-        selectInput("outputType", "output type", choices = c("loopNum", "loopWidth", "loopWidthCdf"), selected = "loopNum")
+        selectInput("outputType", "output type", choices = c("loopNum", "loopWidth", "loopWidthCdf", "heatMap"), selected = "loopNum")
     ),
     plotOutput("anyPlot")
 )
@@ -44,11 +46,21 @@ server <- function(input, output) {
     annoteNum <- reactiveVal(0)
 
     samples <- reactive({
-        req(input$loopFiles)
         input$loopFiles$name |> strsplit('.', fixed = TRUE) |> vapply(function(x) x[1], "")
     })
 
     observeEvent(input$addFilter, {
+        insertUI(
+            selector = "#addFilter",
+            where = "afterEnd",
+            ui = selectInput(
+                inputId = paste0("filter", filterNum() + 1, "TSS"),
+                label = "TSS",
+                choices = c("off", "any", "either", "neither", "both"),
+                selected = "any"
+            ),
+            immediate = TRUE
+        )
         for (i in seq_len(annoteNum())) {
             insertUI(
                 selector = "#addFilter",
@@ -83,6 +95,7 @@ server <- function(input, output) {
         ),
         {
             for (i in seq_len(filterNum())) {
+                removeUI(selector = sprintf("div:has(>> #%s)", paste0("filter", i, "TSS")), immediate = TRUE)
                 for (j in seq_len(annoteNum())) {
                     removeUI(selector = sprintf("div:has(>> #%s)", paste0("filter", i, "annote", j)), immediate = TRUE)
                 }
@@ -111,14 +124,76 @@ server <- function(input, output) {
                 ),
                 immediate = TRUE
             )
-        } else {
+        } 
+        
+        if (input$outputType != "loopWidth") {
             removeUI(selector = sprintf('.shiny-input-container:has(#%s)','loopWidthBin'), immediate = TRUE)
+        }
+
+        if (input$outputType == "heatMap" && !is.null(input$hicFiles)) {
+            insertUI(
+                selector = "div:has(>> #outputType)",
+                where = "afterEnd",
+                ui = selectInput(
+                    inputId = "resolution",
+                    label = "resolution",
+                    choices = availableResolutions(input$hicFiles$datapath[1])
+                ),
+                immediate = TRUE
+            )
+            insertUI(
+                selector = "div:has(>> #outputType)",
+                where = "afterEnd",
+                ui = checkboxInput(
+                    inputId = "balanced",
+                    label = "balanced",
+                    value = TRUE
+                ),
+                immediate = TRUE
+            )
+            insertUI(
+                selector = "div:has(>> #outputType)",
+                where = "afterEnd",
+                ui = numericInput(
+                    inputId = "end",
+                    label = "end",
+                    value = NA,
+                    min = 0
+                ),
+                immediate = TRUE
+            )
+            insertUI(
+                selector = "div:has(>> #outputType)",
+                where = "afterEnd",
+                ui = numericInput(
+                    inputId = "start",
+                    label = "start",
+                    value = NA,
+                    min = 0
+                ),
+                immediate = TRUE
+            )
+            insertUI(
+                selector = "div:has(>> #outputType)",
+                where = "afterEnd",
+                ui = textInput(
+                    inputId = "chromosome",
+                    label = "chromosome"
+                ),
+                immediate = TRUE
+            )
+        }
+
+        if (input$outputType != "heatMap") {
+            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "resolution"), immediate = TRUE)
+            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "balanced"), immediate = TRUE)
+            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "end"), immediate = TRUE)
+            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "start"), immediate = TRUE)
+            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "chromosome"), immediate = TRUE)
         }
     })
 
     loops <- reactive({
-        req(input$loopFiles)
-        req(input$mergegap)
         for (i in seq_len(nrow(input$loopFiles))) {
             file.rename(input$loopFiles$datapath[i], file.path(beddir, input$loopFiles$name[i]))
         }
@@ -150,6 +225,37 @@ server <- function(input, output) {
     maskblackListLoops <- reactive({
         maskblackListAnchors <- annotateAnchors(loops(), blackListRegions(), "black", maxgap = input$maxgap)@anchors |> mcols() |> _$black
         maskblackListAnchors[loops()@interactions[, "left"]] | maskblackListAnchors[loops()@interactions[, "right"]]
+    })
+
+    maskTSSAnchors <- reactive({
+        annotateAnchors(loops(), getHumanTSS(), "temp", maxgap = input$maxgap)@anchors |> mcols() |> _$temp
+    })
+
+    maskTSSLoopsLeft <- reactive({
+        maskTSSAnchors()[loops()@interactions[, "left"]]
+    })
+
+    maskTSSLoopsRight <- reactive({
+        maskTSSAnchors()[loops()@interactions[, "right"]]
+    })
+
+    maskTSSloopsList <- reactive({
+        maskTSSloopsList <- vector('list', filterNum())
+        for (i in seq_len(filterNum())) {
+            mode <- input[[paste0("filter", i, "TSS")]]
+            if (mode == "off") {
+                maskTSSloopsList[[i]] <- rep(TRUE, nrow(loops()@rowData))
+            } else if (mode == "any") {
+                maskTSSloopsList[[i]] <-  maskTSSLoopsLeft() | maskTSSLoopsRight()
+            } else if (mode == "either") {
+                maskTSSloopsList[[i]] <- maskTSSLoopsLeft() & !maskTSSLoopsRight() | !maskTSSLoopsLeft() & maskTSSLoopsRight()
+            } else if (mode == "neither") {
+                maskTSSloopsList[[i]] <- !maskTSSLoopsLeft() & !maskTSSLoopsRight()
+            } else if (mode == "both") {
+                maskTSSloopsList[[i]] <- maskTSSLoopsLeft() & maskTSSLoopsRight()
+            }
+        }
+        return(maskTSSloopsList)
     })
 
     annotGRangeList <- reactive({
@@ -211,6 +317,7 @@ server <- function(input, output) {
     })
 
     observe({
+        req(input$loopFiles)
         maxLoopWidth <- max(loops()@rowData$loopWidth)
         updateSliderInput(
             input = "loopWidthRange",
@@ -224,6 +331,7 @@ server <- function(input, output) {
     })
 
     observe({
+        req(input$loopFiles)
         maxLoopCount <- max(max(loops()@counts), 1)
         updateSliderInput(input = "loopCountRange",
             max = maxLoopCount,
@@ -242,23 +350,23 @@ server <- function(input, output) {
                 maskLoopsCountList[[i]] <- rep(FALSE, nrow(loops()@rowData))
             }
         }
-        maskLoopsCountList
+        return(maskLoopsCountList)
     })
 
     filterLoopList <- reactive({
         filterLoopList <- vector('list', filterNum())
         for (i in seq_len(filterNum())) {
-            filterLoopList[[i]] <- loops() |> subsetLoops(maskFDRPValue() & !maskblackListLoops() & maskLoopsWidth() & maskLoopsCountList()[[i]] & maskAnnotLoopsFilterList()[[i]])
+            filterLoopList[[i]] <- loops() |> subsetLoops(maskFDRPValue() & !maskblackListLoops() & maskTSSloopsList()[[i]] & maskAnnotLoopsFilterList()[[i]] & maskLoopsWidth() & maskLoopsCountList()[[i]])
         }
-        filterLoopList
+        return(filterLoopList)
     })
 
     loopNums <- reactive({
         loopNums <- rep(0, filterNum())
         for (i in seq_len(filterNum())) {
-            loopNums[i] <- nrow(filterLoopList()[[i]]@rowData)
+            loopNums[i] <- filterLoopList()[[i]]@counts[, input[[paste0("filter", i)]]] |> sum()
         }
-        loopNums
+        return(loopNums)
     })
 
     loopWidths <- reactive({
@@ -272,13 +380,25 @@ server <- function(input, output) {
         loopWidthsList |> bind_rows(tibble(filter = character(0), count = double(0), loopWidth = integer(0)))
     })
 
+    hics <- reactive({
+        hics <- vector('list', nrow(input$hicFiles))
+        for (i in seq_len(nrow(input$hicFiles))) {
+            hics[[i]] <- HiCExperiment::import(input$hicFiles$datapath[i],
+                focus = paste0(input$chromosome, ":", input$start, "-", input$end),
+                resolution = as.integer(input$resolution)
+            )
+        }
+    })
+
     output$anyPlot <- renderPlot({
         req(filterNum() > 0)
+        req(input$loopFiles)
         for (i in seq_len(filterNum())) {
-            req(input[[paste0("filter", i)]])
+            req(input[[paste0("filter", i, "TSS")]])
             for (j in seq_len(annoteNum())) {
                 req(input[[paste0("filter", i, "annote", j)]])
             }
+            req(input[[paste0("filter", i)]])
         }
 
         if (input$outputType == "loopNum") {
@@ -287,9 +407,6 @@ server <- function(input, output) {
                 geom_col()
         } else if (input$outputType == "loopWidth") {
             req(input$loopWidthBin)
-            # loopWidths() |> mutate(bin = cut(loopWidth, seq(min(loopWidth), max(loopWidth) + 1, length = input$loopWidthBin), right = FALSE, labels = FALSE)) |> summarise(histCount = sum(count), .by = c("bin", "filter")) |>
-            #     ggplot(aes(bin, histCount, color = filter)) +
-            #     geom_line()
             loopWidths() |>
                 ggplot(aes(x = loopWidth, weight = count, color = filter)) +
                 stat_bin(geom = "line", bins = input$loopWidthBin, position = "identity")
@@ -297,6 +414,15 @@ server <- function(input, output) {
             loopWidths() |> 
                 ggplot(aes(x = loopWidth, color = filter)) + 
                 stat_ecdf(weight = count, pad = FALSE)
+        } else if (input$outputType == "heatMap") {
+            req(input$hicFiles)
+            req(input$chromosome)
+            req(input$start)
+            req(input$end)
+            req(input$resolution)
+            req(input$balanced)
+            balanced <- ifelse(input$balanced, "balanced", "count")
+            plotMatrix(hics()[[1]])
         }
     })
 }

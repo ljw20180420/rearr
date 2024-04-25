@@ -4,89 +4,77 @@ library(tidyverse)
 library(ggrepel)
 library(diffloop)
 library(GenomicRanges)
+library(Sushi)
+library(HiContacts)
+library(rtracklayer)
+# library(tools)
 
 source("../helpers/mangoFDRPValue.R")
+source("../helpers/Sushi-master/R/plotBedpe.R")
+source("../helpers/Sushi-master/R/convertstrandinfo.R")
 
 options(shiny.maxRequestSize = 1000 * 1024^2)
 
-ui <- page_sidebar(
-    title = "Diffloop Analysis (Pair)",
+ui <- navbarPage(
+    "Diffloop Analysis (Pair)",
     sidebar = sidebar(
         helpText("This App use diffloop to analyze loop data which require equal length."),
         fileInput("loopFiles", label = "Loop files (bedpe or mango)", multiple = TRUE),
         numericInput("mergegap", label = "merge gap", value = 500),
         numericInput("nbins", label = "nbins", value = 10, min = 0, step = 1),
-
         numericInput("FDR", label = "FDR", value = 1, min = 0, max = 1, step = 0.01),
         numericInput("PValue", label = "PValue", value = 1, min = 0, max = 1, step = 0.01),
-
         numericInput("maxgap", label = "max gap between blackList/annotation and anchor", value = 0, min = 0, step = 100),
-
         fileInput("blackListFiles", label = "black list regions (bed files)", multiple = TRUE),
-
         sliderInput("loopWidthRange", label = "loop width range", min = 0, max = 0, value = c(0, 0), step = 1),
-
         sliderInput("loopCountRange", label = "loop count range", min = 1, max = 1, value = c(1, 1), step = 1),
-
-        selectInput("outputType", "output type", choices = c("loopDistancePlot", "pcaPlot"), selected = "loopDistancePlot")
     ),
-    plotOutput("anyPlot")
+    tabPanel("loopDistance",
+        plotOutput("loopDistancePlot")
+    ),
+    tabPanel("pca",
+        uiOutput("sampleGroupsPca"),
+        plotOutput("pcaPlot")
+    ),
+    tabPanel("loopArc",
+        textInput("chromosome", label = "chromosome"),
+        numericInput("start", label = "start", value = NA, min = 0),
+        numericInput("end", label = "end", value = NA, min = 0),
+        plotOutput("loopArcPlot")
+    ),
+    tabPanel("diffloop",
+        uiOutput("sampleGroupsDiffloop"),
+        selectInput("diffloopMethod", "diffloop method", choices = c("edgeR", "Voom"), selected = "edgeR"),
+        downloadButton("downloadDiffloop", label = "download diffloop")
+    )
 )
 
 server <- function(input, output) {
     beddir <- tempdir()
 
-    samples <- reactiveVal(character(0))
-
-    observeEvent(input$loopFiles,
-        {
-            if (input$outputType == "pcaPlot") {
-                for (i in seq_len(length(samples()))) {
-                    removeUI(selector = sprintf('.shiny-input-container:has(#%s)', samples()[i]), immediate = TRUE)
-                }
-            }
-            samples(input$loopFiles$name |> strsplit('.', fixed = TRUE) |> vapply(function(x) x[1], ""))
-            if (input$outputType == "pcaPlot") {
-                for (i in seq_len(length(samples()))) {
-                    insertUI(
-                        selector = "div:has(>> #outputType)",
-                        where = "afterEnd",
-                        ui = textInput(
-                            inputId = samples()[i],
-                            label = samples()[i],
-                            value = paste0("group", i)
-                        ),
-                        immediate = TRUE
-                    )
-                }
-            }
+    samples <- reactive({
+        input$loopFiles$name |> str_replace(".interactions.all.mango", "")
+    })
+    
+    output$sampleGroupsPca <- renderUI({
+        req(input$loopFiles)
+        sampleGroups <- vector('list', nrow(input$loopFiles))
+        for (i in seq_len(nrow(input$loopFiles))) {
+            sampleGroups[[i]] <- textInput(inputId = paste0(samples()[i], "Pca"), label = samples()[i], value = paste0("group", i))
         }
-    )
+        tagList(sampleGroups)
+    })
 
-    observeEvent(input$outputType, {
-        if (input$outputType == "pcaPlot") {
-            for (i in seq_len(length(samples()))) {
-                insertUI(
-                    selector = "div:has(>> #outputType)",
-                    where = "afterEnd",
-                    ui = textInput(
-                        inputId = samples()[i],
-                        label = samples()[i],
-                        value = paste0("group", i)
-                    ),
-                    immediate = TRUE
-                )
-            }
-        } else {
-            for (i in seq_len(length(samples()))) {
-                removeUI(selector = sprintf('.shiny-input-container:has(#%s)', samples()[i]), immediate = TRUE)
-            }
+    output$sampleGroupsDiffloop <- renderUI({
+        req(input$loopFiles)
+        sampleGroups <- vector('list', nrow(input$loopFiles))
+        for (i in seq_len(nrow(input$loopFiles))) {
+            sampleGroups[[i]] <- textInput(inputId = paste0(samples()[i], "Diffloop"), label = samples()[i], value = paste0("group", i))
         }
+        tagList(sampleGroups)
     })
 
     loops <- reactive({
-        req(input$loopFiles)
-        req(input$mergegap)
         for (i in seq_len(nrow(input$loopFiles))) {
             file.rename(input$loopFiles$datapath[i], file.path(beddir, input$loopFiles$name[i]))
         }
@@ -121,6 +109,7 @@ server <- function(input, output) {
     })
 
     observe({
+        req(input$loopFiles)
         maxLoopWidth <- max(loops()@rowData$loopWidth)
         updateSliderInput(
             input = "loopWidthRange",
@@ -134,6 +123,7 @@ server <- function(input, output) {
     })
 
     observe({
+        req(input$loopFiles)
         maxLoopCount <- max(max(loops()@counts), 1)
         updateSliderInput(input = "loopCountRange",
             max = maxLoopCount,
@@ -150,28 +140,69 @@ server <- function(input, output) {
         loops() |> subsetLoops(maskFDRPValue() & !maskblackListLoops() & maskLoopsWidth() & maskLoopsCount())
     })
 
-    output$anyPlot <- renderPlot({
+    output$loopDistancePlot <- renderPlot({
         req(input$loopFiles)
-        if (input$outputType == "loopDistancePlot") {
-            anyPlot <- loopDistancePlot(filterLoop())
-        } else if (input$outputType == "pcaPlot") {
+        ggObj <- loopDistancePlot(filterLoop())
+        return(ggObj)
+    })
+
+    output$pcaPlot <- renderPlot({
+        req(input$loopFiles)
+        groups <- rep("", 3)
+        loopSamples <- filterLoop()@colData |> row.names()
+        for (i in seq_len(length(samples()))) {
+            req(input[[paste0(samples()[i], "Pca")]])
+            for (j in seq_len(length(loopSamples))) {
+                if (loopSamples[j] == samples()[i]) {
+                    groups[j] <- input[[paste0(samples()[i], "Pca")]]
+                    break
+                }
+            }
+        }
+        filterLoop() |> updateLDGroups(groups) |>
+            pcaPlot() +
+            geom_text_repel(aes(label = loopSamples))
+    })
+
+    observe({
+        output$loopArcPlot <- renderPlot(
+            {
+                req(input$loopFiles)
+                req(input$chromosome)
+                req(input$start)
+                req(input$end)
+                region <- GRanges(seqnames = input$chromosome, ranges = IRanges(start = input$start, end = input$end))
+                ggObj <- loopPlot(filterLoop(), region)
+                return(ggObj)
+            },
+            height = length(samples()) * 300
+        )
+    })
+
+    output$downloadDiffloop <- downloadHandler(
+        filename = "diffloopRowData.tsv",
+        content = function(file) {
+            req(input$loopFiles)
+            req(input$diffloopMethod)
             groups <- rep("", 3)
             loopSamples <- filterLoop()@colData |> row.names()
             for (i in seq_len(length(samples()))) {
-                req(input[[samples()[i]]])
+                req(input[[paste0(samples()[i], "Diffloop")]])
                 for (j in seq_len(length(loopSamples))) {
                     if (loopSamples[j] == samples()[i]) {
-                        groups[j] <- input[[samples()[i]]]
+                        groups[j] <- input[[paste0(samples()[i], "Diffloop")]]
                         break
                     }
                 }
             }
-            anyPlot <- filterLoop() |> updateLDGroups(groups) |>
-                pcaPlot() +
-                geom_text_repel(aes(label = loopSamples))
+            if (input$diffloopMethod == "edgeR") {
+                filterLoop() |> updateLDGroups(groups) |> quickAssoc() |> _@rowData |> write_tsv(file)
+            } else {
+                filterLoop() |> updateLDGroups(groups) |> quickAssocVoom() |> _@rowData |> write_tsv(file)
+            }
+            
         }
-        return(anyPlot)
-    })
+    )
 }
 
 shinyApp(ui = ui, server = server)

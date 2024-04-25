@@ -25,6 +25,8 @@ test/*
 pv-1.8.5/
 less-643/
 gawk-5.3.0/
-flask_project/__pycache__/
-flask_project/celery_project/__pycache__/
 flask_project/jobs/
+shinyApps/helpers/Sushi-master/*
+!shinyApps/helpers/Sushi-master/R
+tmp/
+**/__pycache__/
