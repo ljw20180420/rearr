@@ -3,194 +3,128 @@ library(bslib)
 library(tidyverse)
 library(diffloop)
 library(GenomicRanges)
+library(HiContacts)
+library(rtracklayer)
+library(GenomicFeatures)
+library(shinyjs)
+
+chromInfo <- getChromInfoFromUCSC("hg19")
 
 source("../helpers/mangoFDRPValue.R")
 source("../helpers/stat_ecdf_weighted.R")
 
 options(shiny.maxRequestSize = 1000 * 1024^2)
 
-ui <- page_sidebar(
-    title = "Diffloop Analysis",
+ui <- navbarPage(
+    "Diffloop Analysis",
     sidebar = sidebar(
         helpText("This App use diffloop to analyze loop data."),
-        fileInput("loopFiles", label = "Loop files (bedpe or mango)", multiple = TRUE),
-        numericInput("mergegap", label = "merge gap", value = 500),
-        numericInput("nbins", label = "nbins", value = 10, min = 0, step = 1),
+        fileInput("loopFiles", "Loop files (bedpe or mango)", multiple = TRUE),
+        numericInput("mergegap", "merge gap", value = 500),
+        numericInput("nbins", "nbins", value = 10, min = 0, step = 1),
 
-        numericInput("FDR", label = "FDR", value = 1, min = 0, max = 1, step = 0.01),
-        numericInput("PValue", label = "PValue", value = 1, min = 0, max = 1, step = 0.01),
+        numericInput("FDR", "FDR", value = 1, min = 0, max = 1, step = 0.01),
+        numericInput("PValue", "PValue", value = 1, min = 0, max = 1, step = 0.01),
 
-        numericInput("maxgap", label = "max gap between blackList/annotation and anchor", value = 0, min = 0, step = 100),
+        numericInput("maxgap", "max gap between blackList/annotation and anchor", value = 0, min = 0, step = 100),
 
-        fileInput("blackListFiles", label = "black list regions (bed files)", multiple = TRUE),
+        fileInput("blackListFiles", "black list regions (bed files)", multiple = TRUE),
 
-        fileInput("annotFiles", label = "annotation files", multiple = TRUE),
+        fileInput("annotFiles", "annotation files", multiple = TRUE),
 
-        sliderInput("loopWidthRange", label = "loop width range", min = 0, max = 0, value = c(0, 0), step = 1),
+        sliderInput("loopWidthRange", "loop width range", min = 0, max = 0, value = c(0, 0), step = 1),
 
-        sliderInput("loopCountRange", label = "loop count range", min = 1, max = 1, value = c(1, 1), step = 1),
+        sliderInput("loopCountRange", "loop count range", min = 1, max = 1, value = c(1, 1), step = 1),
 
-        fileInput("hicFiles", label = "hic files", multiple = TRUE),
+        fileInput("hicFiles", "hic files"),
 
-        actionButton("addFilter", "add filter"),
-        actionButton("clearFilter", "clear filter"),
+        numericInput("filterNum", "filter number", value = 1, min = 1, step = 1),
 
-        selectInput("outputType", "output type", choices = c("loopNum", "loopWidth", "loopWidthCdf", "heatMap"), selected = "loopNum")
+        uiOutput("filters")
     ),
-    plotOutput("anyPlot")
+    tabPanel("loop number",
+        plotOutput("loopNumPlot"),
+        downloadButton("loopNumDownload")
+    ),
+    tabPanel("loop width",
+        numericInput("loopWidthBin", "loop width bin number", value = 20, min = 0, step = 1),
+        plotOutput("loopWidthPlot"),
+        downloadButton("loopWidthDownload")
+    ),
+    tabPanel("loop width cumulative distribution",
+        plotOutput("loopWidthCdfPlot"),
+        downloadButton("loopWidthCdfDownload")
+    ),
+    tabPanel("heat map",
+        checkboxInput("balanced", "balanced", value = TRUE),
+        checkboxInput("horizontal", "horizontal", value = TRUE),
+        selectInput("resolution", "resolution", choices = NULL),
+        selectInput("chromosome", "chromosome", choices = NULL),
+        numericInput("start", "start", value = NA, min = 0),
+        numericInput("end", "end", value = NA, min = 0),
+        numericInput("maxDistance", "max distance", value = 1000000, min = 100000, step = 10000),
+        actionButton("renderHeat", "render heatmap"),
+        uiOutput("heatMapPlot")
+    ),
+    tabPanel("aggregate",
+        useShinyjs(),
+        selectInput("aggResolution", "resolution", choices = NULL),
+        numericInput("flank", "flanking bins", value = 10, min = 0, step = 1),
+        fileInput("view", "view file in bed which defines which regions of the chromosomes to use"),
+        checkboxInput("setVminVmax", "set vmin and vmax", value = FALSE),
+        numericInput("vmin", "value for the lowest colour", value = NA),
+        numericInput("vmax", "value for the highest colour", value = NA),
+        actionButton("renderAggregate", "render aggregate"),
+        uiOutput("aggregatePlot")
+    )
 )
 
 server <- function(input, output) {
     beddir <- tempdir()
-    filterNum <- reactiveVal(0)
-    annoteNum <- reactiveVal(0)
 
     samples <- reactive({
-        input$loopFiles$name |> strsplit('.', fixed = TRUE) |> vapply(function(x) x[1], "")
+        input$loopFiles$name |> str_replace(".interactions.all.mango", "")
     })
 
-    observeEvent(input$addFilter, {
-        insertUI(
-            selector = "#addFilter",
-            where = "afterEnd",
-            ui = selectInput(
-                inputId = paste0("filter", filterNum() + 1, "TSS"),
-                label = "TSS",
-                choices = c("off", "any", "either", "neither", "both"),
-                selected = "any"
-            ),
-            immediate = TRUE
-        )
-        for (i in seq_len(annoteNum())) {
-            insertUI(
-                selector = "#addFilter",
-                where = "afterEnd",
-                ui = selectInput(
-                    inputId = paste0("filter", filterNum() + 1, "annote", i),
-                    label = input$annotFiles$name[i],
-                    choices = c("off", "any", "either", "neither", "both"),
-                    selected = "any"
-                ),
-                immediate = TRUE
-            )
-        }
-        insertUI(
-            selector = "#addFilter",
-            where = "afterEnd",
-            ui = checkboxGroupInput(
-                inputId = paste0("filter", filterNum() + 1),
-                label = paste0("filter", filterNum() + 1),
-                choices = samples(),
-                selected = samples()
-            ),
-            immediate = TRUE
-        )
-        filterNum(filterNum() + 1)
+    resolutions <- reactive({
+        resolutions <- availableResolutions(input$hicFiles$datapath)
+        return(resolutions[resolutions >= 10000])
     })
 
-    observeEvent(ignoreInit = TRUE, list(
-            input$loopFiles,
-            input$annotFiles,
-            input$clearFilter
-        ),
-        {
-            for (i in seq_len(filterNum())) {
-                removeUI(selector = sprintf("div:has(>> #%s)", paste0("filter", i, "TSS")), immediate = TRUE)
-                for (j in seq_len(annoteNum())) {
-                    removeUI(selector = sprintf("div:has(>> #%s)", paste0("filter", i, "annote", j)), immediate = TRUE)
+    observe({
+        toggleState("vmin")
+        toggleState("vmax")
+    }) |> bindEvent(input$setVminVmax)
+
+    observe({
+        updateSelectInput(inputId = "resolution", choices = resolutions())
+        updateSelectInput(inputId = "aggResolution", choices = resolutions())
+        updateSelectInput(inputId = "chromosome", choices = availableChromosomes(input$hicFiles$datapath)@seqnames)
+    }) |> bindEvent(input$hicFiles)
+
+    observe({
+        chromSize <- chromInfo$size[chromInfo$chrom == input$chromosome]
+        updateNumericInput(inputId = "start", value = 0)
+        updateNumericInput(inputId = "end", value = chromSize, max = chromSize)
+    }) |> bindEvent(input$chromosome)
+
+    output$filters <- renderUI({
+        req(input$loopFiles)
+        annoteNum <- ifelse(is.null(input$annotFiles), 0, nrow(input$annotFiles))
+        filterUIs <- vector('list', input$filterNum * (annoteNum + 2))
+        for (i in seq_len(input$filterNum)) {
+            for (j in seq_len(annoteNum + 2)) {
+                p <- (i - 1) * (annoteNum + 2) + j
+                if (j == 1) {
+                    filterUIs[[p]] <- checkboxGroupInput(paste0("filter", i), paste0("filter", i), choices = samples(), selected = samples())
+                } else if (j == 2) {
+                    filterUIs[[p]] <- selectInput(paste0("filter", i, "TSS"), "TSS", choices = c("off", "any", "either", "neither", "both"), selected = "any")
+                } else {
+                    filterUIs[[p]] <- selectInput(paste0("filter", i, "annote", j - 2), input$annotFiles$name[j - 2], choices = c("off", "any", "either", "neither", "both"), selected = "any")
                 }
-                removeUI(selector = paste0("#filter", i), immediate = TRUE)
             }
-            if (is.null(input$annotFiles)) {
-                annoteNum(0)
-            } else {
-                annoteNum(nrow(input$annotFiles))
-            }
-            filterNum(0)
         }
-    )
-
-    observeEvent(input$outputType, {
-        if (input$outputType == "loopWidth") {
-            insertUI(
-                selector = "div:has(>> #outputType)",
-                where = "afterEnd",
-                ui = numericInput(
-                    inputId = "loopWidthBin",
-                    label = "loop width bin number",
-                    value = 20,
-                    min = 0,
-                    step = 1
-                ),
-                immediate = TRUE
-            )
-        } 
-        
-        if (input$outputType != "loopWidth") {
-            removeUI(selector = sprintf('.shiny-input-container:has(#%s)','loopWidthBin'), immediate = TRUE)
-        }
-
-        if (input$outputType == "heatMap" && !is.null(input$hicFiles)) {
-            insertUI(
-                selector = "div:has(>> #outputType)",
-                where = "afterEnd",
-                ui = selectInput(
-                    inputId = "resolution",
-                    label = "resolution",
-                    choices = availableResolutions(input$hicFiles$datapath[1])
-                ),
-                immediate = TRUE
-            )
-            insertUI(
-                selector = "div:has(>> #outputType)",
-                where = "afterEnd",
-                ui = checkboxInput(
-                    inputId = "balanced",
-                    label = "balanced",
-                    value = TRUE
-                ),
-                immediate = TRUE
-            )
-            insertUI(
-                selector = "div:has(>> #outputType)",
-                where = "afterEnd",
-                ui = numericInput(
-                    inputId = "end",
-                    label = "end",
-                    value = NA,
-                    min = 0
-                ),
-                immediate = TRUE
-            )
-            insertUI(
-                selector = "div:has(>> #outputType)",
-                where = "afterEnd",
-                ui = numericInput(
-                    inputId = "start",
-                    label = "start",
-                    value = NA,
-                    min = 0
-                ),
-                immediate = TRUE
-            )
-            insertUI(
-                selector = "div:has(>> #outputType)",
-                where = "afterEnd",
-                ui = textInput(
-                    inputId = "chromosome",
-                    label = "chromosome"
-                ),
-                immediate = TRUE
-            )
-        }
-
-        if (input$outputType != "heatMap") {
-            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "resolution"), immediate = TRUE)
-            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "balanced"), immediate = TRUE)
-            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "end"), immediate = TRUE)
-            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "start"), immediate = TRUE)
-            removeUI(selector = sprintf('.shiny-input-container:has(#%s)', "chromosome"), immediate = TRUE)
-        }
+        tagList(filterUIs)
     })
 
     loops <- reactive({
@@ -240,8 +174,8 @@ server <- function(input, output) {
     })
 
     maskTSSloopsList <- reactive({
-        maskTSSloopsList <- vector('list', filterNum())
-        for (i in seq_len(filterNum())) {
+        maskTSSloopsList <- vector('list', input$filterNum)
+        for (i in seq_len(input$filterNum)) {
             mode <- input[[paste0("filter", i, "TSS")]]
             if (mode == "off") {
                 maskTSSloopsList[[i]] <- rep(TRUE, nrow(loops()@rowData))
@@ -294,10 +228,11 @@ server <- function(input, output) {
     })
 
     maskAnnotLoopsFilterList <- reactive({
-        maskAnnotLoopsFilterList <- vector('list', filterNum())
-        for (i in seq_len(filterNum())) {
+        maskAnnotLoopsFilterList <- vector('list', input$filterNum)
+        for (i in seq_len(input$filterNum)) {
             maskAnnotLoopsFilterList[[i]] <- rep(TRUE, nrow(loops()@rowData))
-            for (j in seq_len(annoteNum())) {
+            annoteNum <- ifelse(is.null(input$annotFiles), 0, nrow(input$annotFiles))
+            for (j in seq_len(annoteNum)) {
                 mode <- input[[paste0("filter", i, "annote", j)]]
                 if (mode == "off") {
                     mask <- rep(TRUE, nrow(loops()@rowData))
@@ -340,8 +275,8 @@ server <- function(input, output) {
     })
 
     maskLoopsCountList <- reactive({
-        maskLoopsCountList <- vector('list', filterNum())
-        for (i in seq_len(filterNum())) {
+        maskLoopsCountList <- vector('list', input$filterNum)
+        for (i in seq_len(input$filterNum)) {
             if (length(input[[paste0("filter", i)]]) > 0) {
                 selectedCounts <- loops()@counts[, input[[paste0("filter", i)]]]
                 loopSelectedNum <- as.matrix(selectedCounts >= input$loopCountRange[1] & selectedCounts <= input$loopCountRange[2]) |> rowSums()
@@ -354,24 +289,24 @@ server <- function(input, output) {
     })
 
     filterLoopList <- reactive({
-        filterLoopList <- vector('list', filterNum())
-        for (i in seq_len(filterNum())) {
+        filterLoopList <- vector('list', input$filterNum)
+        for (i in seq_len(input$filterNum)) {
             filterLoopList[[i]] <- loops() |> subsetLoops(maskFDRPValue() & !maskblackListLoops() & maskTSSloopsList()[[i]] & maskAnnotLoopsFilterList()[[i]] & maskLoopsWidth() & maskLoopsCountList()[[i]])
         }
         return(filterLoopList)
     })
 
     loopNums <- reactive({
-        loopNums <- rep(0, filterNum())
-        for (i in seq_len(filterNum())) {
+        loopNums <- rep(0, input$filterNum)
+        for (i in seq_len(input$filterNum)) {
             loopNums[i] <- filterLoopList()[[i]]@counts[, input[[paste0("filter", i)]]] |> sum()
         }
         return(loopNums)
     })
 
     loopWidths <- reactive({
-        loopWidthsList <- vector('list', filterNum())
-        for (i in seq_len(filterNum())) {
+        loopWidthsList <- vector('list', input$filterNum)
+        for (i in seq_len(input$filterNum)) {
             if (nrow(filterLoopList()[[i]]@rowData) == 0) {
                 next
             }
@@ -380,51 +315,193 @@ server <- function(input, output) {
         loopWidthsList |> bind_rows(tibble(filter = character(0), count = double(0), loopWidth = integer(0)))
     })
 
-    hics <- reactive({
-        hics <- vector('list', nrow(input$hicFiles))
-        for (i in seq_len(nrow(input$hicFiles))) {
-            hics[[i]] <- HiCExperiment::import(input$hicFiles$datapath[i],
-                focus = paste0(input$chromosome, ":", input$start, "-", input$end),
-                resolution = as.integer(input$resolution)
-            )
-        }
+    hic <- reactive({
+        HiCExperiment::import(input$hicFiles$datapath, focus = "chrM", resolution = resolutions() |> tail(n = 1))
     })
 
-    output$anyPlot <- renderPlot({
-        req(filterNum() > 0)
+    reqInputs <- function() {
         req(input$loopFiles)
-        for (i in seq_len(filterNum())) {
+        for (i in seq_len(input$filterNum)) {
             req(input[[paste0("filter", i, "TSS")]])
-            for (j in seq_len(annoteNum())) {
+            annoteNum <- ifelse(is.null(input$annotFiles), 0, nrow(input$annotFiles))
+            for (j in seq_len(annoteNum)) {
                 req(input[[paste0("filter", i, "annote", j)]])
             }
             req(input[[paste0("filter", i)]])
         }
+    }
 
-        if (input$outputType == "loopNum") {
-            tibble(filter = paste0("filter", seq_len(filterNum())), loopNum = loopNums()) |>
-                ggplot(aes(filter, loopNum)) +
-                geom_col()
-        } else if (input$outputType == "loopWidth") {
-            req(input$loopWidthBin)
-            loopWidths() |>
-                ggplot(aes(x = loopWidth, weight = count, color = filter)) +
-                stat_bin(geom = "line", bins = input$loopWidthBin, position = "identity")
-        } else if (input$outputType == "loopWidthCdf") {
-            loopWidths() |> 
-                ggplot(aes(x = loopWidth, color = filter)) + 
-                stat_ecdf(weight = count, pad = FALSE)
-        } else if (input$outputType == "heatMap") {
-            req(input$hicFiles)
-            req(input$chromosome)
-            req(input$start)
-            req(input$end)
-            req(input$resolution)
-            req(input$balanced)
-            balanced <- ifelse(input$balanced, "balanced", "count")
-            plotMatrix(hics()[[1]])
-        }
+    loopNumGG <- reactive({
+        tibble(filter = paste0("filter", seq_len(input$filterNum)), loopNum = loopNums()) |>
+            ggplot(aes(filter, loopNum)) +
+            geom_col()
     })
+
+    output$loopNumPlot <- renderPlot({
+        reqInputs()
+        loopNumGG()
+    })
+
+    output$loopNumDownload <- downloadHandler(
+        filename = "loopNum.pdf",
+        content = function(file) {
+            ggsave(file, loopNumGG())
+        }
+    )
+
+    loopWidthGG <- reactive({
+        loopWidths() |>
+            ggplot(aes(x = loopWidth, weight = count, color = filter)) +
+            stat_bin(geom = "line", bins = input$loopWidthBin, position = "identity")
+    })
+
+    output$loopWidthPlot <- renderPlot({
+        reqInputs()
+        loopWidthGG()
+    })
+
+    output$loopWidthDownload <- downloadHandler(
+        filename = "loopWidth.pdf",
+        content = function(file) {
+            ggsave(file, loopWidthGG())
+        }
+    )
+
+    loopWidthCdfGG <- reactive({
+        loopWidths() |> 
+            ggplot(aes(x = loopWidth, color = filter)) + 
+            stat_ecdf(weight = count, pad = FALSE)
+    })
+
+    output$loopWidthCdfPlot <- renderPlot({
+        reqInputs()
+        loopWidthCdfGG()
+    })
+
+    output$loopWidthCdfDownload <- downloadHandler(
+        filename = "loopWidthCdf.pdf",
+        content = function(file) {
+            ggsave(file, loopWidthCdfGG())
+        }
+    )
+
+    bedpeFiles <- reactive({
+        bedpeFiles <- vector('list', input$filterNum)
+        for (i in seq_len(input$filterNum)) {
+            loops <- filterLoopList()[[i]]
+            seqnames <- loops@anchors |> rmchr() |> addchr() |> _@seqnames
+            chrs <- rep(levels(seqnames@values), times = c(seqnames@lengths, rep(0, length(levels(seqnames@values)) - length(seqnames@lengths))))
+            anchors <- loops@anchors |> rmchr() |> addchr() |> as_tibble() |> _[, 1:3]
+            leftAnchors <- anchors |> _[loops@interactions[, 'left'], ] |> setNames(c("chrom1", "start1", "end1"))
+            rightAnchors <- anchors |> _[loops@interactions[, 'right'], ] |> setNames(c("chrom2", "start2", "end2"))
+            bedpeFiles[[i]] <- tempfile(fileext = ".bedpe")
+            cbind(leftAnchors, rightAnchors) |> mutate(name = ".", count = loops@counts[, input[[paste0("filter", i)]]] |> as.matrix() |> rowSums()) |> write_tsv(file = bedpeFiles[[i]], col_names = FALSE)
+        }
+        return(bedpeFiles)
+    })
+
+    output$heatMapPlot <- renderUI({
+        req(input$hicFiles)
+        plotOutputList <- vector('list', 2 * input$filterNum)
+        for (i in seq_len(input$filterNum)) {
+            plotOutputList[[2 * i - 1]] <- plotOutput(paste0("heatMap", i), width = "1000px", height = "1000px")
+            plotOutputList[[2 * i]] <- downloadButton(paste0("heatMap", i, "download"))
+        }
+        tagList(plotOutputList)
+    })
+
+    heatMapGGList <- reactive({
+        balanced <- ifelse(input$balanced, "balanced", "count")
+        maxDistance <- switch(input$horizontal + 1, NULL, input$maxDistance)
+        heatMapGGList <- vector('list', input$filterNum)
+        for (i in seq_len(input$filterNum)) {
+            loops <- bedpeFiles()[[i]] |> import() |> InteractionSet::makeGInteractionsFromGRangesPairs()
+            heatMapGGList[[i]] <- hic() |> refocus(paste0(input$chromosome, ":", input$start, "-", input$end)) |> zoom(as.integer(input$resolution)) |> plotMatrix(use.scores = balanced, loops = loops, maxDistance = maxDistance)
+        }
+        return(heatMapGGList)
+    })
+
+    observe({
+        reqInputs()
+        req(input$hicFiles)
+        req(input$chromosome)
+        req(input$start)
+        req(input$end)
+        req(input$resolution)
+        for (i in seq_len(input$filterNum)) {
+            local({
+                my_i <- i
+                output[[paste0("heatMap", my_i)]] <- renderPlot({
+                    isolate({
+                        heatMapGGList()[[my_i]]
+                    })
+                })
+                output[[paste0("heatMap", my_i, "download")]] <- downloadHandler(
+                    filename = paste0("heatMap", my_i, ".pdf"),
+                    content = function(file) {
+                        ggsave(file, heatMapGGList()[[my_i]])
+                    }
+                )
+            })
+        }
+    }) |> bindEvent(input$renderHeat)
+
+    output$aggregatePlot <- renderUI({
+        req(input$hicFiles)
+        imageOutputList = vector("list", 2 * input$filterNum)
+        for (i in seq_len(input$filterNum)) {
+            imageOutputList[[2 * i - 1]] <- imageOutput(paste0("aggregate", i), width = "400px", height = "400px")
+            imageOutputList[[2 * i]] <- downloadButton(paste0("aggregate", i, "download"))
+        }
+        tagList(imageOutputList)
+    })
+
+    observe({
+        reqInputs()
+        req(input$hicFiles)
+        req(input$aggResolution)
+        flankBps <- input$flank * as.integer(input$aggResolution)
+        for (i in seq_len(input$filterNum)) {
+            local({
+                my_i <- i
+                clpyFile <- tempfile(fileext = ".clpy")
+                pngFile <- sub(".clpy$", ".png", clpyFile)
+                if (!is.null(input$view)) {
+                    coolpupCmd = sprintf("coolpup.py --view %s --flank %d -o %s %s::/resolutions/%s %s", input$view$datapath, flankBps, clpyFile, input$hicFiles$datapath, input$resolution, bedpeFiles()[[my_i]])
+                } else {
+                    coolpupCmd = sprintf("coolpup.py --flank %d -o %s %s::/resolutions/%s %s", flankBps, clpyFile, input$hicFiles$datapath, input$resolution, bedpeFiles()[[my_i]])
+                }
+                coolpupCmd |> system()
+                if (input$setVminVmax) {
+                    req(input$vmin)
+                    req(input$vmax)
+                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %d --vmax %d", clpyFile, pngFile, input$vmin, input$vmax)
+                } else {
+                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s", clpyFile, pngFile)
+                }
+                plotpupCmd |> system()
+                output[[paste0("aggregate", my_i)]] <- renderImage(
+                    {
+                        list(src = pngFile)
+                    },
+                    deleteFile = FALSE 
+                )
+                output[[paste0("aggregate", my_i, "download")]] <- downloadHandler(
+                    filename = paste0("aggregate", my_i, ".pdf"),
+                    content = function(file) {
+                        if (input$setVminVmax) {
+                            req(input$vmin)
+                            req(input$vmax)
+                            plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %d --vmax %d", clpyFile, file, input$vmin, input$vmax)
+                        } else {
+                            plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s", clpyFile, file)
+                        }
+                        plotpupCmd |> system()
+                    }
+                )
+            })
+        }
+    }) |> bindEvent(input$renderAggregate)
 }
 
 shinyApp(ui = ui, server = server)

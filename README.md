@@ -34,6 +34,13 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 
 # TODO
 ```[tasklist]
+- [ ] resemble indelphi
+- [ ] implement tidymodels (need to install tidymodels in shiny rocker, which must not be installed through CRAN)
+- [ ] merge shiny APP visualize alg file into single APP with multiple tabPanels in narbarPage
+- [ ] explore base
+- [ ] feature choose
+- [ ] AI review
+- [ ] PCR
 - [X] Alignment browser with folded insertion lines
 - [ ] CDN
 - [ ] Single page webUI (reply results to the page instead of saving it on the server)

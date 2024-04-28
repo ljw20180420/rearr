@@ -5,9 +5,6 @@ library(ggrepel)
 library(diffloop)
 library(GenomicRanges)
 library(Sushi)
-library(HiContacts)
-library(rtracklayer)
-# library(tools)
 
 source("../helpers/mangoFDRPValue.R")
 source("../helpers/Sushi-master/R/plotBedpe.R")
@@ -30,22 +27,25 @@ ui <- navbarPage(
         sliderInput("loopCountRange", label = "loop count range", min = 1, max = 1, value = c(1, 1), step = 1),
     ),
     tabPanel("loopDistance",
-        plotOutput("loopDistancePlot")
+        plotOutput("loopDistancePlot"),
+        downloadButton("loopDistanceDownload")
     ),
     tabPanel("pca",
         uiOutput("sampleGroupsPca"),
-        plotOutput("pcaPlot")
+        plotOutput("pcaPlot"),
+        downloadButton("pcaDownload")
     ),
     tabPanel("loopArc",
         textInput("chromosome", label = "chromosome"),
         numericInput("start", label = "start", value = NA, min = 0),
         numericInput("end", label = "end", value = NA, min = 0),
-        plotOutput("loopArcPlot")
+        plotOutput("loopArcPlot"),
+        downloadButton("loopArcDownload")
     ),
     tabPanel("diffloop",
         uiOutput("sampleGroupsDiffloop"),
         selectInput("diffloopMethod", "diffloop method", choices = c("edgeR", "Voom"), selected = "edgeR"),
-        downloadButton("downloadDiffloop", label = "download diffloop")
+        downloadButton("downloadDiffloop")
     )
 )
 
@@ -140,14 +140,24 @@ server <- function(input, output) {
         loops() |> subsetLoops(maskFDRPValue() & !maskblackListLoops() & maskLoopsWidth() & maskLoopsCount())
     })
 
-    output$loopDistancePlot <- renderPlot({
-        req(input$loopFiles)
+    loopDistanceGG <- reactive({
         ggObj <- loopDistancePlot(filterLoop())
         return(ggObj)
     })
 
-    output$pcaPlot <- renderPlot({
+    output$loopDistancePlot <- renderPlot({
         req(input$loopFiles)
+        loopDistanceGG()
+    })
+
+    output$loopDistanceDownload <- downloadHandler(
+        filename = "loopDistance.pdf",
+        content = function(file) {
+            ggsave(file, loopDistanceGG())
+        }
+    )
+
+    pcaGG <- reactive({
         groups <- rep("", 3)
         loopSamples <- filterLoop()@colData |> row.names()
         for (i in seq_len(length(samples()))) {
@@ -164,6 +174,24 @@ server <- function(input, output) {
             geom_text_repel(aes(label = loopSamples))
     })
 
+    output$pcaPlot <- renderPlot({
+        req(input$loopFiles)
+        pcaGG()
+    })
+
+    output$pcaDownload <- downloadHandler(
+        filename = "pca.pdf",
+        content = function(file) {
+            ggsave(file, pcaGG())
+        }
+    )
+
+    loopArcGG <- reactive({
+        region <- GRanges(seqnames = input$chromosome, ranges = IRanges(start = input$start, end = input$end))
+        ggObj <- loopPlot(filterLoop(), region)
+        return(ggObj)
+    })
+
     observe({
         output$loopArcPlot <- renderPlot(
             {
@@ -171,13 +199,20 @@ server <- function(input, output) {
                 req(input$chromosome)
                 req(input$start)
                 req(input$end)
-                region <- GRanges(seqnames = input$chromosome, ranges = IRanges(start = input$start, end = input$end))
-                ggObj <- loopPlot(filterLoop(), region)
-                return(ggObj)
+                loopArcGG()
             },
             height = length(samples()) * 300
         )
     })
+
+    output$loopArcDownload <- downloadHandler(
+        filename = "loopArc.pdf",
+        content = function(file) {
+            pdf(file)
+            loopArcGG() |> replayPlot()
+            dev.off()
+        }
+    )
 
     output$downloadDiffloop <- downloadHandler(
         filename = "diffloopRowData.tsv",
