@@ -1,14 +1,21 @@
 <script setup>
-import AlignReads from './AlignReads.vue'
+import uploadFile from './uploadFile.vue'
 </script>
 
 <template>
   <div class="outer">
-    <h1>Align Reads</h1>
-    <AlignReads />
+    <uploadFile url="R1" />
+  </div>
+  <div class="outer">
+    <uploadFile url="removeDup" />
   </div>
 
-  <div class="outer">
+  <!-- <div class="outer">
+    <h1>Align Reads</h1>
+    <AlignReads />
+  </div> -->
+
+  <!-- <div class="outer">
     <h1>Monitor Progresses</h1>
     <a href="/flower" target="_blank">Celery Flower</a>
   </div>
@@ -16,7 +23,7 @@ import AlignReads from './AlignReads.vue'
   <div class="outer">
     <h1>Shiny Applications</h1>
     <a href="/shiny" target="_blank">Shiny Server</a>
-  </div>
+  </div> -->
 </template>
 
 <style>

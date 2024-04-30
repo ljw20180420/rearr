@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: sxIndexSpliter.sh fasta_genome csvfiles
+# Usage: sxExtractSpliter.sh fasta_genome csvfiles
 # csvfile = adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + target(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
 
 getSxCsvFilePrimer()
@@ -44,8 +44,6 @@ shift
 for csvfile in "$@"
 do
     paste -d "" <(getSxCsvFilePrimer <"${csvfile}") <(getSxCsvFileBarcode <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >"${csvfile}.primer+barcode.fa"
-    bowtie2-build -q "${csvfile}.primer+barcode.fa" "${csvfile}.primer+barcode"
 
     paste -d "" <(getSxCsvFileAdapter <"${csvfile}") <(getSxCsvFilesgRNA <"${csvfile}") <(getSxCsvFileScaffold <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >"${csvfile}.adapter+sgRNA+scaffold.fa"
-    bowtie2-build -q "${csvfile}.adapter+sgRNA+scaffold.fa" "${csvfile}.adapter+sgRNA+scaffold"
 done

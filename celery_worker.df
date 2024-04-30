@@ -1,7 +1,13 @@
-FROM ubuntu:22.04
-WORKDIR /app/flask_project
-RUN apt-get update 
-RUN apt-get install -y --no-install-recommends python3
-RUN apt-get install -y --no-install-recommends python3-pip
-RUN apt-get install -y --no-install-recommends zip
+FROM python:latest AS celery_worker_build
+LABEL maintainer="ljw2017@sjtu.edu.cn"
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev
+COPY ["./", "/app/"]
+RUN ./install.sh core
+
+FROM python:latest
+WORKDIR /app
+COPY --from=celery_worker_build /usr/local/share/awk/ /usr/local/share/awk/
+COPY --from=celery_worker_build /usr/local/bin/ /usr/local/bin/
 RUN pip install celery
+COPY ["./flask_project/celery_project/", "/app/celery_project/"]

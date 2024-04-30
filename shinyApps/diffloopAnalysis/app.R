@@ -118,7 +118,7 @@ server <- function(input, output) {
                 if (j == 1) {
                     filterUIs[[p]] <- checkboxGroupInput(paste0("filter", i), paste0("filter", i), choices = samples(), selected = samples())
                 } else if (j == 2) {
-                    filterUIs[[p]] <- selectInput(paste0("filter", i, "TSS"), "TSS", choices = c("off", "any", "either", "neither", "both"), selected = "any")
+                    filterUIs[[p]] <- selectInput(paste0("filter", i, "TSS"), "TSS", choices = c("off", "any", "either", "neither", "both"), selected = "off")
                 } else {
                     filterUIs[[p]] <- selectInput(paste0("filter", i, "annote", j - 2), input$annotFiles$name[j - 2], choices = c("off", "any", "either", "neither", "both"), selected = "any")
                 }
@@ -475,7 +475,7 @@ server <- function(input, output) {
                 if (input$setVminVmax) {
                     req(input$vmin)
                     req(input$vmax)
-                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %d --vmax %d", clpyFile, pngFile, input$vmin, input$vmax)
+                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %f --vmax %f", clpyFile, pngFile, input$vmin, input$vmax)
                 } else {
                     plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s", clpyFile, pngFile)
                 }
@@ -492,7 +492,7 @@ server <- function(input, output) {
                         if (input$setVminVmax) {
                             req(input$vmin)
                             req(input$vmax)
-                            plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %d --vmax %d", clpyFile, file, input$vmin, input$vmax)
+                            plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %f --vmax %f", clpyFile, file, input$vmin, input$vmax)
                         } else {
                             plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s", clpyFile, file)
                         }
