@@ -1,7 +1,9 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
+import uploadFile from uploadFile.vue
 const file = ref(null);
+const refFile = ref(null);
 const percentage = ref(0);
 const task_id = ref(null);
 const status = ref(null);

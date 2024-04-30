@@ -1,0 +1,28 @@
+# export by: dot -Tpdf -o projectLogic.pdf projectLogic.gv
+
+digraph projectLogic
+{
+    graph [layout = dot]
+
+    node [style=filled, shape=box, color=aqua]
+    targetFile [label="target file"]
+    pairedFile [label="paired file"]
+    removeDup [label="removeDuplicates.sh", shape=ellipse, color=aquamarine]
+    nonDupFile [label="file without duplicates"]
+    targetSpliter [label="target spliter"]
+    pairSpliter [label="pair spliter"]
+    demultiplex [label="demultiplex.sh", shape=ellipse, color=aquamarine]
+    demultiplexFile [label="demultiplex file"]
+    specificPostprocess [label="specific postprocess", shape=diamond, color=bisque]
+    postFile [label="file of reads to align"]
+    refFile [label="file of references"]
+    rearrangement [label="rearrangement", shape=ellipse, color=aquamarine]
+    correct [label="correct_micro_homology.awk", shape=ellipse]
+    algFile [label="alignments"]
+
+    targetFile -> removeDup -> nonDupFile -> demultiplex -> demultiplexFile -> specificPostprocess -> postFile -> rearrangement -> correct -> algFile
+    pairedFile -> removeDup
+    targetSpliter -> demultiplex
+    pairSpliter -> demultiplex
+    refFile -> rearrangement
+}
