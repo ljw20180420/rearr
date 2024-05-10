@@ -47,18 +47,16 @@ server <- function(input, output, session) {
         req(input$cut2)
         req(input$query)
 
-        writeLines(sprintf("0\n%s\n%d\n%d\n%s\n%d\n", input$reference1, input$cut1, input$cut2, input$reference2, nchar(input$reference2)), con = refFile)
+        writeLines(sprintf("0\t%s\t%d\t%d\t%s\t%d\n", input$reference1, input$cut1, input$cut2, input$reference2, nchar(input$reference2)), con = refFile)
         alignPipe = pipe(sprintf(
-                '../../Rearrangement/build/rearrangement 3<%s -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | gawk -f ../../tools/correct_micro_homology.AWK -- %d %s %d %s %d | tail -n+2 >%s',
+                'rearrangement 3<%s -u -3 -v -9 -s0 -6 -s1 4 -s2 2 -qv -9 | gawk -f correct_micro_homology.awk -- %s %s %s | tail -n+2 >%s',
                 refFile,
-                input$cut1,
+                refFile,
                 input$PAM1,
-                input$cut2,
                 input$PAM2,
-                nchar(input$reference1),
                 algFile
         ))
-        sprintf("%s\t1", input$query) |> writeLines(con = alignPipe)
+        sprintf("%s\t1\t0", input$query) |> writeLines(con = alignPipe)
         readLines(algFile) |> paste(collapse = "<br>")
     })
 }

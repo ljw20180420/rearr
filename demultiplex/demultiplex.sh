@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: demultiplex.sh inputFile spliterToMap spliterPair minScoreToMap minScorePair
+# Usage: demultiplex.sh inputFile spliterToMap spliterPair minScoreToMap minScorePair >demultiplexFile
 # spliter(ToMap|Pair) is a bowtie2 index used to split (toMap|pair)
 # minScore(ToMap|Pair) thres the match between (toMap|pair) and spliter(ToMap|Pair)
 
@@ -43,4 +43,4 @@ minScoreToMap=$4
 minScorePair=$5
 
 
-pv -c -N "demultiplex ${inputFile}" "${inputFile}" | cut -f1 | mapSpliter ${minScoreToMap} ${spliterToMap} | gawk -f endOfSpliterPos.awk | paste "${inputFile}" - <(cut -f2 "${inputFile}" | mapSpliter ${minScorePair} ${spliterPair} | gawk -f endOfSpliterPos.awk) | FilterSpilters >"${inputFile}.demultiplex"
+pv -c -N "demultiplex ${inputFile}" "${inputFile}" | cut -f1 | mapSpliter ${minScoreToMap} ${spliterToMap} | gawk -f endOfSpliterPos.awk | paste "${inputFile}" - <(cut -f2 "${inputFile}" | mapSpliter ${minScorePair} ${spliterPair} | gawk -f endOfSpliterPos.awk) | FilterSpilters

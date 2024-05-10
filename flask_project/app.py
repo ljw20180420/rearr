@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
 import os, tempfile
-from flask import Flask, render_template, request, send_file, send_from_directory, redirect, url_for
-from werkzeug.utils import secure_filename
-# from celery_project.app import celeryApp
-from celery_project.tasks import celeryRemoveDuplicates
+from flask import Flask, render_template, request, send_file, send_from_directory, redirect
+from celery_project.tasks import celeryRemoveDuplicates, celeryBowtie2build, celeryDemultiplex, celeryRearrange
 from celery.result import AsyncResult
-from celery import uuid
 
 # change Jinja2 delimiter to solve the comflicts with vue3
 class VueFlask(Flask):
@@ -22,25 +19,65 @@ class VueFlask(Flask):
 
 flaskApp = VueFlask(__name__, static_folder="vue_project/dist/assets", template_folder="vue_project/dist", static_url_path="/assets")
 
-
 @flaskApp.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(flaskApp.root_path, 'vue_project/dist'),
-                               'favicon.ico', mimetype='favicon.ico')
+    return send_from_directory(
+        os.path.join(flaskApp.root_path, 'vue_project/dist'),
+        'favicon.ico', mimetype='favicon.ico'
+    )
 
 @flaskApp.get("/")
 def homePage():
     return render_template("index.html")
 
-targetFile, fqR2File, rmDupFile,  = None
+fileType2Name = {}
+name2Value = {}
+tmpFold = os.path.join(flaskApp.root_path, "tmp")
+os.makedirs(tmpFold, exist_ok=True)
 
-@flaskApp.put('/removeDup')
+@flaskApp.put('/uploadFile/<string:fileType>')
+def uploadFile(fileType):
+    global fileType2Name
+    tmpFile = tempfile.mkstemp(dir=tmpFold)[1]
+    fileType2Name[fileType] = os.path.relpath(tmpFile, start=flaskApp.root_path)
+    request.files['file[]'].save(tmpFile)
+    return 'OK', 200
+
+@flaskApp.put('/setValues')
+def setValues():
+    global name2Value
+    for key, val in request.form.items():
+        name2Value[key] = val
+    return 'OK', 200
+
+@flaskApp.get('/runJob/removeDup')
 def removeDup():
-    os.makedirs("tmp", exist_ok=True)
-    inputFile = os.path.relpath(tempfile.mkstemp(dir="tmp")[1])
-    outputFile = os.path.relpath(tempfile.mkstemp(dir="tmp")[1])
-    request.files['file[]'].save(inputFile)
-    result = celeryRemoveDuplicates.delay(inputFile, outputFile)
+    global fileType2Name
+    fileType2Name["rmDupFile"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryRemoveDuplicates.delay([fileType2Name["targetFile"], fileType2Name["pairFile"]], fileType2Name["rmDupFile"])
+    return result.id
+
+@flaskApp.get('/runJob/bowtie2build')
+def bowtie2build():
+    global fileType2Name
+    fileType2Name["targetSpliterIndex"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    fileType2Name["pairSpliterIndex"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    fileType2Name["bowtie2buildLog"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryBowtie2build.delay(fileType2Name["targetSpliter"], fileType2Name["pairSpliter"], fileType2Name["targetSpliterIndex"], fileType2Name["pairSpliterIndex"], fileType2Name["bowtie2buildLog"])
+    return result.id
+
+@flaskApp.get('/runJob/demultiplex')
+def demultiplex():
+    global fileType2Name
+    fileType2Name["demultiplexFile"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryDemultiplex.delay(fileType2Name["rmDupFile"], fileType2Name["targetSpliterIndex"], fileType2Name["pairSpliterIndex"], name2Value["minScoreTarget"], name2Value["minScorePair"], fileType2Name["demultiplexFile"])
+    return result.id
+
+@flaskApp.get('/runJob/rearrange')
+def rearrange():
+    global fileType2Name
+    fileType2Name["alignFile"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryRearrange.delay(fileType2Name["toAlignFile"], fileType2Name["refFile"], name2Value["s0"], name2Value["s1"], name2Value["s2"], name2Value["u"], name2Value["v"], name2Value["ru"], name2Value["rv"], name2Value["qu"], name2Value["qv"], name2Value["PAM1"], name2Value["PAM2"], fileType2Name["alignFile"])
     return result.id
 
 @flaskApp.get("/download/<string:taskId>")
@@ -48,43 +85,15 @@ def downloadResult(taskId):
     result = AsyncResult(taskId)
     if result.status == 'SUCCESS':
         return send_file(result.get(), as_attachment=True)
-    return result.status
-    
+    return 'Accepted', 202
 
-# @flaskApp.put('/align')
-# def alignReads():
-#     # flask cannot serialize FileStorage, so FileStorage cannot be passed to celery. The compromise is to apply a synchronic saving.
-#     task_id = uuid()
-#     file = request.files['files[]']
-#     fileName = secure_filename(file.filename)
-#     os.makedirs(os.path.join(flaskApp.root_path, "jobs", task_id), exist_ok=True)
-#     file.save(os.path.join(flaskApp.root_path, "jobs", task_id, fileName))
+@flaskApp.get("/flower")
+def flower():
+    return redirect('http://localhost:5555', code=301)
 
-#     result = celeryAlignReads.apply_async(kwargs={
-#             'fileName': fileName,
-#             'ref1': request.form['ref1'],
-#             'ref2': request.form['ref2'],
-#             'cut1': request.form['cut1'],
-#             'cut2': request.form['cut2'],
-#             'PAM1': request.form['PAM1'],
-#             'PAM2': request.form['PAM2'],
-#             'jobPath': "jobs",
-#             'exePath': "..",
-#             'downloadURL': url_for('downloadResult', task_id=task_id, _external=True),
-#         }, task_id=task_id)
-#     return f'''{task_id} {result.status}'''
-
-# @flaskApp.get("/flower")
-# def flower():
-#     return redirect('http://localhost:5555', code=301)
-
-# @flaskApp.get("/shiny")
-# def shiny():
-#     return redirect('http://localhost:3838', code=301)
-
-# @flaskApp.get("/inspect/<string:task_id>")
-# def inspect(task_id):
-#     return AsyncResult(task_id).status
+@flaskApp.get("/shiny")
+def shiny():
+    return redirect('http://localhost:3838', code=301)
 
 if __name__ == "__main__":
     # flaskApp.run()

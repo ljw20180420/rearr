@@ -3,6 +3,9 @@
 for target in $@
 do
     case $target in
+        apt|core)
+            apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev gawk bowtie2 cutadapt samtools cmake
+            ;;&
         rearrangement|Rearrangement|core)
             mkdir -p Rearrangement/build
             cd Rearrangement/build
@@ -27,33 +30,25 @@ do
             cp ../bin/kpLogo /usr/local/bin/
             cd -
             ;;&
-        gawk|awk|core)
-            unzip -o gawk-5.3.0.zip
-            cd gawk-5.3.0
-            ./configure LDFLAGS="-static"
-            make
-            make install
-            cd -
-            ;;&
         correct|core)
-            cp correct_micro_homology.awk /usr/local/share/awk/
+            cp correct_micro_homology.awk /usr/share/awk/
             ;;&
         removeDup|core)
             cp removeDuplicates.sh /usr/local/bin/
             ;;&
         demultiplex|core)
             cp demultiplex/demultiplex.sh /usr/local/bin/
-            cp demultiplex/endOfSpliterPos.awk /usr/local/share/awk/
+            cp demultiplex/endOfSpliterPos.awk /usr/share/awk/
             ;;&
         sx)
             # install getSxCsvFileRef
             cp sx/getSxCsvFileRef/getSxCsvFileRef.sh /usr/local/bin/
             cp sx/getSxCsvFileRef/getSxCsvFileTarget.pl /usr/local/bin/
             cp sx/getSxCsvFileRef/getSxRefFile.pl /usr/local/bin/
-            cp sx/getSxCsvFileRef/sxTargetSam2Bed.awk /usr/local/share/awk/
+            cp sx/getSxCsvFileRef/sxTargetSam2Bed.awk /usr/share/awk/
             # install cutR2Adapter
             cp sx/sxCutR2AdapterFilterCumulate.sh /usr/local/bin/
-            cp sx/sxCumulateToMapCutAdaptSpliter.awk /usr/local/share/awk/
+            cp sx/sxCumulateToMapCutAdaptSpliter.awk /usr/share/awk/
             # install sxInderSpliter
             cp sx/sxExtractSpliter.sh /usr/local/bin/
             # install sxInferCsvfileFromFastq

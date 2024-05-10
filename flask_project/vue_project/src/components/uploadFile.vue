@@ -3,11 +3,14 @@ import { ref } from 'vue';
 import axios from 'axios';
 const file = ref(null);
 const percentage = ref(0);
-const props = defineProps(['url']);
+const props = defineProps({
+    'description': String,
+    'url': String
+});
 async function uploadFile(event) {
     file.value = event.target.files;
     try{
-        await axios.putForm(props.url, {
+        await axios.putForm("/uploadFile/" + props.url, {
             file: file.value,
         },
         {
@@ -23,6 +26,7 @@ async function uploadFile(event) {
 
 <template>
     <div>
+        <span>{{ description }}</span><br>
         <input type="file" @change="uploadFile">
         <span>{{ percentage }}%</span>
     </div>
