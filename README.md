@@ -34,6 +34,8 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 
 # TODO
 ```[tasklist]
+- [X] add selection for loop number and count in shiny app diffloopAnalysis
+- [X] add selection for --clr-weight-name in shiny app diffloopAnalysis
 - [ ] resemble indelphi
 - [ ] implement tidymodels (need to install tidymodels in shiny rocker, which must not be installed through CRAN)
 - [ ] merge shiny APP visualize alg file into single APP with multiple tabPanels in narbarPage

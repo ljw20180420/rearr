@@ -7,6 +7,7 @@ library(HiContacts)
 library(rtracklayer)
 library(GenomicFeatures)
 library(shinyjs)
+library(shinyWidgets)
 
 chromInfo <- getChromInfoFromUCSC("hg19")
 
@@ -32,9 +33,7 @@ ui <- navbarPage(
 
         fileInput("annotFiles", "annotation files", multiple = TRUE),
 
-        sliderInput("loopWidthRange", "loop width range", min = 0, max = 0, value = c(0, 0), step = 1),
-
-        sliderInput("loopCountRange", "loop count range", min = 1, max = 1, value = c(1, 1), step = 1),
+        uiOutput("globalFilters"),
 
         fileInput("hicFiles", "hic files"),
 
@@ -43,6 +42,7 @@ ui <- navbarPage(
         uiOutput("filters")
     ),
     tabPanel("loop number",
+        selectInput("numberCount", "number/count", choices = c("number", "count")),
         plotOutput("loopNumPlot"),
         downloadButton("loopNumDownload")
     ),
@@ -68,6 +68,7 @@ ui <- navbarPage(
     ),
     tabPanel("aggregate",
         useShinyjs(),
+        selectInput("normalization", "normalization", choices = c("weight", "''")),
         selectInput("aggResolution", "resolution", choices = NULL),
         numericInput("flank", "flanking bins", value = 10, min = 0, step = 1),
         fileInput("view", "view file in bed which defines which regions of the chromosomes to use"),
@@ -97,16 +98,18 @@ server <- function(input, output) {
     }) |> bindEvent(input$setVminVmax)
 
     observe({
+        req(input$hicFiles)
         updateSelectInput(inputId = "resolution", choices = resolutions())
         updateSelectInput(inputId = "aggResolution", choices = resolutions())
         updateSelectInput(inputId = "chromosome", choices = availableChromosomes(input$hicFiles$datapath)@seqnames)
-    }) |> bindEvent(input$hicFiles)
+    })
 
     observe({
+        req(input$chromosome)
         chromSize <- chromInfo$size[chromInfo$chrom == input$chromosome]
         updateNumericInput(inputId = "start", value = 0)
         updateNumericInput(inputId = "end", value = chromSize, max = chromSize)
-    }) |> bindEvent(input$chromosome)
+    })
 
     output$filters <- renderUI({
         req(input$loopFiles)
@@ -251,27 +254,19 @@ server <- function(input, output) {
         return(maskAnnotLoopsFilterList)
     })
 
-    observe({
+    output$globalFilters <- renderUI({
         req(input$loopFiles)
+        minLoopWidth <- min(loops()@rowData$loopWidth)
         maxLoopWidth <- max(loops()@rowData$loopWidth)
-        updateSliderInput(
-            input = "loopWidthRange",
-            max = maxLoopWidth,
-            value = c(0, maxLoopWidth)
-        )
+        widthFilter <- numericRangeInput("loopWidthRange", "loop width range", value = c(minLoopWidth, maxLoopWidth), min = minLoopWidth, max = maxLoopWidth, step = 1)
+        maxLoopCount <- max(max(loops()@counts), 1)
+        minLoopCount <- min(min(loops()@counts), maxLoopCount)
+        countFilter <- numericRangeInput("loopCountRange", "loop count range", value = c(minLoopCount, maxLoopCount), min = minLoopCount, max = maxLoopCount, step = 1)
+        tagList(widthFilter, countFilter)
     })
 
     maskLoopsWidth <- reactive({
         (loops()@rowData$loopWidth >= input$loopWidthRange[1]) & (loops()@rowData$loopWidth <= input$loopWidthRange[2])
-    })
-
-    observe({
-        req(input$loopFiles)
-        maxLoopCount <- max(max(loops()@counts), 1)
-        updateSliderInput(input = "loopCountRange",
-            max = maxLoopCount,
-            value = c(1, maxLoopCount)
-        )
     })
 
     maskLoopsCountList <- reactive({
@@ -299,7 +294,11 @@ server <- function(input, output) {
     loopNums <- reactive({
         loopNums <- rep(0, input$filterNum)
         for (i in seq_len(input$filterNum)) {
-            loopNums[i] <- filterLoopList()[[i]]@counts[, input[[paste0("filter", i)]]] |> sum()
+            if (input$numberCount == "number") {
+                loopNums[i] <- filterLoopList()[[i]]@counts[, input[[paste0("filter", i)]]] |> as.matrix() |> rowSums() |> as.logical() |> sum()
+            } else if (input$numberCount == "count") {
+                loopNums[i] <- filterLoopList()[[i]]@counts[, input[[paste0("filter", i)]]] |> sum()
+            }
         }
         return(loopNums)
     })
@@ -467,9 +466,9 @@ server <- function(input, output) {
                 clpyFile <- tempfile(fileext = ".clpy")
                 pngFile <- sub(".clpy$", ".png", clpyFile)
                 if (!is.null(input$view)) {
-                    coolpupCmd = sprintf("coolpup.py --view %s --flank %d -o %s %s::/resolutions/%s %s", input$view$datapath, flankBps, clpyFile, input$hicFiles$datapath, input$resolution, bedpeFiles()[[my_i]])
+                    coolpupCmd = sprintf("coolpup.py --view %s --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", input$view$datapath, flankBps, clpyFile, input$normalization, input$hicFiles$datapath, input$aggResolution, bedpeFiles()[[my_i]])
                 } else {
-                    coolpupCmd = sprintf("coolpup.py --flank %d -o %s %s::/resolutions/%s %s", flankBps, clpyFile, input$hicFiles$datapath, input$resolution, bedpeFiles()[[my_i]])
+                    coolpupCmd = sprintf("coolpup.py --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", flankBps, clpyFile, input$normalization, input$hicFiles$datapath, input$aggResolution, bedpeFiles()[[my_i]])
                 }
                 coolpupCmd |> system()
                 if (input$setVminVmax) {

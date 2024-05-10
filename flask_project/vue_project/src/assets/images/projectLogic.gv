@@ -1,0 +1,29 @@
+# export by: dot -Tpng -o projectLogic.png projectLogic.gv
+
+digraph projectLogic
+{
+    graph [layout=dot, rankdir="LR"]
+
+    node [style=filled, shape=box, color=aqua]
+    targetFile [label="target file"]
+    pairedFile [label="pair file"]
+    removeDup [label="removeDuplicates.sh", shape=ellipse, color=aquamarine]
+    nonDupFile [label="file without duplicates"]
+    targetSpliter [label="target spliter"]
+    pairSpliter [label="pair spliter"]
+    bowtie2build [label="bowtie2-build", shape=ellipse, color=aquamarine]
+    targetSpliterIndex [label="target spliter index"]
+    pairSpliterIndex [label="pair spliter index"]
+    demultiplex [label="demultiplex.sh", shape=ellipse, color=aquamarine]
+    demultiplexFile [label="demultiplex file"]
+    specificPostprocess [label="specific postprocess", shape=diamond, color=bisque]
+    postFile [label="file of reads to align"]
+    refFile [label="file of references"]
+    rearrangement [label="rearrangement", shape=ellipse, color=aquamarine]
+    correct [label="correct_micro_homology.awk", shape=ellipse, color=aquamarine]
+    algFile [label="alignments"]
+
+    {targetFile, pairedFile} -> removeDup -> nonDupFile -> demultiplex -> demultiplexFile -> specificPostprocess -> postFile
+    {targetSpliter, pairSpliter} -> bowtie2build -> {targetSpliterIndex, pairSpliterIndex} -> demultiplex
+    {postFile, refFile} -> rearrangement -> correct -> algFile
+}

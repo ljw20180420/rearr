@@ -1,17 +1,38 @@
 from .app import celeryApp
-import os
 import subprocess
+import os
+import time
+
+@celeryApp.on_after_finalize.connect
+def setup_periodic_tasks(sender, **kwargs):
+    sender.add_periodic_task(86400, celeryClearTmp.s("tmp"), name='clear temporary file')
 
 @celeryApp.task
-def celeryRemoveDuplicates(inputFiles, outputFile):
-    subprocess.run(f'''removeDuplicates.sh {" ".join(inputFiles)} >{outputFile} ''', shell=True, executable="/bin/bash")
-    return outputFile
+def celeryClearTmp(tmpPath):
+    now = time.time()
+    for file in os.listdir(tmpPath):
+        file = os.path.join(tmpPath, file)
+        if os.stat(file).st_mtime < now - 7 * 86400:
+            os.remove(file)
+    return "success"
 
-@celeryApp.task(bind=True)
-def celeryAlignReads(self, fileName=None, ref1=None, ref2=None, cut1=None, cut2=None, PAM1='NGG', PAM2='NGG', jobPath=None, exePath=None, downloadURL=None):
-    fastqFile = os.path.join(jobPath, self.request.id, fileName) 
-    cmd = f'''{os.path.join(exePath, "rearr_run.sh")} {fastqFile} {ref1} {ref2} {cut1} {cut2} {PAM1} {PAM2}'''
-    with open(f"{fastqFile}.stdout", "w") as sdo, open(f"{fastqFile}.stderr", "w") as sde:
-        _ = subprocess.run(cmd, stdout = sdo, stderr = sde, shell=True, executable="/bin/bash")
-    _ = subprocess.run(f'''cd {jobPath}; zip -rm {self.request.id}.zip {self.request.id} -x {self.request.id}/{fileName}; rm -r {self.request.id}''', shell=True, executable="/bin/bash")
-    return downloadURL
+@celeryApp.task
+def celeryRemoveDuplicates(inputFiles, rmDupFile):
+    subprocess.run(f'''removeDuplicates.sh {" ".join(inputFiles)} >{rmDupFile} ''', shell=True, executable="/bin/bash")
+    return rmDupFile
+
+@celeryApp.task
+def celeryBowtie2build(targetSpliter, pairSpliter, targetSpliterIndex, pairSpliterIndex, bowtie2buildLog):
+    subprocess.run(f'''bowtie2-build {targetSpliter} {targetSpliterIndex} 2>&1 >>{bowtie2buildLog}''', shell=True, executable="/bin/bash")
+    subprocess.run(f'''bowtie2-build {pairSpliter} {pairSpliterIndex} 2>&1 >>{bowtie2buildLog}''', shell=True, executable="/bin/bash")
+    return bowtie2buildLog
+
+@celeryApp.task
+def celeryDemultiplex(rmDupFile, targetSpliterIndex, pairSpliterIndex, minScoreTarget, minScorePair, demultiplexFile):
+    subprocess.run(f'''demultiplex.sh {rmDupFile} {targetSpliterIndex} {pairSpliterIndex} {minScoreTarget} {minScorePair} >{demultiplexFile}''', shell=True, executable="/bin/bash")
+    return demultiplexFile
+
+@celeryApp.task
+def celeryRearrange(toAlignFile, refFile, s0, s1, s2, u, v, ru, rv, qu, qv, PAM1, PAM2, alignFile):
+    subprocess.run(f'''rearrangement <{toAlignFile} 3<{refFile} -s0 {s0} -s1 {s1} -s2 {s2} -u {u} -v {v} -ru {ru} -rv {rv} -qu {qu} -qv {qv} | gawk -f correct_micro_homology.awk -- {refFile} {PAM1} {PAM2} >{alignFile}''', shell=True, executable="/bin/bash")
+    return alignFile

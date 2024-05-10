@@ -1,13 +1,8 @@
-FROM python:latest AS celery_worker_build
+FROM python:latest
 LABEL maintainer="ljw2017@sjtu.edu.cn"
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev
+RUN pip install celery
 COPY ["./", "/app/"]
 RUN ./install.sh core
-
-FROM python:latest
-WORKDIR /app
-COPY --from=celery_worker_build /usr/local/share/awk/ /usr/local/share/awk/
-COPY --from=celery_worker_build /usr/local/bin/ /usr/local/bin/
-RUN pip install celery
+RUN rm -rf /app
 COPY ["./flask_project/celery_project/", "/app/celery_project/"]

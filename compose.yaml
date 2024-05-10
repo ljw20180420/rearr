@@ -1,34 +1,54 @@
 services:
+  rabbitmq:
+    container_name: celery_rabbitmq
+    image: rabbitmq:latest
+    ports:
+      - "5672:5672"
+  
+  beat:
+    depends_on:
+      - rabbitmq
+    restart: always
+    container_name: celery_beat
+    image: my_celery_flower
+    build:
+      context: .
+      dockerfile: celery_flower.df
+    command: celery -A celery_project.app --broker=amqp://rabbitmq:5672 beat
+
   flower:
     depends_on:
       - rabbitmq
+    restart: always
     container_name: celery_flower
     image: my_celery_flower
+    build:
+      context: .
+      dockerfile: celery_flower.df
     ports:
       - "5555:5555"
-    command: ["celery", "-A", "celery_project.app", "--broker=amqp://rabbitmq:5672", "flower"]
-
-  rabbitmq:
-    container_name: celery_rabbitmq
-    image: rabbitmq
-    ports:
-      - "5672:5672"
+    command: celery -A celery_project.app --broker=amqp://rabbitmq:5672 flower
 
   worker:
     depends_on:
       - rabbitmq
+    restart: always
     container_name: celery_worker
     image: my_celery_worker
+    build:
+      context: .
+      dockerfile: celery_worker.df
     volumes:
       - "./flask_project/tmp:/app/tmp"
-    command: ["celery", "-A", "celery_project.app", "--broker=amqp://rabbitmq:5672", "worker"]
+    command: celery -A celery_project.app --broker=amqp://rabbitmq:5672 worker
 
   shiny:
+    restart: always
     container_name: shiny_server
+    image: my_shiny_server
     build:
       context: .
       dockerfile: ./shiny_server.df
-    image: my_shiny_server
     ports:
       - "3838:3838"
     volumes:
