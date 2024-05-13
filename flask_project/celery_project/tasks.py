@@ -22,9 +22,8 @@ def celeryRemoveDuplicates(inputFiles, rmDupFile):
     return rmDupFile
 
 @celeryApp.task
-def celeryBowtie2build(targetSpliter, pairSpliter, targetSpliterIndex, pairSpliterIndex, bowtie2buildLog):
-    subprocess.run(f'''bowtie2-build {targetSpliter} {targetSpliterIndex} 2>&1 >>{bowtie2buildLog}''', shell=True, executable="/bin/bash")
-    subprocess.run(f'''bowtie2-build {pairSpliter} {pairSpliterIndex} 2>&1 >>{bowtie2buildLog}''', shell=True, executable="/bin/bash")
+def celeryBuildSpliter(spliter, spliterIndex, bowtie2buildLog):
+    subprocess.run(f'''bowtie2-build {spliter} {spliterIndex} 2>&1 >{bowtie2buildLog}''', shell=True, executable="/bin/bash")
     return bowtie2buildLog
 
 @celeryApp.task

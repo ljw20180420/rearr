@@ -1,37 +1,30 @@
 services:
   rabbitmq:
+    restart: always
     container_name: celery_rabbitmq
     image: rabbitmq:latest
-    ports:
-      - "5672:5672"
   
+  redis:
+    restart: always
+    container_name: celery_redis
+    image: redis:latest
+
   beat:
     depends_on:
       - rabbitmq
+      - redis
     restart: always
     container_name: celery_beat
     image: my_celery_flower
     build:
       context: .
       dockerfile: celery_flower.df
-    command: celery -A celery_project.app --broker=amqp://rabbitmq:5672 beat
-
-  flower:
-    depends_on:
-      - rabbitmq
-    restart: always
-    container_name: celery_flower
-    image: my_celery_flower
-    build:
-      context: .
-      dockerfile: celery_flower.df
-    ports:
-      - "5555:5555"
-    command: celery -A celery_project.app --broker=amqp://rabbitmq:5672 flower
+    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
 
   worker:
     depends_on:
       - rabbitmq
+      - redis
     restart: always
     container_name: celery_worker
     image: my_celery_worker
@@ -40,7 +33,53 @@ services:
       dockerfile: celery_worker.df
     volumes:
       - "./flask_project/tmp:/app/tmp"
-    command: celery -A celery_project.app --broker=amqp://rabbitmq:5672 worker
+    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
+
+  flask:
+    depends_on:
+      - rabbitmq
+      - redis
+      - worker
+    restart: always
+    container_name: flask_app
+    image: my_flask_app
+    build:
+      context: .
+      dockerfile: flask.df
+    volumes:
+      - "./flask_project/tmp:/app/tmp"
+    environment:
+      CELERY_BROKER: amqp://rabbitmq:5672
+      CELERY_BACKEND: redis://redis:6379/0
+      CELERY_FLOWER: http://flower:5555
+      SHINY_SERVER: http://shiny:3838
+    command: waitress-serve app:flaskApp
+
+  flower:
+    depends_on:
+      - rabbitmq
+      - redis
+      - worker
+    restart: always
+    container_name: celery_flower
+    image: my_celery_flower
+    build:
+      context: .
+      dockerfile: celery_flower.df
+    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower
+
+  nginx:
+    depends_on:
+      - flask
+    restart: always
+    container_name: flask_nginx
+    image: nginx:latest
+    ports:
+      - "8080:8080"
+      - "5555:5555"
+      - "3838:3838"
+    volumes:
+      - "./nginx.default.conf:/etc/nginx/conf.d/default.conf"
 
   shiny:
     restart: always
@@ -49,7 +88,5 @@ services:
     build:
       context: .
       dockerfile: ./shiny_server.df
-    ports:
-      - "3838:3838"
     volumes:
       - "./shinyApps:/srv/shiny-server"

@@ -1,0 +1,7 @@
+FROM python:latest
+LABEL maintainer="ljw2017@sjtu.edu.cn"
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends npm
+RUN pip install flask celery[redis] waitress
+COPY ["./flask_project/", "/app/"]
+RUN cd vue_project && npm install && npm run build

@@ -56,8 +56,8 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 - [ ] Move sed/awk/perl codes embedded in bash scripts to individual files for easier debugging and reusing
 - [ ] stage docker build process (say a celery image can be used for both flask image and worker image)
 - [ ] Minimize docker image size, pre-build images and deployed to docker hub
-- [ ] Add nginx
-- [ ] Add waitress
+- [X] Add nginx
+- [X] Add waitress
 - [ ] Add tls
 - [ ] Install necessary dependencies to shiny server
 - [ ] Organize the whole project to a more extensible form (easily add now function both natively, in docker, or online)

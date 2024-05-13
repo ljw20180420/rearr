@@ -6,7 +6,6 @@ sx/csvfiles/*
 !sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv
 !sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G2.csv
 !sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G3.csv
-barcode/tests/
 paper/*
 !paper/function_table/
 paper/function_table/*
@@ -25,6 +24,4 @@ pv-1.8.5/
 shinyApps/helpers/Sushi-master/*
 !shinyApps/helpers/Sushi-master/R
 **/__pycache__/
-**/.vscode/
 **/tmp/
-**/*.png

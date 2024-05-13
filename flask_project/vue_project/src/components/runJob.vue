@@ -3,13 +3,15 @@ import { ref } from 'vue';
 import axios from 'axios';
 const taskId = ref(null);
 const props = defineProps({
-    'description': String,
-    'url': String
+    fileType: String,
+    url: String
 });
+const pageStatus = defineModel();
 async function runJob() {
     try{
-        const response = await axios.get("/runJob/" + props.url);
-        taskId.value = response.data;
+        const response = await axios.putForm("/runJob/" + props.url, pageStatus.value);
+        taskId.value = response.data.taskId;
+        pageStatus.value[props.fileType] = response.data.fileName;
     } catch(error) {
         alert(error);
     }
@@ -18,7 +20,7 @@ async function runJob() {
 
 <template>
     <div>
-        <span>{{ description }}</span><br>
+        <span>{{ fileType }}</span>
         <button @click="runJob">run</button>
         <a :href="'/download/' + taskId">{{ taskId }}</a>
     </div>
