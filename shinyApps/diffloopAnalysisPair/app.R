@@ -4,11 +4,10 @@ library(tidyverse)
 library(ggrepel)
 library(diffloop)
 library(GenomicRanges)
-library(Sushi)
+# library(Sushi) only load export functions, attach(getNamespace("Sushi")) load all functions, including those unexported ones
+attach(getNamespace("Sushi"))
 
 source("../helpers/mangoFDRPValue.R")
-source("../helpers/Sushi-master/R/plotBedpe.R")
-source("../helpers/Sushi-master/R/convertstrandinfo.R")
 
 options(shiny.maxRequestSize = 1000 * 1024^2)
 

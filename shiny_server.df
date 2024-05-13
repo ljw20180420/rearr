@@ -1,3 +1,6 @@
 FROM rocker/shiny-verse:latest
-RUN apt-get update
-RUN apt-get install -y --no-install-recommends gawk
+RUN apt-get update && apt-get install -y --no-install-recommends libbz2-dev gawk
+RUN R -e 'BiocManager::install(c("diffloop", "rtracklayer", "HiContacts", "GenomicFeatures"), ask = FALSE)'
+RUN R -e 'library(devtools); install_github("PhanstielLab/Sushi")'
+RUN R -e 'library(devtools); install_github("aryeelab/diffloop")'
+RUN R -e 'install.packages(c("shinyjs", "shinyWidgets", "ggrepel", "spatstat"))'

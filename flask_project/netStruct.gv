@@ -16,8 +16,9 @@ digraph netStruct
     waitress [label = "Waitress"]
     nginx [label = "Nginx"]
 
-    rabbitmqRPC -> celeryWorkers -> rabbitmqAMQP -> flaskVue3 -> waitress -> nginx
-    rabbitmqRPC -> celeryFlower -> flaskVue3
+    {rabbitmqRPC, celeryWorkers} -> rabbitmqAMQP -> flaskVue3 -> waitress -> nginx
+    rabbitmqAMQP -> celeryFlower
     rabbitmqAMQP -> celeryBeat
-    shinyApp -> shinyServer -> flaskVue3
+    celeryFlower -> nginx
+    shinyApp -> shinyServer -> nginx
 }

@@ -58,6 +58,7 @@ ui <- navbarPage(
     tabPanel("heat map",
         checkboxInput("balanced", "balanced", value = TRUE),
         checkboxInput("horizontal", "horizontal", value = TRUE),
+        selectInput("scale", "scale", choices = c('log10', 'log2', 'linear', 'exp0.2')),
         selectInput("resolution", "resolution", choices = NULL),
         selectInput("chromosome", "chromosome", choices = NULL),
         numericInput("start", "start", value = NA, min = 0),
@@ -415,7 +416,7 @@ server <- function(input, output) {
         heatMapGGList <- vector('list', input$filterNum)
         for (i in seq_len(input$filterNum)) {
             loops <- bedpeFiles()[[i]] |> import() |> InteractionSet::makeGInteractionsFromGRangesPairs()
-            heatMapGGList[[i]] <- hic() |> refocus(paste0(input$chromosome, ":", input$start, "-", input$end)) |> zoom(as.integer(input$resolution)) |> plotMatrix(use.scores = balanced, loops = loops, maxDistance = maxDistance)
+            heatMapGGList[[i]] <- hic() |> refocus(paste0(input$chromosome, ":", input$start, "-", input$end)) |> zoom(as.integer(input$resolution)) |> plotMatrix(use.scores = balanced, scale = input$scale, loops = loops, maxDistance = maxDistance)
         }
         return(heatMapGGList)
     })

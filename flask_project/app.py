@@ -2,22 +2,12 @@
 
 import os, tempfile
 from flask import Flask, render_template, request, send_file, send_from_directory, redirect
-from celery_project.tasks import celeryRemoveDuplicates, celeryBowtie2build, celeryDemultiplex, celeryRearrange
+from celery_project.tasks import celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celeryRearrange
 from celery.result import AsyncResult
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-# change Jinja2 delimiter to solve the comflicts with vue3
-class VueFlask(Flask):
-    jinja_options = Flask.jinja_options.copy()
-    jinja_options.update(dict(
-        block_start_string='{b{s',
-        block_end_string='b}e}',
-        variable_start_string='{v{s',
-        variable_end_string='v}e}',
-        comment_start_string='{c{s',
-        comment_end_string='c}e}',
-    ))
-
-flaskApp = VueFlask(__name__, static_folder="vue_project/dist/assets", template_folder="vue_project/dist", static_url_path="/assets")
+flaskApp = Flask(__name__, static_folder="vue_project/dist/assets", template_folder="vue_project/dist", static_url_path="/assets")
+flaskApp.wsgi_app = ProxyFix(flaskApp.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 @flaskApp.route('/favicon.ico')
 def favicon():
@@ -30,55 +20,58 @@ def favicon():
 def homePage():
     return render_template("index.html")
 
-fileType2Name = {}
-name2Value = {}
 tmpFold = os.path.join(flaskApp.root_path, "tmp")
-os.makedirs(tmpFold, exist_ok=True)
 
-@flaskApp.put('/uploadFile/<string:fileType>')
-def uploadFile(fileType):
-    global fileType2Name
+@flaskApp.put('/uploadFile')
+def uploadFile():
     tmpFile = tempfile.mkstemp(dir=tmpFold)[1]
-    fileType2Name[fileType] = os.path.relpath(tmpFile, start=flaskApp.root_path)
     request.files['file[]'].save(tmpFile)
-    return 'OK', 200
+    return os.path.basename(tmpFile)
 
-@flaskApp.put('/setValues')
-def setValues():
-    global name2Value
-    for key, val in request.form.items():
-        name2Value[key] = val
-    return 'OK', 200
+@flaskApp.put('/runJob/removeDuplicates')
+def removeDuplicates():
+    inputFiles = [os.path.join("tmp", file) for file in [request.form["target file"], request.form["pair file"]]]
+    rmDupFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryRemoveDuplicates.delay(inputFiles, rmDupFile)
+    return {'taskId': result.id, 'fileName': os.path.basename(rmDupFile)}
 
-@flaskApp.get('/runJob/removeDup')
-def removeDup():
-    global fileType2Name
-    fileType2Name["rmDupFile"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryRemoveDuplicates.delay([fileType2Name["targetFile"], fileType2Name["pairFile"]], fileType2Name["rmDupFile"])
-    return result.id
+@flaskApp.put('/runJob/buildSpliter/<string:spliterFile>')
+def buildSpliter(spliterFile):
+    spliter = os.path.join("tmp", request.form[spliterFile])
+    spliterIndex = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    bowtie2buildLog = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryBuildSpliter.delay(spliter, spliterIndex, bowtie2buildLog)
+    return {'taskId': result.id, 'fileName': os.path.basename(spliterIndex)}
 
-@flaskApp.get('/runJob/bowtie2build')
-def bowtie2build():
-    global fileType2Name
-    fileType2Name["targetSpliterIndex"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    fileType2Name["pairSpliterIndex"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    fileType2Name["bowtie2buildLog"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryBowtie2build.delay(fileType2Name["targetSpliter"], fileType2Name["pairSpliter"], fileType2Name["targetSpliterIndex"], fileType2Name["pairSpliterIndex"], fileType2Name["bowtie2buildLog"])
-    return result.id
-
-@flaskApp.get('/runJob/demultiplex')
+@flaskApp.put('/runJob/demultiplex')
 def demultiplex():
-    global fileType2Name
-    fileType2Name["demultiplexFile"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryDemultiplex.delay(fileType2Name["rmDupFile"], fileType2Name["targetSpliterIndex"], fileType2Name["pairSpliterIndex"], name2Value["minScoreTarget"], name2Value["minScorePair"], fileType2Name["demultiplexFile"])
-    return result.id
+    rmDupFile = os.path.join("tmp", request.form["file without duplicates"])
+    targetSpliterIndex = os.path.join("tmp", request.form["target spliter index"])
+    pairSpliterIndex = os.path.join("tmp", request.form["pair spliter index"])
+    minScoreTarget = request.form["minimal alignment score of target spliter"]
+    minScorePair = request.form["minimal alignment score of pair spliter"]
+    demultiplexFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryDemultiplex.delay(rmDupFile, targetSpliterIndex, pairSpliterIndex, minScoreTarget, minScorePair, demultiplexFile)
+    return {'taskId': result.id, 'fileName': os.path.basename(demultiplexFile)}
 
-@flaskApp.get('/runJob/rearrange')
+@flaskApp.put('/runJob/rearrange')
 def rearrange():
-    global fileType2Name
-    fileType2Name["alignFile"] = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryRearrange.delay(fileType2Name["toAlignFile"], fileType2Name["refFile"], name2Value["s0"], name2Value["s1"], name2Value["s2"], name2Value["u"], name2Value["v"], name2Value["ru"], name2Value["rv"], name2Value["qu"], name2Value["qv"], name2Value["PAM1"], name2Value["PAM2"], fileType2Name["alignFile"])
-    return result.id
+    toAlignFile = os.path.join("tmp", request.form["file of reads to align"])
+    refFile = os.path.join("tmp", request.form["file of reference"])
+    s0 = request.form["mismatching score"]
+    s1 = request.form["matching score for non-extension reference part"]
+    s2 = request.form["matching score for extension reference part"]
+    u = request.form["gap-extending penalty"]
+    v = request.form["gap-opening penalty"]
+    ru = request.form["gap-extending penalty for unaligned reference end"]
+    rv = request.form["gap-opening penalty for unaligned reference end"]
+    qu = request.form["gap-extending penalty for unaligned query part"]
+    qv = request.form["gap-opening penalty for unaligned query part"]
+    PAM1 = request.form["PAM1"]
+    PAM2 = request.form["PAM2"]
+    alignFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    result = celeryRearrange.delay(toAlignFile, refFile, s0, s1, s2, u, v, ru, rv, qu, qv, PAM1, PAM2, alignFile)
+    return {'taskId': result.id, 'fileName': os.path.basename(alignFile)}
 
 @flaskApp.get("/download/<string:taskId>")
 def downloadResult(taskId):
@@ -89,12 +82,11 @@ def downloadResult(taskId):
 
 @flaskApp.get("/flower")
 def flower():
-    return redirect('http://localhost:5555', code=301)
+    return redirect('http://www.rearr.xyz:5555', code=301)
 
 @flaskApp.get("/shiny")
 def shiny():
-    return redirect('http://localhost:3838', code=301)
+    return redirect('http://www.rearr.xyz:3838', code=301)
 
 if __name__ == "__main__":
-    # flaskApp.run()
-    flaskApp.run(debug=True)
+    flaskApp.run()

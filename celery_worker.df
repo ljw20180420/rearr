@@ -1,7 +1,7 @@
 FROM python:latest
 LABEL maintainer="ljw2017@sjtu.edu.cn"
 WORKDIR /app
-RUN pip install celery
+RUN pip install celery[redis]
 COPY ["./", "/app/"]
 RUN ./install.sh core
 RUN rm -rf /app

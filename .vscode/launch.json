@@ -9,7 +9,7 @@
             
             "cwd": "${workspaceFolder}",
 
-            "args": ["<barcode/test4/A7-G1-n-1.R2.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.countfile.debug", ">rearr.debug", "3<barcode/test4/A7-G1-n-1.R2.fq.final_hgsgrna_libb_all_0811-NGG.csv.barcode.reference", "-u", "-1", "-v", "-3", "-s0", "-2", "-qv", "-3"],
+            "args": ["<test.input", ">test.output", "3<test.ref", "-u", "-1", "-v", "-3", "-s0", "-2", "-qv", "-3"],
 
             "stopAtEntry": false,
             "environment": [
