@@ -34,6 +34,7 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 
 # TODO
 ```[tasklist]
+- [ ] add CDCI support by github action
 - [X] add selection for loop number and count in shiny app diffloopAnalysis
 - [X] add selection for --clr-weight-name in shiny app diffloopAnalysis
 - [ ] resemble indelphi
