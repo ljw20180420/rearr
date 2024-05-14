@@ -34,9 +34,8 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 
 # TODO
 ```[tasklist]
+- [ ] add a snakemake workflow
 - [ ] add CDCI support by github action
-- [X] add selection for loop number and count in shiny app diffloopAnalysis
-- [X] add selection for --clr-weight-name in shiny app diffloopAnalysis
 - [ ] resemble indelphi
 - [ ] implement tidymodels (need to install tidymodels in shiny rocker, which must not be installed through CRAN)
 - [ ] merge shiny APP visualize alg file into single APP with multiple tabPanels in narbarPage
@@ -44,11 +43,8 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 - [ ] feature choose
 - [ ] AI review
 - [ ] PCR
-- [X] Alignment browser with folded insertion lines
 - [ ] CDN
-- [ ] Single page webUI (reply results to the page instead of saving it on the server)
 - [ ] Rewrite post_process in R
-- [ ] Remove python code from draw_figures.Rmd
 - [ ] Sequence heatmap, and more visualizations
 - [ ] Make single target version a special case of screening case (merge normal mode with barcode mode)
 - [ ] Modulerize native installation
@@ -56,9 +52,6 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 - [ ] Optimize DockerFiles by merge install commands
 - [ ] Move sed/awk/perl codes embedded in bash scripts to individual files for easier debugging and reusing
 - [ ] stage docker build process (say a celery image can be used for both flask image and worker image)
-- [ ] Minimize docker image size, pre-build images and deployed to docker hub
-- [X] Add nginx
-- [X] Add waitress
 - [ ] Add tls
 - [ ] Install necessary dependencies to shiny server
 - [ ] Organize the whole project to a more extensible form (easily add now function both natively, in docker, or online)
@@ -67,12 +60,10 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 - [ ] Use explicit base in shiny app microHomology
 - [ ] Add shiny app to predict indel events
 - [ ] Add shiny app for kpLogo
-- [X] Avoid using system command in shiny app for better portability
 - [ ] Deploy to JCloud
 - [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
 - [ ] Move all downstream analyses to shiny App
 - [ ] Automatic document
-- [ ] Build a docker with only binary program, awk, sed, perl, bash scripts
 - [ ] Python program all run in shiny, so only need a python shiny docker
 - [ ] R program all run in shiny, so only need rocker/shiny-verse image
 ```

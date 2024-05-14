@@ -1,6 +1,6 @@
 #!/bin/bash
 # Remove spliterToMap from 5' and adapter from 3' of toMap. The remain must contain at least minToMapShear bases. After shearing, adjacent lines may be duplicate again. Use sxCumulateToMapCutAdaptSpliter.awk to collapse these duplicates.
-# Usage: sxCutR2AdapterFilterCumulate.sh rmDupFile minToMapShear >toMapFile
+# Usage: sxCutR2AdapterFilterCumulate.sh demultiplexFile minToMapShear >toMapFile
 
 cutadaptPlain()
 {
