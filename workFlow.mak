@@ -1,0 +1,26 @@
+# Input: pairFile, targetSpliterFile, pairSpliterFile, genomeRef, refFile, minScoreTarget, minScorePair, s0, s1, s2, u, v, ru, rv, qu, qv
+# sxInput: minToMapShear
+
+%.count: % $(pairFile)
+	removeDuplicates.sh $< $(pairFile) >$@
+
+%.1.bt2 %.2.bt2 %.3.bt2 %.4.bt2 %.rev.1.bt2 %.rev.2.bt2: %
+	bowtie2-build $< $<
+
+%.demultiplex: %.count $(targetSpliterFile).1.bt2 $(targetSpliterFile).2.bt2 $(targetSpliterFile).3.bt2 $(targetSpliterFile).4.bt2 $(targetSpliterFile).rev.1.bt2 $(targetSpliterFile).rev.2.bt2 $(pairSpliterFile).1.bt2 $(pairSpliterFile).2.bt2 $(pairSpliterFile).3.bt2 $(pairSpliterFile).4.bt2 $(pairSpliterFile).rev.1.bt2 $(pairSpliterFile).rev.2.bt2
+	demultiplex.sh $< $(targetSpliterFile) $(pairSpliterFile) $(minScoreTarget) $(minScorePair) >$@
+
+%.alg: %.post $(refFile)
+	rearrangement <$< 3<$(refFile) -s0 $(s0) -s1 $(s1) -s2 $(s2) -u $(u) -v $(v) -ru $(ru) -rv $(rv) -qu $(qu) -qv $(qv) | gawk -f correct_micro_homology.awk -- $(refFile) NGG NGG >$@
+
+# the followings are specific to sx data
+%.ref: % $(genomeRef)
+	getSxCsvFileRef.sh $< $(genomeRef) >$@
+
+%.post: %.demultiplex
+	sxCutR2AdapterFilterCumulate.sh $< $(minToMapShear) >$@
+
+%.csv.primer+barcode.fa %.csv.adapter+sgRNA+scaffold.fa: %.csv
+	sxExtractSpliter.sh $(genomeRef) $<
+
+.PRECIOUS: %.count %.1.bt2 %.demultiplex %.alg %.ref %.post %.csv.primer+barcode.fa

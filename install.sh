@@ -47,12 +47,10 @@ do
             cp sx/getSxCsvFileRef/getSxRefFile.pl /usr/local/bin/
             cp sx/getSxCsvFileRef/sxTargetSam2Bed.awk /usr/share/awk/
             # install cutR2Adapter
-            cp sx/sxCutR2AdapterFilterCumulate.sh /usr/local/bin/
-            cp sx/sxCumulateToMapCutAdaptSpliter.awk /usr/share/awk/
+            cp sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh /usr/local/bin/
+            cp sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk /usr/share/awk/
             # install sxInderSpliter
             cp sx/sxExtractSpliter.sh /usr/local/bin/
-            # install sxInferCsvfileFromFastq
-            cp sx/sxInferCsvfileFromFastq.sh /usr/local/bin/
             ;;&
     esac
 done
