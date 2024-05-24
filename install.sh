@@ -1,10 +1,11 @@
 #!/bin/bash
+# Usage: sudo ./install.sh core sx
 
 for target in $@
 do
     case $target in
         apt|core)
-            apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev gawk bowtie2 cutadapt samtools cmake
+            apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev gawk bowtie2 cutadapt samtools cmake bedtools
             ;;&
         rearrangement|Rearrangement|core)
             mkdir -p Rearrangement/build

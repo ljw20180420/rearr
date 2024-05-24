@@ -3,6 +3,7 @@ LABEL maintainer="ljw2017@sjtu.edu.cn"
 WORKDIR /app
 RUN pip install celery[redis]
 COPY ["./", "/app/"]
-RUN ./install.sh core
+RUN ./install.sh core sx
 RUN rm -rf /app
 COPY ["./flask_project/celery_project/", "/app/celery_project/"]
+COPY ["./rearrTest.sh", "./workFlow.mak", "/app/"]
