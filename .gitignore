@@ -25,3 +25,5 @@ shinyApps/helpers/Sushi-master/*
 !shinyApps/helpers/Sushi-master/R
 **/__pycache__/
 **/tmp/
+.dockerignore
+hg19

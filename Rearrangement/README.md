@@ -31,3 +31,8 @@ upBound21<tab>ref2seg1<tab>downBound21<tab>upBound22<tab>ref2seg2<tab>downBound2
 upBound31<tab>ref3seg1<tab>downBound31<tab>upBound32<tab>ref3seg2<tab>downBound32<tab>upBound33<tab>ref3seg3<tab>downBound33<tab>etc<newline>
 etc
 ```
+
+# outputFile format
+```
+index<tab>count<tab>score<tab>refId<tab>5'QueryUnmap<tab>ref1MapStart<tab>query1MapStart<tab>ref1MapEnd<tab>query1MapEnd<tab>randomInsertion<tab>ref2MapStart<tab>query2MapStart<tab>ref2MapEnd<tab>query2MapEnd<tab>3'QueryUnmap<tab>cut1<tab>cut2
+```

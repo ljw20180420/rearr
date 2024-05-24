@@ -34,6 +34,7 @@ fastq.table.cut1.cut2.ref1len: the summarization table for indel information
 
 # TODO
 ```[tasklist]
+- [ ] add a link to genome in install.sh
 - [ ] add a snakemake workflow
 - [ ] add CDCI support by github action
 - [ ] resemble indelphi

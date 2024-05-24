@@ -17,21 +17,35 @@ def celeryClearTmp(tmpPath):
     return "success"
 
 @celeryApp.task
-def celeryRemoveDuplicates(inputFiles, rmDupFile):
-    subprocess.run(f'''removeDuplicates.sh {" ".join(inputFiles)} >{rmDupFile} ''', shell=True, executable="/bin/bash")
-    return rmDupFile
+def celeryUpload(uploadFiles):
+    return uploadFiles
 
 @celeryApp.task
-def celeryBuildSpliter(spliter, spliterIndex, bowtie2buildLog):
-    subprocess.run(f'''bowtie2-build {spliter} {spliterIndex} 2>&1 >{bowtie2buildLog}''', shell=True, executable="/bin/bash")
-    return bowtie2buildLog
+def celeryRemoveDuplicates(inputFiles, rmDupFile):
+    subprocess.run(f'''removeDuplicates.sh {" ".join(inputFiles)} >{rmDupFile} ''', shell=True, executable="/bin/bash")
+    return [rmDupFile]
+
+@celeryApp.task
+def celeryBuildSpliter(spliter, spliterIndex):
+    subprocess.run(f'''bowtie2-build {spliter} {spliterIndex}''', shell=True, executable="/bin/bash")
+    return [f'{spliterIndex}.{ext}' for ext in ['1.bt2', '2.bt2', '3.bt2', '4.bt2', 'rev.1.bt2', 'rev.2.bt2']]
 
 @celeryApp.task
 def celeryDemultiplex(rmDupFile, targetSpliterIndex, pairSpliterIndex, minScoreTarget, minScorePair, demultiplexFile):
     subprocess.run(f'''demultiplex.sh {rmDupFile} {targetSpliterIndex} {pairSpliterIndex} {minScoreTarget} {minScorePair} >{demultiplexFile}''', shell=True, executable="/bin/bash")
-    return demultiplexFile
+    return [demultiplexFile]
+
+@celeryApp.task
+def celerySxPostProcess(demultiplexFile, minToMapShear, toAlignFile):
+    subprocess.run(f'''sxCutR2AdapterFilterCumulate.sh {demultiplexFile} {minToMapShear} >{toAlignFile}''', shell=True, executable="/bin/bash")
+    return [toAlignFile]
 
 @celeryApp.task
 def celeryRearrange(toAlignFile, refFile, s0, s1, s2, u, v, ru, rv, qu, qv, PAM1, PAM2, alignFile):
     subprocess.run(f'''rearrangement <{toAlignFile} 3<{refFile} -s0 {s0} -s1 {s1} -s2 {s2} -u {u} -v {v} -ru {ru} -rv {rv} -qu {qu} -qv {qv} | gawk -f correct_micro_homology.awk -- {refFile} {PAM1} {PAM2} >{alignFile}''', shell=True, executable="/bin/bash")
-    return alignFile
+    return [alignFile]
+
+@celeryApp.task
+def celeryGetReference(csvFile, genome, bowtie2index, refFile):
+    subprocess.run(f'''getSxCsvFileRef.sh {csvFile} {genome} {bowtie2index} >{refFile}''', shell=True, executable="/bin/bash")
+    return [refFile]

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: sxExtractSpliter.sh fasta_genome csvfiles
+# Usage: sxExtractSpliter.sh csvfiles
 # csvfile = adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + target(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
 
 getSxCsvFilePrimer()
@@ -39,8 +39,6 @@ getSxFaHead()
     awk '{print ">" NR - 1}'
 }
 
-fasta_genome=$1
-shift
 for csvfile in "$@"
 do
     paste -d "" <(getSxCsvFilePrimer <"${csvfile}") <(getSxCsvFileBarcode <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >"${csvfile}.primer+barcode.fa"
