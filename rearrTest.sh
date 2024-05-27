@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Usage: ./test.sh
-# To replace args (say makeTarget): makeTarget=test/A2-g1n-3.R2.fq.count ./test.sh
+# Usage: ./rearrTest.sh
+# To replace args (say makeTarget): makeTarget=test/A2-g1n-3.R2.fq.count ./rearrTest.sh
 
 # The following parameters should be replaced.
 makeTarget=${makeTarget:-test/A2-g1n-3.R2.fq.alg}
@@ -9,10 +9,14 @@ pairFile=${pairFile:-test/A2-g1n-3.fq}
 targetSpliterFile=${targetSpliterFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.primer+barcode.fa}
 pairSpliterFile=${pairSpliterFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.adapter+sgRNA+scaffold.fa}
 refFile=${refFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.ref}
+ext1up=${ext1up:-50}
+ext1down=${ext1down:-0}
+ext2up=${ext2up:-10}
+ext2down=${ext2down:-100}
 
 # The following parameters are default in most cases.
-genome=${genome:-hg19/hg19.fa}
-bowtie2index=${bowtie2index:-hg19/hg19}
+genome=${genome:-genome/genome.fa}
+bowtie2index=${bowtie2index:-genome/genome}
 minScoreTarget=${minScoreTarget:-30}
 minScorePair=${minScorePair:-100}
 s0=${s0:--6}

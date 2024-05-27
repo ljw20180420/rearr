@@ -46,6 +46,11 @@ def celeryRearrange(toAlignFile, refFile, s0, s1, s2, u, v, ru, rv, qu, qv, PAM1
     return [alignFile]
 
 @celeryApp.task
-def celeryGetReference(csvFile, genome, bowtie2index, refFile):
-    subprocess.run(f'''getSxCsvFileRef.sh {csvFile} {genome} {bowtie2index} >{refFile}''', shell=True, executable="/bin/bash")
+def celeryGetReference(csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile):
+    subprocess.run(f'''getSxCsvFileRef.sh {csvFile} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}''', shell=True, executable="/bin/bash")
     return [refFile]
+
+@celeryApp.task
+def celeryGetSpliters(csvFile, targetSpliter, pairSpliter):
+    subprocess.run(f'''sxExtractSpliter.sh {csvFile} >{targetSpliter} 3>{pairSpliter}''', shell=True, executable="/bin/bash")
+    return [targetSpliter, pairSpliter]

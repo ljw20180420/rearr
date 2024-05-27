@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: sxExtractSpliter.sh csvfiles
+# Usage: sxExtractSpliter.sh csvfile >spliter1 3>spliter2
 # csvfile = adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + target(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
 
 getSxCsvFilePrimer()
@@ -39,9 +39,7 @@ getSxFaHead()
     awk '{print ">" NR - 1}'
 }
 
-for csvfile in "$@"
-do
-    paste -d "" <(getSxCsvFilePrimer <"${csvfile}") <(getSxCsvFileBarcode <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >"${csvfile}.primer+barcode.fa"
+csvfile=$1
+paste -d "" <(getSxCsvFilePrimer <"${csvfile}") <(getSxCsvFileBarcode <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >&1
 
-    paste -d "" <(getSxCsvFileAdapter <"${csvfile}") <(getSxCsvFilesgRNA <"${csvfile}") <(getSxCsvFileScaffold <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >"${csvfile}.adapter+sgRNA+scaffold.fa"
-done
+paste -d "" <(getSxCsvFileAdapter <"${csvfile}") <(getSxCsvFilesgRNA <"${csvfile}") <(getSxCsvFileScaffold <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >&3
