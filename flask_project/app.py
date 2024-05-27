@@ -2,7 +2,7 @@
 
 import os, tempfile, io, zipfile, re
 from flask import Flask, render_template, request, send_file, send_from_directory, redirect
-from celery_project.tasks import celeryUpload, celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryGetReference
+from celery_project.tasks import celeryUpload, celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryGetReference, celeryGetSpliters
 from celery.result import AsyncResult
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -110,9 +110,26 @@ def getReference():
     bowtie2index = os.path.join("tmp", request.form["genome index[]"])
     mat = re.search('\.(rev\.)?[1-4]\.bt2', bowtie2index)
     bowtie2index = bowtie2index[:mat.span()[0]]
+    ext1up = request.form["cleavage 1 extend upstream"]
+    ext1down = request.form["cleavage 1 extend downstream"]
+    ext2up = request.form["cleavage 2 extend upstream"]
+    ext2down = request.form["cleavage 2 extend downstream"]
     refFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryGetReference.delay(csvFile, genome, bowtie2index, refFile)
+    result = celeryGetReference.delay(csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile)
     return [{'taskId': result.id, 'name': 'file of reference', 'value': [os.path.basename(refFile)]}]
+
+@flaskApp.put('/runJob/getSpliters')
+def getSpliters():
+    csvFile = os.path.join("tmp", request.form["csvfile[]"])
+    targetSpliter = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
+    os.remove(os.path.join(flaskApp.root_path, targetSpliter))
+    pairSpliter = targetSpliter + ".pair"
+    targetSpliter = targetSpliter + ".target"
+    result = celeryGetSpliters.delay(csvFile, targetSpliter, pairSpliter)
+    return [
+        {'taskId': result.id, 'name': 'target spliter', 'value': [os.path.basename(targetSpliter)]},
+        {'taskId': result.id, 'name': 'pair spliter', 'value': [os.path.basename(pairSpliter)]}
+    ]
 
 @flaskApp.get("/download/<string:taskId>")
 def download(taskId):

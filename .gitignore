@@ -24,6 +24,7 @@ pv-1.8.5/
 shinyApps/helpers/Sushi-master/*
 !shinyApps/helpers/Sushi-master/R
 **/__pycache__/
-**/tmp/
+**/tmp
+**/genome
 .dockerignore
 hg19

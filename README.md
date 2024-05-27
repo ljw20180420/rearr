@@ -6,13 +6,13 @@ git clone https://github.com/ljw20180420/sx_lcy.git
 
 # Install
 ```{bash}
-cd sx_lcy
-./install.sh
+It is recommanded to use rearr in docker. If you want to install natively, cd into the project fold and execute ./install/sh core sx
 ```
 
 # Usage
 ```{bash}
-rearr_run.sh path_to_fastq/fq[.gz] ref1 ref2 cut1 cut2 NGGCCNtype1 NGGCCNtype2
+See rearrTest.sh
+If you use docker, first login into a docker by ./loginWorker.sh dataPath. dataPath will be mounted to /app/data in docker. Then just use as native.
 ```
 
 # Parameters
@@ -27,9 +27,10 @@ NGGCCNtype2: ref2 is on the NGG strand or the CCN strand
 
 # Output
 ```{list}
-fastq.count: the count of duplicates in the fastq file
-fastq.alg.cut1.cut2.ref1len: the alignments
-fastq.table.cut1.cut2.ref1len: the summarization table for indel information
+target.count: file of target and pair without duplicates
+target.demultiplex: file after demultiplex
+target.post: file ready to align
+target.alg: alignments
 ```
 
 # TODO

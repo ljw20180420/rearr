@@ -5,8 +5,12 @@ import { ref, watch } from 'vue';
 const { node } = useNode();
 const { findNode, findEdge } = useVueFlow();
 const connections = useHandleConnections({type: 'source'});
-const targetEdge = findEdge(connections.value[0].edgeId);
-const targetNode = findNode(targetEdge.target);
+let targetEdges = [];
+let targetNodes = [];
+for (let i = 0; i < connections.value.length; ++i) {
+    targetEdges.push(findEdge(connections.value[i].edgeId));
+    targetNodes.push(findNode(targetEdges[i].target));
+}
 const sourceConns = useHandleConnections({type: 'target'})
 let sourceEdges = [];
 for (let sourceConn of sourceConns.value) {
@@ -25,7 +29,9 @@ watch(
         return true;
     },
     (activate) => {
-        targetEdge.animated = activate;
+        for (let targetEdge of targetEdges) {
+            targetEdge.animated = activate;
+        }
         disabled.value = !activate;
     },
     {
@@ -49,10 +55,19 @@ async function runJob() {
         }
         const response = await axios.putForm("/runJob/" + node.id, node.data.values);
         for (let rdt of response.data) {
-            for (let obj of targetNode.data) {
-                if (rdt.name == obj.name) {
-                    obj.value = rdt.value;
-                    obj.taskId = rdt.taskId;
+            let found = false;
+            for (let targetNode of targetNodes) {
+                for (let obj of targetNode.data) {
+                    if (rdt.name == obj.name) {
+                        obj.value = rdt.value;
+                        obj.taskId = rdt.taskId;
+                        found = true;
+                    }
+                    if (found) {
+                        break;
+                    }
+                }
+                if (found) {
                     break;
                 }
             }
