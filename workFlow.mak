@@ -19,7 +19,7 @@
 %.post: %.demultiplex
 	sxCutR2AdapterFilterCumulate.sh $< $(minToMapShear) >$@
 
-%.csv.primer+barcode.fa %.csv.adapter+sgRNA+scaffold.fa: %.csv
-	sxExtractSpliter.sh $< >$<.primer+barcode.fa 3>$<.adapter+sgRNA+scaffold.fa
+%.target.fa %.pair.fa: %
+	sxExtractSpliter.sh $< >$<.target.fa 3>$<.pair.fa
 
 .PRECIOUS: %.count %.1.bt2 %.demultiplex %.alg %.ref %.post %.csv.primer+barcode.fa

@@ -4,10 +4,10 @@
 # To replace args (say makeTarget): makeTarget=test/A2-g1n-3.R2.fq.count ./rearrTest.sh
 
 # The following parameters should be replaced.
-makeTarget=${makeTarget:-test/A2-g1n-3.R2.fq.alg}
-pairFile=${pairFile:-test/A2-g1n-3.fq}
-targetSpliterFile=${targetSpliterFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.primer+barcode.fa}
-pairSpliterFile=${pairSpliterFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.adapter+sgRNA+scaffold.fa}
+makeTarget=${makeTarget:-test/A2-g1n-3.R2.fq.gz.alg}
+pairFile=${pairFile:-test/A2-g1n-3.fq.gz}
+targetSpliterFile=${targetSpliterFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.target.fa}
+pairSpliterFile=${pairSpliterFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.pair.fa}
 refFile=${refFile:-sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.ref}
 ext1up=${ext1up:-50}
 ext1down=${ext1down:-0}
