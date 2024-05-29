@@ -32,7 +32,7 @@ def celeryBuildSpliter(spliter, spliterIndex):
 
 @celeryApp.task
 def celeryDemultiplex(rmDupFile, targetSpliterIndex, pairSpliterIndex, minScoreTarget, minScorePair, demultiplexFile):
-    subprocess.run(f'''demultiplex.sh {rmDupFile} {targetSpliterIndex} {pairSpliterIndex} {minScoreTarget} {minScorePair} >{demultiplexFile}''', shell=True, executable="/bin/bash")
+    subprocess.run(f'''spliterTarget={targetSpliterIndex} spliterPair={pairSpliterIndex} minScoreTarget={minScoreTarget} minScorePair={minScorePair} demultiplex.sh {rmDupFile} >{demultiplexFile}''', shell=True, executable="/bin/bash")
     return [demultiplexFile]
 
 @celeryApp.task
