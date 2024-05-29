@@ -13,17 +13,11 @@ const nodeTypes = {
 const nodes = ref([
   { id: 'target file', type: 'dataTankNode', position: { x: 950, y: 50 }, data: [ { type: 'file', taskId: null, name: 'target file', value: [null] } ] },
   { id: 'pair file', type: 'dataTankNode', position: { x: 950, y: 150 }, data: [ { type: 'file', taskId: null, name: 'pair file', value: [null] } ] },
-  { id: 'removeDuplicates', type: 'runJobNode', position: { x: 1600, y: 100 }, data: {
-    values: { 'target file': [null], 'pair file': [null] },
-    taskIds: { 'target file': null, 'pair file': null },
-  }},
+  { id: 'removeDuplicates', type: 'runJobNode', position: { x: 1600, y: 100 }, data: {} },
   { id: 'file without duplicates', type: 'dataTankNode', position: { x: 1850, y: 100 }, data: [ { type: 'file', taskId: null, name: 'file without duplicates', value: [null] } ] },
 
   { id: 'target spliter', type: 'dataTankNode', position: { x: 950, y: 250 }, data: [ { type: 'file', taskId: null, name: 'target spliter', value: [null] } ] },
-  { id: 'buildSpliter/target spliter', type: 'runJobNode', position: { x: 1600, y: 250 }, data: {
-    values: { 'target spliter': [null] },
-    taskIds: { 'target spliter': null },
-  }},
+  { id: 'buildSpliter/target spliter', type: 'runJobNode', position: { x: 1600, y: 250 }, data: {} },
   { id: 'target spliter index', type: 'dataTankNode', position: { x: 1850, y: 250 }, data: [
     { type: 'value', name: 'minimal alignment score of target spliter', value: null },
     { type: 'files', taskId: null, name: 'target spliter index', value: new Array(6).fill(null) },
@@ -39,32 +33,11 @@ const nodes = ref([
     { type: 'files', taskId: null, name: 'pair spliter index', value: new Array(6).fill(null) },
   ] },
 
-  { id: 'demultiplex', type: 'runJobNode', position: { x: 2500, y: 350 }, data: {
-    values: {
-      'file without duplicates': [null],
-      'target spliter index': new Array(6).fill(null),
-      'pair spliter index': new Array(6).fill(null),
-      'minimal alignment score of target spliter': null,
-      'minimal alignment score of pair spliter': null,
-    },
-    taskIds: {
-      'file without duplicates': null,
-      'target spliter index': null,
-      'pair spliter index': null,
-    },
-  } },
+  { id: 'demultiplex', type: 'runJobNode', position: { x: 2500, y: 350 }, data: {} },
   { id: 'demultiplex file', type: 'dataTankNode', position: { x: 2750, y: 350 }, data: [{ type: 'file', taskId: null, name: 'demultiplex file', value: [null] }] },
 
   { id: "minimal base number after remove 5' spliter and 3' adapter from target", type: 'dataTankNode', position: { x:2750, y: 550 }, data: [{ type: 'value', name: "minimal base number after remove 5' spliter and 3' adapter from target", value: 30 }] },
-  { id: 'sxPostProcess', type: 'runJobNode', position: { x: 3400, y: 450 }, data: {
-    values: {
-      'demultiplex file': [null],
-      "minimal base number after remove 5' spliter and 3' adapter from target": 30,
-    },
-    taskIds: {
-      'demultiplex file': null,
-    },
-  } },
+  { id: 'sxPostProcess', type: 'runJobNode', position: { x: 3400, y: 450 }, data: {} },
   { id: 'file of reads to align', type: 'dataTankNode', position: { x: 4550, y: 650 }, data: [
     { type: 'value', name: 'gap-extending penalty for unaligned query part', value: 0 },
     { type: 'value', name: 'gap-opening penalty for unaligned query part', value: -5 },
@@ -85,34 +58,11 @@ const nodes = ref([
     { type: 'value', name: 'gap-extending penalty', value: -3 },
     { type: 'value', name: 'gap-opening penalty', value: -9 },
   ] },
-  { id: 'rearrange', type: 'runJobNode', position: { x: 5200, y: 650 }, data: {
-    values: {
-      'file of reads to align': [null],
-      'file of reference': [null],
-      'gap-extending penalty for unaligned query part': null,
-      'gap-opening penalty for unaligned query part': null,
-      'gap-extending penalty for unaligned reference end': null,
-      'gap-opening penalty for unaligned reference end': null,
-      'PAM1': null,
-      'PAM2': null,
-      'mismatching score': null,
-      'matching score for non-extension reference part': null,
-      'matching score for extension reference part': null,
-      'gap-extending penalty': null,
-      'gap-opening penalty': null,
-    },
-    taskIds: {
-      'file of reads to align': null,
-      'file of reference': null,
-    },
-  } },
+  { id: 'rearrange', type: 'runJobNode', position: { x: 5200, y: 650 }, data: {} },
   { id: 'alignments', type: 'dataTankNode', position: { x: 5450, y: 650 }, data: [{ type: 'file', taskId: null, name: 'alignments', value: [null] }] },
 
   { id: 'genome', type: 'dataTankNode', position: { x: 2750, y: 1050 }, data: [{ type: 'file', taskId: null, name: 'genome', value: ["../genome/genome.fa"] }] },
-  { id: 'indexGenome', type: 'runJobNode', position: { x: 3400, y: 1150 }, data: {
-    values: { 'genome': [null] },
-    taskIds: { 'genome': null },
-  } },
+  { id: 'indexGenome', type: 'runJobNode', position: { x: 3400, y: 1150 }, data: {} },
   { id: 'genome index', type: 'dataTankNode', position: { x: 3650, y: 1150 }, data: [{ type: 'files', taskId: null, name: 'genome index', value: [
     '../genome/genome.1.bt2',
     '../genome/genome.2.bt2',
@@ -129,27 +79,9 @@ const nodes = ref([
     { type: 'value', name: 'cleavage 2 extend upstream', value: 10 },
     { type: 'value', name: 'cleavage 2 extend downstream', value: 100 },
   ] },
-  { id: 'getReference', type: 'runJobNode', position: { x: 4300, y: 1050 }, data: {
-    values: {
-      'csvfile': [null],
-      'genome': [null],
-      'genome index': [null],
-      'cleavage 1 extend upstream': null,
-      'cleavage 1 extend downstream': null,
-      'cleavage 2 extend upstream': null,
-      'cleavage 2 extend downstream': null,
-    },
-    taskIds: {
-      'csvfile': null,
-      'genome': null,
-      'genome index': null,
-    },
-  } },
+  { id: 'getReference', type: 'runJobNode', position: { x: 4300, y: 1050 }, data: {} },
 
-  { id: 'getSpliters', type: 'runJobNode', position: {x: 700, y: 350}, data: {
-    values: { 'csvfile': [null] },
-    taskIds: { 'csvfile': null },
-  } }
+  { id: 'getSpliters', type: 'runJobNode', position: {x: 700, y: 350}, data: {} }
 ])
 
 const edges = ref([
