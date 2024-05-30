@@ -1,42 +1,39 @@
 <script setup>
 import axios from 'axios';
 import { useNode, Handle, Position, useVueFlow, useHandleConnections } from '@vue-flow/core';
-import { ref, watch } from 'vue';
-const { node } = useNode();
-const { findNode, findEdge } = useVueFlow();
-const connections = useHandleConnections({type: 'source'});
-let targetEdges = [];
-let targetNodes = [];
-for (let i = 0; i < connections.value.length; ++i) {
-    targetEdges.push(findEdge(connections.value[i].edgeId));
-    targetNodes.push(findNode(targetEdges[i].target));
-}
-const sourceConns = useHandleConnections({type: 'target'})
-let sourceEdges = [];
-for (let sourceConn of sourceConns.value) {
-    sourceEdges.push(findEdge(sourceConn.edgeId));
-}
+import { computed, watch } from 'vue';
+const { node, connectedEdges } = useNode();
+const { findNode, addEdges } = useVueFlow();
+node.active = computed(() => {
+    for (let edge of connectedEdges.value) {
+        if (edge.target === node.id && !edge.animated) {
+            return false;
+        }
+    }
+    return true;
+});
+// useHandleConnections({
+//   type: "source",
+//   onConnect: (params) => {
+//     params['id'] = `${params.source}-${params.target}`;
+//     addEdges(params);
+//     const source = findNode(params.source)
+//     const edge = findEdge(params.id)
+//     edge.animated = source.active;
+//   },
+// });
 
-const disabled = ref(null);
-
-watch(
-    () => {
-        for (let sourceEdge of sourceEdges) {
-            if (!sourceEdge.animated) {
-                return false;
+watch(() => node.active,
+    (active) => {
+        for (let edge of connectedEdges.value) {
+            if (edge.source === node.id) {
+                edge.animated = active;
             }
         }
-        return true;
-    },
-    (activate) => {
-        for (let targetEdge of targetEdges) {
-            targetEdge.animated = activate;
-        }
-        disabled.value = !activate;
     },
     {
         deep: true,
-        immediate: true
+        immediate: true,
     }
 )
 
@@ -56,7 +53,11 @@ async function runJob() {
         const response = await axios.putForm("/runJob/" + node.id, node.data.values);
         for (let rdt of response.data) {
             let found = false;
-            for (let targetNode of targetNodes) {
+            for (let edge of connectedEdges.value) {
+                if (edge.target === node.id) {
+                    continue;
+                }
+                const targetNode = findNode(edge.target);
                 for (let obj of targetNode.data) {
                     if (rdt.name == obj.name) {
                         obj.value = rdt.value;
@@ -81,8 +82,8 @@ async function runJob() {
 <template>
     <div>
         <span>{{ node.id }} </span>
-        <button @click="runJob" :disabled="disabled">run</button>
-        <Handle type="source" :position="Position.Right" />
-        <Handle type="target" :position="Position.Left" />
+        <button @click="runJob" :disabled="!node.active">run</button>
+        <Handle type="source" :position="Position.Right" :is-valid-connection="(connection) => node.to.includes(connection.target)" />
+        <Handle type="target" :position="Position.Left" :is-valid-connection="(connection) => node.from.includes(connection.source)" />
     </div>
 </template>

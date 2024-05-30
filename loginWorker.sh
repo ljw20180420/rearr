@@ -17,7 +17,7 @@ then
     chown $(id -un):$(id -gn) genome
 fi
 
-dataPath=$1
+dataPath=$(realpath $1)
 if [ -z $dataPath ]
 then
     echo "must specify dataPath"
@@ -27,5 +27,5 @@ docker run -it --rm \
 -v "./genome:/app/genome" \
 -v "./sx/csvfiles:/app/sx/csvfiles" \
 -v "./test:/app/test" \
--v "./$dataPath:/app/data" \
+-v "$dataPath:/app/data" \
 ljwdocker1989/celery_worker /bin/bash

@@ -1,18 +1,58 @@
 <script setup>
 import { ref, watch } from 'vue';
 import axios from 'axios';
-import { useNode, Handle, Position, useHandleConnections, useVueFlow } from '@vue-flow/core';
+import { useNode, Handle, Position, useVueFlow, useHandleConnections } from '@vue-flow/core';
 const files = ref(null);
 const percentage = ref(0);
-const { node } = useNode();
-const { findNode, findEdge } = useVueFlow();
-const connections = useHandleConnections({type: 'source'});
-let targetEdges = [];
-let targetNodes = [];
-for (let i = 0; i < connections.value.length; ++i) {
-    targetEdges.push(findEdge(connections.value[i].edgeId));
-    targetNodes.push(findNode(targetEdges[i].target));
-}
+const { node, connectedEdges } = useNode();
+const { findNode, addEdges } = useVueFlow();
+useHandleConnections({
+    type: "source",
+    // onConnect: (params) => {
+    //     for (let param of params) {
+    //         param['id'] = `${param.source}-${param.target}`;
+    //         addEdges(param);
+    //         const source = findNode(param.source)
+    //         const edge = findEdge(param.id)
+    //         const target = findNode(param.target)
+    //         let activate = true;
+    //         for (let obj of source.data) {
+    //             target.data.values[obj.name] = obj.value
+    //             if (Object.keys(obj).includes("taskId")) {
+    //                 target.data.taskIds[obj.name] = obj.taskId
+    //             }
+    //             if (obj.value == null || obj.value === "" ) {
+    //                 activate = false;
+    //             } else if (Array.isArray(obj.value)) {
+    //                 for (let val of obj.value) {
+    //                     if (val == null) {
+    //                         activate = false;
+    //                     }
+    //                 }
+    //             }
+    //             edge.animated = activate;
+    //         }
+    //     }
+    // },
+    onDisconnect: (params) => {
+        console.log("onDisConnect", params);
+        for (let param of params) {
+            const source = findNode(param.source)
+            const target = findNode(param.target)
+            for (let obj of source.data) {
+                if (Array.isArray(obj.value))
+                {
+                    target.data.values[obj.name] = Array(obj.value.length).fill(null);
+                } else {
+                    target.data.values[obj.name] = null;
+                }
+                if (Object.keys(obj).includes("taskId")) {
+                    target.data.taskIds[obj.name] = null
+                }
+            }
+        }
+    },
+});
 
 async function upload(event, idx) {
     files.value = event.target.files;
@@ -34,17 +74,20 @@ async function upload(event, idx) {
     }
 }
 
-watch(
-    () => node.data,
+watch(() => node.data,
     (data) => {
-        for (let i in targetEdges) {
+        for (let edge of connectedEdges.value) {
+            if (edge.target === node.id) {
+                continue;
+            }
+            const targetNode = findNode(edge.target);
             let activate = true;
             for (let obj of data) {
-                targetNodes[i].data.values[obj.name] = obj.value
+                targetNode.data.values[obj.name] = obj.value
                 if (Object.keys(obj).includes("taskId")) {
-                    targetNodes[i].data.taskIds[obj.name] = obj.taskId
+                    targetNode.data.taskIds[obj.name] = obj.taskId
                 }
-                if (obj.value == null || obj.value === "" ) {
+                if (obj.value == null || obj.value === "") {
                     activate = false;
                 } else if (Array.isArray(obj.value)) {
                     for (let val of obj.value) {
@@ -54,12 +97,12 @@ watch(
                     }
                 }
             }
-            targetEdges[i].animated = activate;
+            edge.animated = activate;
         }
     },
     {
         deep: true,
-        immediate: true
+        immediate: true,
     }
 )
 </script>
@@ -82,7 +125,7 @@ watch(
             </select>
             <hr>
         </div>
-        <Handle type="source" :position="Position.Right" />
-        <Handle type="target" :position="Position.Left" />
+        <Handle type="source" :position="Position.Right" :is-valid-connection="(connection) => node.to.includes(connection.target)" />
+        <Handle type="target" :position="Position.Left" :is-valid-connection="(connection) => node.from.includes(connection.source)" />
     </div>
 </template>
