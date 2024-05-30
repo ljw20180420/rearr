@@ -56,14 +56,24 @@ def buildSpliter(spliterFile):
 @flaskApp.put('/runJob/demultiplex')
 def demultiplex():
     rmDupFile = os.path.join("tmp", request.form["file without duplicates[]"])
-    targetSpliterIndex = os.path.join("tmp", request.form["target spliter index[]"])
-    mat = re.search('\.(rev\.)?[1-4]\.bt2', targetSpliterIndex)
-    targetSpliterIndex = targetSpliterIndex[:mat.span()[0]]
-    pairSpliterIndex = os.path.join("tmp", request.form["pair spliter index[]"])
-    mat = re.search('\.(rev\.)?[1-4]\.bt2', pairSpliterIndex)
-    pairSpliterIndex = pairSpliterIndex[:mat.span()[0]]
-    minScoreTarget = request.form["minimal alignment score of target spliter"]
-    minScorePair = request.form["minimal alignment score of pair spliter"]
+    try:
+        targetSpliterIndex = os.path.join("tmp", request.form["target spliter index[]"])
+        mat = re.search('\.(rev\.)?[1-4]\.bt2', targetSpliterIndex)
+        targetSpliterIndex = targetSpliterIndex[:mat.span()[0]]
+        minScoreTarget = request.form["minimal alignment score of target spliter"]
+    except:
+        targetSpliterIndex = ""
+        minScoreTarget = ""
+    try:
+        pairSpliterIndex = os.path.join("tmp", request.form["pair spliter index[]"])
+        mat = re.search('\.(rev\.)?[1-4]\.bt2', pairSpliterIndex)
+        pairSpliterIndex = pairSpliterIndex[:mat.span()[0]]
+        minScorePair = request.form["minimal alignment score of pair spliter"]
+    except:
+        pairSpliterIndex = ""
+        minScorePair = ""
+    if not targetSpliterIndex and not pairSpliterIndex:
+        raise Exception("At least one of targetSpliter and pairSpliter should be specified")
     demultiplexFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
     result = celeryDemultiplex.delay(rmDupFile, targetSpliterIndex, pairSpliterIndex, minScoreTarget, minScorePair, demultiplexFile)
     return [{'taskId': result.id, 'name': 'demultiplex file', 'value': [os.path.basename(demultiplexFile)]}]
@@ -140,10 +150,7 @@ def download(taskId):
             for file in result.get():
                 zf.write(os.path.join(flaskApp.root_path, file), os.path.basename(file))
         stream.seek(0)
-        download_name = os.path.basename(result.get()[0])
-        mat = re.search('\.(rev\.)?[1-4]\.bt2', download_name)
-        if mat:
-            download_name = download_name[:mat.span()[0]]
+        download_name = os.path.basename(result.get()[0]).split(".")[0]
         return send_file(
             stream,
             as_attachment=True,
