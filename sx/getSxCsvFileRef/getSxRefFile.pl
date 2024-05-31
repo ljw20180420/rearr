@@ -24,7 +24,7 @@ if ($AG eq "A"){
             substr($_, $spos, 1) = "A";
         }
         else{
-            substr($_, $spos, 1) = "AA";
+            substr($_, $spos, 2) = "AA";
         }
     }
 }

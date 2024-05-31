@@ -35,7 +35,6 @@ useHandleConnections({
     //     }
     // },
     onDisconnect: (params) => {
-        console.log("onDisConnect", params);
         for (let param of params) {
             const source = findNode(param.source)
             const target = findNode(param.target)
