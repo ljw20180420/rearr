@@ -32,9 +32,69 @@ posMatrixToTibble <- function(mat, cut) {
 drawPositionalStatic <- function(inputTibble, insertCount) {
     inputTibble |>
         ggplot(aes(pos, count)) +
-        geom_col(aes(fill = type)) +
+        geom_col(aes(fill = type), width = 1) +
         geom_step(aes(pos, count, color = "black"), data = insertCount[2:(nrow(insertCount) - 1),], direction = "mid") +
         scale_x_continuous(name = "position relative to cut1", expand = c(0, 0)) +
         scale_y_continuous(expand = c(0, 0)) +
         scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+}
+
+getPositionalBaseTibble <- function(queryMat, counts, cut) {
+    baseFreq <- rbind(
+        colSums((queryMat == "-") * counts),
+        colSums((queryMat == "A") * counts),
+        colSums((queryMat == "C") * counts),
+        colSums((queryMat == "G") * counts),
+        colSums((queryMat == "T") * counts)
+    )
+    rownames(baseFreq) <- c("-", "A", "C", "G", "T")
+    baseFreq |> posMatrixToTibble(cut)
+}
+
+getPositionalMSDTibble <- function(queryMat, refMat, counts, cut) {
+    refMat <- toupper(refMat)
+    MSDFreq <- rbind(
+        colSums((queryMat == '-') * counts),
+        colSums((queryMat != refMat & queryMat != '-') * counts),
+        colSums((queryMat == refMat) * counts)
+    )
+    rownames(MSDFreq) <- c("delete", "SNP", "match")
+    MSDFreq |> posMatrixToTibble(cut)
+}
+
+calInsertionCount <- function(refList, cuts, refLens) {
+    insertList <- vector("list", length(refList))
+    for (i in seq_len(length(refList))) {
+        mask <- refList[[i]] != "-"
+        insertList[[i]] <- cumsum(mask)[!mask] - cuts[i]
+    }
+    histCount <- insertList |> unlist() |> table()
+    fullCount <- rep(0, max(cuts) + max(refLens - cuts) + 1)
+    fullCount[as.integer(names(histCount)) + max(cuts) + 1] <- histCount
+    tibble(
+        count = fullCount,
+        pos = seq(-max(cuts), max(refLens - cuts))
+    )
+}
+
+drawPositionalReads <- function(queryMat, cut) {
+    queryMat |> melt() |>
+        ggplot(aes(x = Var2 - cut, y = Var1)) + 
+        geom_raster(aes(fill=value), hjust = 0, vjust = 0) + 
+        scale_fill_manual(values = c("-" = "white", "A" = "darkgreen", "C" = "blue", "G" = "gold", "T" = "red")) +
+        scale_x_continuous(name = "position relative to cut1", expand = c(0, 0)) +
+        scale_y_continuous(name = "reads", expand = c(0, 0))
+}
+
+drawPositionalSnps <- function(queryMat, refMat, cut) {
+    refMat <- toupper(refMat)
+    queryMat[queryMat != refMat & queryMat != "-"] = "S"
+    queryMat[queryMat == "-"] = "D"
+    queryMat[queryMat == refMat] = "M"
+    queryMat |> melt() |>
+        ggplot(aes(x = Var2 - cut, y = Var1)) + 
+        geom_raster(aes(fill=value), hjust = 0, vjust = 0) + 
+        scale_fill_manual(values = c("D" = "white", "M" = "darkgreen", "S" = "red")) +
+        scale_x_continuous(name = "position relative to cut1", expand = c(0, 0)) +
+        scale_y_continuous(name = "reads", expand = c(0, 0))
 }
