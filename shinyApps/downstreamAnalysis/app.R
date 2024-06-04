@@ -42,7 +42,7 @@ ui <- navbarPage(
         plotOutput("baseSubFreqPlot")
     ),
     tabPanel("positional statistics",
-        selectInput("positionalMode", "display mode", choices = c("base", "indel"), selected = "base"),
+        selectInput("positionalMode", "display mode", choices = c("base", "indel", "read", "snp"), selected = "base"),
         plotOutput("posBaseRef1Plot"),
         plotOutput("posBaseRef2Plot")
     )
@@ -119,6 +119,9 @@ server <- function(input, output) {
     cuts2 <- reactive({
         algLines()[seq(1, length(algLines()), 3)] |> strsplit("\t") |> vapply(function(x) as.integer(x[17]), 0) - ref1Lens()
     })
+    ref2Lens <- reactive({
+        nchar(refAllSeqs()) - ref1Lens()
+    })
     refGapMat <- reactive({
         algLines()[seq(2, length(algLines()), 3)] |> extendToSameLength()
     })
@@ -142,74 +145,24 @@ server <- function(input, output) {
         queryAllSeqs() |> substr(ref1Lens() + 1, nchar(queryAllSeqs())) |> extendToAlignCut(cuts2())
     })
     base1Tibble <- reactive({
-        baseFreq <- rbind(
-            colSums((query1Mat() == "-") * counts()),
-            colSums((query1Mat() == "A") * counts()),
-            colSums((query1Mat() == "C") * counts()),
-            colSums((query1Mat() == "G") * counts()),
-            colSums((query1Mat() == "T") * counts())
-        )
-        rownames(baseFreq) <- c("-", "A", "C", "G", "T")
-        baseFreq |> posMatrixToTibble(max(cuts1()))
+        getPositionalBaseTibble(query1Mat(), counts(), max(cuts1()))
     })
     base2Tibble <- reactive({
-        baseFreq <- rbind(
-            colSums((query2Mat() == "-") * counts()),
-            colSums((query2Mat() == "A") * counts()),
-            colSums((query2Mat() == "C") * counts()),
-            colSums((query2Mat() == "G") * counts()),
-            colSums((query2Mat() == "T") * counts())
-        )
-        rownames(baseFreq) <- c("-", "A", "C", "G", "T")
-        baseFreq |> posMatrixToTibble(max(cuts2()))
+        getPositionalBaseTibble(query2Mat(), counts(), max(cuts2()))
     })
     MSD1Tibble <- reactive({
-        MSDFreq <- rbind(
-            colSums((query1Mat() == '-') * counts()),
-            colSums((toupper(query1Mat()) != toupper(ref1Mat()) & query1Mat() != '-') * counts()),
-            colSums((toupper(query1Mat()) == toupper(ref1Mat())) * counts())
-        )
-        rownames(MSDFreq) <- c("delete", "SNP", "match")
-        MSDFreq |> posMatrixToTibble(max(cuts1()))
+        getPositionalMSDTibble(query1Mat(), ref1Mat(), counts(), max(cuts1()))
     })
     MSD2Tibble <- reactive({
-        MSDFreq <- rbind(
-            colSums((query2Mat() == '-') * counts()),
-            colSums((toupper(query2Mat()) != toupper(ref2Mat()) & query2Mat() != '-') * counts()),
-            colSums((toupper(query2Mat()) == toupper(ref2Mat())) * counts())
-        )
-        rownames(MSDFreq) <- c("delete", "SNP", "match")
-        MSDFreq |> posMatrixToTibble(max(cuts2()))
+        getPositionalMSDTibble(query2Mat(), ref2Mat(), counts(), max(cuts2()))
     })
     insert1Count <- reactive({
         refList <- algLines()[seq(2, length(algLines()), 3)] |> vapply(function(x) substr(x, 1, gregexpr("[acgtn]", x)[[1]][3] - 1), "") |> strsplit("")
-        insertList <- vector("list", length(refList))
-        for (i in seq_len(length(refList))) {
-            mask <- refList[[i]] != "-"
-            insertList[[i]] <- cumsum(mask)[!mask] - cuts1()[i]
-        }
-        histCount <- insertList |> unlist() |> table()
-        fullCount <- rep(0, max(cuts1()) + max(ref1Lens() - cuts1()) + 1)
-        fullCount[as.integer(names(histCount)) + max(cuts1()) + 1] <- histCount
-        tibble(
-            count = fullCount,
-            pos = seq(-max(cuts1()), max(ref1Lens() - cuts1()))
-        )
+        calInsertionCount(refList, cuts1(), ref1Lens())
     })
     insert2Count <- reactive({
         refList <- algLines()[seq(2, length(algLines()), 3)] |> vapply(function(x) substr(x, gregexpr("[acgtn]", x)[[1]][2] + 1, nchar(x)), "") |> strsplit("")
-        insertList <- vector("list", length(refList))
-        for (i in seq_len(length(refList))) {
-            mask <- refList[[i]] != "-"
-            insertList[[i]] <- cumsum(mask)[!mask] - cuts2()[i]
-        }
-        histCount <- insertList |> unlist() |> table()
-        fullCount <- rep(0, max(cuts2()) + max(nchar(refAllSeqs()) - ref1Lens() - cuts2()) + 1)
-        fullCount[as.integer(names(histCount)) + max(cuts2()) + 1] <- histCount
-        tibble(
-            count = fullCount,
-            pos = seq(-max(cuts2()), max(nchar(refAllSeqs()) - ref1Lens() - cuts2()))
-        )
+        calInsertionCount(refList, cuts2(), ref2Lens())
     })
 
     output$posBaseRef1Plot <- renderPlot({
@@ -219,8 +172,12 @@ server <- function(input, output) {
         if (input$positionalMode == "base") {
             drawPositionalStatic(base1Tibble(), insert1Count())
         }
-        else {
+        else if (input$positionalMode == "indel") {
             drawPositionalStatic(MSD1Tibble(), insert1Count())
+        } else if (input$positionalMode == "read") {
+            drawPositionalReads(query1Mat(), max(cuts1()))
+        } else if (input$positionalMode == "snp") {
+            drawPositionalSnps(query1Mat(), ref1Mat(), max(cuts1()))
         }
     })
 
@@ -231,8 +188,12 @@ server <- function(input, output) {
         if (input$positionalMode == "base") {
             drawPositionalStatic(base2Tibble(), insert2Count())
         }
-        else {
+        else if (input$positionalMode == "indel") {
             drawPositionalStatic(MSD2Tibble(), insert2Count())
+        } else if (input$positionalMode == "read") {
+            drawPositionalReads(query2Mat(), max(cuts2()))
+        } else if (input$positionalMode == "snp") {
+            drawPositionalSnps(query2Mat(), ref2Mat(), max(cuts2()))
         }
     })
 }
