@@ -88,30 +88,6 @@ TRANfreq = scipy.sparse.csc_array((numpy.repeat(counts, repcounts), (numpy.conca
 _ = 0 # handle block bug
 ```
 
-```{r show micro-homology, fig.cap = "show micro-homology", fig.asp = 1, echo = FALSE, message = FALSE, warning = FALSE}
-microhomo <- matrix(as.integer(rep(ref1vec, time = length(ref2vec)) == rep(ref2vec, each = length(ref1vec))), nrow = length(ref1vec))
-for (i in seq_len(nrow(microhomo))) {
-  for (j in seq_len(ncol(microhomo))) {
-    if (i > 1 && j > 1)
-    {
-      if (microhomo[i, j] > 0) {
-        microhomo[i, j] <- microhomo[i - 1, j - 1] + microhomo[i, j]
-      }
-    }
-  }
-}
-rc <- which(microhomo > 3, arr.ind = T)
-pos12 <- rc[rep(seq_len(nrow(rc)), time = microhomo[rc]),] -
-  rep(unlist(sapply(microhomo[rc], function(i) seq(i - 1, 0, by = -1))), time = 2)
-tibble(pos1 = pos12[, 1], pos2 = pos12[, 2]) |>
-  ggplot(aes(pos1, pos2)) +
-  geom_point() +
-  scale_x_continuous(expand=c(0,0)) +
-  scale_y_continuous(expand=c(0,0)) ->
-  ggfig
-print(ggfig)
-```
-
 ```{r load and preprocess information table for alignments, include = FALSE}
 indel_tsv <- read_tsv(tablefile, col_types = "iiiciiiiciiiiciic", na = "NA")
 indel_tsv |>
@@ -208,25 +184,6 @@ indel_tsv |>
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(name = "density", expand = c(0,0)) ->
   ggfig
-print(ggfig)
-```
-
-```{r seqLogo, fig.cap = "seqLogo", fig.asp = 0.5, echo = FALSE, message = FALSE, warning = FALSE}
-basefreq <- py$basefreq
-rownames(basefreq) <- c("A", "C", "G", "T", "D")
-ggplot() +
-  geom_logo(basefreq, method = "bits", namespace = "ACGTD") +
-  scale_x_continuous(breaks = NULL) +
-  theme_logo() ->
-  ggfig1
-
-ggplot() +
-  geom_logo(basefreq, method = "prob", namespace = "ACGTD") +
-  scale_x_continuous(breaks = NULL) +
-  theme_logo() ->
-  ggfig2
-
-ggfig <- ggfig1 / ggfig2
 print(ggfig)
 ```
 

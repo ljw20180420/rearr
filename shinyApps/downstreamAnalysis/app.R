@@ -42,7 +42,7 @@ ui <- navbarPage(
         plotOutput("baseSubFreqPlot")
     ),
     tabPanel("positional statistics",
-        selectInput("positionalMode", "display mode", choices = c("base", "indel", "read", "snp"), selected = "base"),
+        selectInput("positionalMode", "display mode", choices = c("histgram base", "histgram indel", "read base", "read snp", "logo probability", "logo bits", "logo custom"), selected = "histgram base"),
         plotOutput("posBaseRef1Plot"),
         plotOutput("posBaseRef2Plot")
     )
@@ -144,11 +144,17 @@ server <- function(input, output) {
     query2Mat <- reactive({
         queryAllSeqs() |> substr(ref1Lens() + 1, nchar(queryAllSeqs())) |> extendToAlignCut(cuts2())
     })
+    base1Freq <- reactive({
+        getPositionalBaseFreq(query1Mat(), counts())
+    })
+    base2Freq <- reactive({
+        getPositionalBaseFreq(query2Mat(), counts())
+    })
     base1Tibble <- reactive({
-        getPositionalBaseTibble(query1Mat(), counts(), max(cuts1()))
+        base1Freq() |> posMatrixToTibble(max(cuts1()))
     })
     base2Tibble <- reactive({
-        getPositionalBaseTibble(query2Mat(), counts(), max(cuts2()))
+        base2Freq() |> posMatrixToTibble(max(cuts2()))
     })
     MSD1Tibble <- reactive({
         getPositionalMSDTibble(query1Mat(), ref1Mat(), counts(), max(cuts1()))
@@ -169,15 +175,21 @@ server <- function(input, output) {
         req(input$algfiles)
         req(input$positionalMode)
 
-        if (input$positionalMode == "base") {
+        if (input$positionalMode == "histgram base") {
             drawPositionalStatic(base1Tibble(), insert1Count())
         }
-        else if (input$positionalMode == "indel") {
+        else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD1Tibble(), insert1Count())
-        } else if (input$positionalMode == "read") {
+        } else if (input$positionalMode == "read base") {
             drawPositionalReads(query1Mat(), max(cuts1()))
-        } else if (input$positionalMode == "snp") {
+        } else if (input$positionalMode == "read snp") {
             drawPositionalSnps(query1Mat(), ref1Mat(), max(cuts1()))
+        } else if (input$positionalMode == "logo probability") {
+            drawPositionalLogo(base1Freq()[2:5,], 'prob', "ACGT")
+        } else if (input$positionalMode == "logo bits") {
+            drawPositionalLogo(base1Freq()[2:5,], 'bits', "ACGT")
+        } else if (input$positionalMode == "logo custom") {
+            drawPositionalLogo(base1Freq()[2:5,], 'custom', "ACGT")
         }
     })
 
@@ -185,15 +197,21 @@ server <- function(input, output) {
         req(input$algfiles)
         req(input$positionalMode)
 
-        if (input$positionalMode == "base") {
+        if (input$positionalMode == "histgram base") {
             drawPositionalStatic(base2Tibble(), insert2Count())
         }
-        else if (input$positionalMode == "indel") {
+        else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD2Tibble(), insert2Count())
-        } else if (input$positionalMode == "read") {
+        } else if (input$positionalMode == "read base") {
             drawPositionalReads(query2Mat(), max(cuts2()))
-        } else if (input$positionalMode == "snp") {
+        } else if (input$positionalMode == "read snp") {
             drawPositionalSnps(query2Mat(), ref2Mat(), max(cuts2()))
+        } else if (input$positionalMode == "logo probability") {
+            drawPositionalLogo(base2Freq()[2:5,], 'prob', "ACGT")
+        } else if (input$positionalMode == "logo bits") {
+            drawPositionalLogo(base2Freq()[2:5,], 'bits', "ACGT")
+        } else if (input$positionalMode == "logo custom") {
+            drawPositionalLogo(base2Freq()[2:5,], 'custom', "ACGT")
         }
     })
 }
