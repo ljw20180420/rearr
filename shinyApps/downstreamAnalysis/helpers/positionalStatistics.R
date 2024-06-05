@@ -39,7 +39,7 @@ drawPositionalStatic <- function(inputTibble, insertCount) {
         scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
 }
 
-getPositionalBaseTibble <- function(queryMat, counts, cut) {
+getPositionalBaseFreq <- function(queryMat, counts) {
     baseFreq <- rbind(
         colSums((queryMat == "-") * counts),
         colSums((queryMat == "A") * counts),
@@ -48,7 +48,7 @@ getPositionalBaseTibble <- function(queryMat, counts, cut) {
         colSums((queryMat == "T") * counts)
     )
     rownames(baseFreq) <- c("-", "A", "C", "G", "T")
-    baseFreq |> posMatrixToTibble(cut)
+    return(baseFreq)
 }
 
 getPositionalMSDTibble <- function(queryMat, refMat, counts, cut) {
@@ -97,4 +97,11 @@ drawPositionalSnps <- function(queryMat, refMat, cut) {
         scale_fill_manual(values = c("D" = "white", "M" = "darkgreen", "S" = "red")) +
         scale_x_continuous(name = "position relative to cut1", expand = c(0, 0)) +
         scale_y_continuous(name = "reads", expand = c(0, 0))
+}
+
+drawPositionalLogo <- function(baseFreq, method, namespace) {
+    ggplot() +
+    geom_logo(data = baseFreq, method = method, namespace = namespace) +
+    scale_x_continuous(breaks = NULL) +
+    theme_logo()
 }
