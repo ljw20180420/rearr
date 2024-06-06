@@ -62,18 +62,19 @@ getPositionalMSDTibble <- function(queryMat, refMat, counts, cut) {
     MSDFreq |> posMatrixToTibble(cut)
 }
 
-calInsertionCount <- function(refList, cuts, refLens) {
+calInsertionCount <- function(refList, cuts, maxCutDown) {
+    maxCut <- max(cuts)
     insertList <- vector("list", length(refList))
     for (i in seq_len(length(refList))) {
         mask <- refList[[i]] != "-"
         insertList[[i]] <- cumsum(mask)[!mask] - cuts[i]
     }
     histCount <- insertList |> unlist() |> table()
-    fullCount <- rep(0, max(cuts) + max(refLens - cuts) + 1)
-    fullCount[as.integer(names(histCount)) + max(cuts) + 1] <- histCount
+    fullCount <- rep(0, maxCut + maxCutDown + 1)
+    fullCount[as.integer(names(histCount)) + maxCut + 1] <- histCount
     tibble(
         count = fullCount,
-        pos = seq(-max(cuts), max(refLens - cuts))
+        pos = seq(-maxCut, maxCutDown)
     )
 }
 
