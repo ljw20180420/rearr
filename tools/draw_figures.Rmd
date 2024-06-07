@@ -112,59 +112,6 @@ indel_tsv |>
   indel_tsv
 ```
 
-```{r indel type count, fig.cap = "indel type count", echo = FALSE, message = FALSE, warning = FALSE}
-indel_tsv |>
-  summarise(count = sum(count), .by = indel_type) |>
-  mutate(percent = count / sum(count), perlabel = scales::percent(percent, accuracy = 0.01)) |>
-  mutate(type_count = sprintf("%s: %d", indel_type, count)) |>
-  mutate(type_count = factor(type_count, levels = c(type_count[startsWith(type_count, "WT")], type_count[startsWith(type_count, "deletion")], type_count[startsWith(type_count, "insertion")], type_count[startsWith(type_count, "indel")]))) |>
-  ggplot(aes(1, percent, fill = type_count, weight = count)) +
-  geom_col() +
-  geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5), size = 1.5) +
-  scale_x_discrete(name = NULL, breaks = NULL) +
-  scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = scales::percent) +
-  scale_fill_manual(values = RColorBrewer::brewer.pal(8, "Set1")[c(1, 2, 3, 6)]) +
-  coord_polar(theta = "y") +
-  theme(text = element_text(size = 5)) ->
-  ggfig1
-
-indel_tsv |>
-  summarise(count = sum(count), .by = indel_type_ex) |>
-  mutate(percent = count / sum(count), perlabel = scales::percent(percent, accuracy = 0.01)) |>
-  mutate(type_count_ex = sprintf("%s: %d", indel_type_ex, count)) |>
-  mutate(type_count_ex = factor(type_count_ex, levels = c(type_count_ex[startsWith(type_count_ex, "WT")], type_count_ex[startsWith(type_count_ex, "deletion")], type_count_ex[startsWith(type_count_ex, "templated")], type_count_ex[startsWith(type_count_ex, "random")], type_count_ex[startsWith(type_count_ex, "temprand")], type_count_ex[startsWith(type_count_ex, "tempdel")], type_count_ex[startsWith(type_count_ex, "randdel")], type_count_ex[startsWith(type_count_ex, "full")]))) |>
-  ggplot(aes(1, percent, fill = type_count_ex, weight = count)) +
-  geom_col() +
-  geom_text(aes(label = perlabel), position = position_stack(vjust = 0.5), size = 1.5) +
-  scale_x_discrete(name = NULL, breaks = NULL) +
-  scale_y_continuous(breaks = c(0, 0.25, 0.5, 0.75), labels = scales::percent) +
-  scale_fill_manual(values = RColorBrewer::brewer.pal(8, "Set1")) +
-  coord_polar(theta = "y") +
-  theme(text = element_text(size = 5)) ->
-  ggfig2
-
-indel_tsv |>
-  summarise(count = sum(count), .by = indel_type) |>
-  ggplot(aes(fill = indel_type, values = count)) +
-  geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
-  scale_fill_manual(limits = c("WT", "deletion", "insertion", "indel"), values = RColorBrewer::brewer.pal(8, "Set1")[c(1, 2, 3, 6)]) +
-  coord_equal() +
-  theme(text = element_text(size = 5)) ->
-  ggfig3
-
-indel_tsv |>
-  summarise(count = sum(count), .by = indel_type_ex) |>
-  ggplot(aes(fill = indel_type_ex, values = count)) +
-  geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
-  scale_fill_manual(limits = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full"), values = RColorBrewer::brewer.pal(8, "Set1")) +
-  coord_equal() +
-  theme(text = element_text(size = 5)) ->
-  ggfig4
-
-ggfig <- (ggfig1 | ggfig2) / (ggfig3 | ggfig4)
-print(ggfig)
-```
-
 ```{r dangle length distribution, fig.cap = "dangle length distribution", echo = FALSE, message = FALSE, warning = FALSE}
 indel_tsv |>
   pivot_longer(cols = c(uplen, randlen, downlen), names_to = "unmapped", values_to = "unmapped_length") |>

@@ -35,3 +35,35 @@ getMicroHomologyTibble <- function(ref1, ref2, cut1, cut2) {
         mh_matrix |> melt() |> `colnames<-`(c("pos1", "pos2", "cls")) |> filter(cls > 0) |> summarise(pos1low = min(pos1) - 1 - cut1, pos1up = max(pos1) - cut1, shift = pos1up - max(pos2) + cut2, .by = "cls")
     )
 }
+
+drawMicroHomologyHeatmap <- function(mhTibbleSub, refEnd1Start2TibbleMicro, maxCut1, maxCut2, maxCut1down, maxCut2down) {
+    mhPosTibble <- mhTibbleSub |> mutate(nacol = NA) |> pivot_longer(cols = c("pos1low", "pos1up", "nacol"), values_to = "mhPos1") |> mutate(mhPos2 = mhPos1 - shift) |> select(mhPos1, mhPos2)
+    log10p1 = trans_new("log10p1", function(x) log10(x + 1), function(x) 10^x - 1)
+    ggplot(refEnd1Start2TibbleMicro) +
+        geom_tile(aes(x = pos2, y = pos1, fill = count), height = 1, width = 1) +
+        geom_path(aes(x = mhPos2, y = mhPos1), data = mhPosTibble) +
+        scale_x_continuous(limits = c(-maxCut2 - 1, maxCut2down + 1), expand=c(0, 0)) +
+        scale_y_continuous(limits = c(-maxCut1 - 1, maxCut1down + 1), expand=c(0, 0)) +
+        scale_fill_gradientn(limits = c(0, NA), colors = c("white", "red"), trans = log10p1) +
+        scale_size_area(max_size = 2) +
+        coord_equal(ratio = 1)
+}
+
+getRefEnd1Start2Tibble <- function(ref1ends, ref2starts, cuts1, cuts2, refIds, counts, microRefId) {
+    tibble(
+        pos1 = ref1ends - cuts1,
+        pos2 = ref2starts - cuts2,
+        refId = refIds,
+        count = counts
+    ) |> filter(refId == microRefId) |> summarise(count = sum(count), .by = c("pos1", "pos2")) |> mutate(shift = pos1 - pos2)
+}
+
+getRefEnd1Start2TibbleMicro <- function(refEnd1Start2Tibble, mhTibbleSub) {
+    joinTibble <- refEnd1Start2Tibble |> left_join(mhTibbleSub, by = "shift", relationship = "many-to-many")
+    outRangeTibble <- joinTibble |> summarise(inRange = any(pos1 >= pos1low & pos1 <= pos1up), count = first(count), .by = c("pos1", "pos2")) |> filter(is.na(inRange) | !inRange) |> mutate(inRange = NULL, cls = 0)
+    inRangeTibble <- joinTibble |> filter(pos1 >= pos1low, pos1 <= pos1up)
+    if (nrow(inRangeTibble) == 0) {
+        return(outRangeTibble)
+    }
+    inRangeTibble |> rowwise() |> mutate(pos1 = list(seq(pos1low, pos1up))) |> ungroup() |> unnest(pos1) |> mutate(pos2 = pos1 - shift) |> select(pos1, pos2, count, cls) |> bind_rows(outRangeTibble)
+}
