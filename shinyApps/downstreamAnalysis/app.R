@@ -5,6 +5,7 @@ library(shinyWidgets)
 library(reshape2)
 library(scales)
 library(ggseqlogo)
+library(waffle)
 
 options(shiny.maxRequestSize = 100 * 1024^3)
 
@@ -13,6 +14,7 @@ source("helpers/alignOne.R")
 source("helpers/baseSubstitute.R")
 source("helpers/positionalStatistics.R")
 source("helpers/microHomology.R")
+source("helpers/classicClassify.R")
 
 # Define UI ----
 ui <- navbarPage(
@@ -54,6 +56,14 @@ ui <- navbarPage(
         selectInput("microRefId", "reference id", choices = NULL),
         numericInput("microThres", "minimal micro homology length", value = 4, min = 1),
         plotOutput("mh_matrix_plot")
+    ),
+    tabPanel("classic classify",
+        checkboxInput("claClaDistinctTemp", "discriminate templated insertion and random insertion"),
+        selectInput("claClaMode", "mode", choices = c("pie", "waffle")),
+        plotOutput("claClaPlot", height = "1000px")
+    ),
+    tabPanel("continuous distribution",
+        selectInput("conDistriTarget", "what", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion"))
     )
 )
 
@@ -73,6 +83,9 @@ server <- function(input, output) {
     })
     totalCount <- reactive({
         sum(counts())
+    })
+    scores <- reactive({
+        headers() |> vapply(function(x) as.double(x[3]), 0)
     })
     refIds <- reactive({
         headers() |> vapply(function(x) as.integer(x[4]), 0)
@@ -98,7 +111,7 @@ server <- function(input, output) {
         headers() |> vapply(function(x) as.integer(x[8]), 0)
     })
     ref2starts <- reactive({
-        headers() |> vapply(function(x) as.integer(x[11]), 0)
+        headers() |> vapply(function(x) as.integer(x[11]), 0) - ref1Lens()
     })
     maxCut1 <- reactive({
         max(cuts1())
@@ -126,6 +139,15 @@ server <- function(input, output) {
     })
     downDeletes <- reactive({
         ifelse(ref2starts() > cuts2(), ref2starts() - cuts2(), 0)
+    })
+    templatedInserts <- reactive({
+        upInserts() + downInserts()
+    })
+    deletes <- reactive({
+        upDeletes() + downDeletes()
+    })
+    inserts <- reactive({
+        randomInserts() + templatedInserts()
     })
 
     ################################
@@ -221,10 +243,6 @@ server <- function(input, output) {
         refList <- algLines()[seq(2, length(algLines()), 3)] |> vapply(function(x) substr(x, gregexpr("[acgtn]", x)[[1]][2] + 1, nchar(x)), "") |> strsplit("")
         calInsertionCount(refList, cuts2(), maxCut2down())
     })
-    vertCent <- reactive({
-        cumCounts <- cumsum(counts())
-        c(cumCounts[1] / 2, (cumCounts[-length(cumCounts)] + cumCounts[-1]) / 2)
-    })
     read1Tibble <- reactive({
         getPositionalReads(query1Mat(), counts(), totalCount() * 0.001, maxCut1())
     })
@@ -302,100 +320,52 @@ server <- function(input, output) {
     mhTibble <- reactive({
         refSeq <- refAllSeqs()[uniqTibble()$index]
         ref1Len <- ref1Lens()[uniqTibble()$index]
-        ref1 <- substr(refSeq, 1, ref1Len)
-        ref2 <- substr(refSeq, ref1Len + 1, nchar(refSeq))
-        getMicroHomologyTibble(ref1, ref2, uniqTibble()$cut1, uniqTibble()$cut2)
+        getMicroHomologyTibble(
+            substr(refSeq, 1, ref1Len),
+            substr(refSeq, ref1Len + 1, nchar(refSeq)),
+            uniqTibble()$cut1, uniqTibble()$cut2
+        )
     })
     mhTibbleSub <- reactive({
         mhTibble() |> filter(pos1up - pos1low >= input$microThres)
     })
     refEnd1Start2Tibble <- reactive({
-        tibble(
-            pos1 = ref1ends() - cuts1(),
-            pos2 = ref2starts() - ref1Lens() - cuts2(),
-            refId = refIds(),
-            count = counts()
-        ) |> filter(refId == as.integer(input$microRefId)) |> summarise(count = sum(count), .by = c("pos1", "pos2")) |> mutate(shift = pos1 - pos2)
+        getRefEnd1Start2Tibble(ref1ends(), ref2starts(), cuts1(), cuts2(), refIds(), counts(), as.integer(input$microRefId))    
     })
     refEnd1Start2TibbleMicro <- reactive({
-        joinTibble <- refEnd1Start2Tibble() |> left_join(mhTibbleSub(), by = "shift", relationship = "many-to-many")
-        outRangeTibble <- joinTibble |> summarise(inRange = any(pos1 >= pos1low & pos1 <= pos1up), count = first(count), .by = c("pos1", "pos2")) |> filter(is.na(inRange) | !inRange) |> mutate(inRange = NULL, cls = 0)
-        inRangeTibble <- joinTibble |> filter(pos1 >= pos1low, pos1 <= pos1up)
-        if (nrow(inRangeTibble) == 0) {
-            return(outRangeTibble)
-        }
-        inRangeTibble |> rowwise() |> mutate(pos1 = list(seq(pos1low, pos1up))) |> ungroup() |> unnest(pos1) |> mutate(pos2 = pos1 - shift) |> select(pos1, pos2, count, cls) |> bind_rows(outRangeTibble)
+        getRefEnd1Start2TibbleMicro(refEnd1Start2Tibble(), mhTibbleSub())
     })
     output$mh_matrix_plot <- renderPlot({
         req(input$algfiles)
         req(input$microRefId)
-        mhPosTibble <- mhTibbleSub() |> mutate(nacol = NA) |> pivot_longer(cols = c("pos1low", "pos1up", "nacol"), values_to = "mhPos1") |> mutate(mhPos2 = mhPos1 - shift) |> select(mhPos1, mhPos2)
-        log10p1 = trans_new("log10p1", function(x) log10(x + 1), function(x) 10^x - 1)
-        ggplot(refEnd1Start2TibbleMicro()) +
-            geom_tile(aes(x = pos2, y = pos1, fill = count), height = 1, width = 1) +
-            geom_path(aes(x = mhPos2, y = mhPos1), data = mhPosTibble) +
-            scale_x_continuous(limits = c(-maxCut2() - 1, maxCut2down() + 1), expand=c(0, 0)) +
-            scale_y_continuous(limits = c(-maxCut1() - 1, maxCut1down() + 1), expand=c(0, 0)) +
-            scale_fill_gradientn(limits = c(0, NA), colors = c("white", "red"), trans = log10p1) +
-            scale_size_area(max_size = 2) +
-            coord_equal(ratio = 1)
+        drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), maxCut1(), maxCut2(), maxCut1down(), maxCut2down())
     })
 
     ##############################
-    # classical classification
+    # classic classification
     ##############################
-    templatedInserts <- reactive({
-        upInserts() + downInserts()
+    indelTypeTibble <- reactive({
+        getIndelTypes(inserts(), deletes(), counts())
     })
-    deletes <- reactive({
-        upDeletes() + downDeletes()
+    indelTypeTibbleEx <- reactive({
+        getIndelTypesEx(templatedInserts(), deletes(), randomInserts(), counts())
     })
-    inserts <- reactive({
-        randomInserts() + templatedInserts()
-    })
-    indelTypes <- reactive({
-        factor(
-            ifelse(
-                inserts() & !deletes(),
-                "insertion",
-                ifelse(
-                    deletes() & !inserts(),
-                    "deletion",
-                    ifelse(inserts() & deletes(),
-                        "indel",
-                        "WT"
-                    )
-                )
-            ),
-            levels = c("WT", "deletion", "insertion", "indel")
-        )
-    })
-    indelTypesEx <- reactive({
-        factor(
-            ifelse(templatedInserts() & deletes() & randomInserts(),
-                "full",
-                ifelse(templatedInserts() & deletes() & !randomInserts(),
-                    "tempdel",
-                    ifelse(templatedInserts() & !deletes() & randomInserts(),
-                        "temprand",
-                        ifelse(templatedInserts() & !deletes() & !randomInserts(),
-                            "templated",
-                            ifelse(!templatedInserts() & deletes() & randomInserts(),
-                                "randdel",
-                                ifelse(!templatedInserts() & deletes() & !randomInserts(),
-                                    "deletion",
-                                    ifelse(!templatedInserts() & !deletes() & randomInserts(),
-                                        "random",
-                                        "WT"
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
-            levels = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full")
-        )
+
+    output$claClaPlot <- renderPlot({
+        req(input$algfiles)
+        if (input$claClaDistinctTemp) {
+            if (input$claClaMode == "pie") {
+                indelTypePiePlot(indelTypeTibbleEx())
+            } else if (input$claClaMode == "waffle") {
+                indelTypeWafflePlot(indelTypeTibbleEx())
+            }
+        } else {
+            if (input$claClaMode == "pie") {
+                indelTypePiePlot(indelTypeTibble())
+            } else if (input$claClaMode == "waffle") {
+                indelTypeWafflePlot(indelTypeTibble())
+            }
+        }
     })
 }
 
