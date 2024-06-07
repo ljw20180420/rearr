@@ -4,6 +4,7 @@ library(tidyverse)
 library(shinyWidgets)
 library(reshape2)
 library(scales)
+library(ggseqlogo)
 
 options(shiny.maxRequestSize = 100 * 1024^3)
 
@@ -70,6 +71,9 @@ server <- function(input, output) {
     counts <- reactive({
         headers() |> vapply(function(x) as.integer(x[2]), 0)
     })
+    totalCount <- reactive({
+        sum(counts())
+    })
     refIds <- reactive({
         headers() |> vapply(function(x) as.integer(x[4]), 0)
     })
@@ -107,6 +111,21 @@ server <- function(input, output) {
     })
     maxCut2down <- reactive({
         max(ref2Lens() - cuts2())
+    })
+    upInserts <- reactive({
+        ifelse(ref1ends() > cuts1(), ref1ends() - cuts1(), 0)
+    })
+    upDeletes <- reactive({
+        ifelse(ref1ends() < cuts1(), cuts1() - ref1ends(), 0)
+    })
+    randomInserts <- reactive({
+        headers() |> vapply(function(x) as.integer(nchar(x[10])), 0)
+    })
+    downInserts <- reactive({
+        ifelse(ref2starts() < cuts2(), cuts2() - ref2starts(), 0)
+    })
+    downDeletes <- reactive({
+        ifelse(ref2starts() > cuts2(), ref2starts() - cuts2(), 0)
     })
 
     ################################
@@ -202,6 +221,30 @@ server <- function(input, output) {
         refList <- algLines()[seq(2, length(algLines()), 3)] |> vapply(function(x) substr(x, gregexpr("[acgtn]", x)[[1]][2] + 1, nchar(x)), "") |> strsplit("")
         calInsertionCount(refList, cuts2(), maxCut2down())
     })
+    vertCent <- reactive({
+        cumCounts <- cumsum(counts())
+        c(cumCounts[1] / 2, (cumCounts[-length(cumCounts)] + cumCounts[-1]) / 2)
+    })
+    read1Tibble <- reactive({
+        getPositionalReads(query1Mat(), counts(), totalCount() * 0.001, maxCut1())
+    })
+    read2Tibble <- reactive({
+        getPositionalReads(query2Mat(), counts(), totalCount() * 0.001, maxCut2())
+    })
+    snp1Tibble <- reactive({
+        queryMat <- query1Mat()
+        refMat <- toupper(ref1Mat())
+        queryMat[queryMat != refMat & queryMat != "-"] = "S"
+        queryMat[queryMat == refMat] = "M"
+        getPositionalReads(queryMat, counts(), totalCount() * 0.001, maxCut1())
+    })
+    snp2Tibble <- reactive({
+        queryMat <- query2Mat()
+        refMat <- toupper(ref2Mat())
+        queryMat[queryMat != refMat & queryMat != "-"] = "S"
+        queryMat[queryMat == refMat] = "M"
+        getPositionalReads(queryMat, counts(), totalCount() * 0.001, maxCut2())
+    })
 
     output$posBaseRef1Plot <- renderPlot({
         req(input$algfiles)
@@ -213,9 +256,9 @@ server <- function(input, output) {
         else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD1Tibble(), insert1Count())
         } else if (input$positionalMode == "read base") {
-            drawPositionalReads(query1Mat(), maxCut1())
+            drawPositionalReads(read1Tibble(), maxCut1(), maxCut1down())
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(query1Mat(), ref1Mat(), maxCut1())
+            drawPositionalSnps(snp1Tibble(), maxCut1(), maxCut1down())
         } else if (input$positionalMode == "logo probability") {
             drawPositionalLogo(base1Freq()[2:5,], 'prob', "ACGT")
         } else if (input$positionalMode == "logo bits") {
@@ -235,9 +278,9 @@ server <- function(input, output) {
         else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD2Tibble(), insert2Count())
         } else if (input$positionalMode == "read base") {
-            drawPositionalReads(query2Mat(), maxCut2())
+            drawPositionalReads(read2Tibble(), maxCut2(), maxCut2down())
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(query2Mat(), ref2Mat(), maxCut2())
+            drawPositionalSnps(snp2Tibble(), maxCut2(), maxCut2down())
         } else if (input$positionalMode == "logo probability") {
             drawPositionalLogo(base2Freq()[2:5,], 'prob', "ACGT")
         } else if (input$positionalMode == "logo bits") {
@@ -296,6 +339,63 @@ server <- function(input, output) {
             scale_fill_gradientn(limits = c(0, NA), colors = c("white", "red"), trans = log10p1) +
             scale_size_area(max_size = 2) +
             coord_equal(ratio = 1)
+    })
+
+    ##############################
+    # classical classification
+    ##############################
+    templatedInserts <- reactive({
+        upInserts() + downInserts()
+    })
+    deletes <- reactive({
+        upDeletes() + downDeletes()
+    })
+    inserts <- reactive({
+        randomInserts() + templatedInserts()
+    })
+    indelTypes <- reactive({
+        factor(
+            ifelse(
+                inserts() & !deletes(),
+                "insertion",
+                ifelse(
+                    deletes() & !inserts(),
+                    "deletion",
+                    ifelse(inserts() & deletes(),
+                        "indel",
+                        "WT"
+                    )
+                )
+            ),
+            levels = c("WT", "deletion", "insertion", "indel")
+        )
+    })
+    indelTypesEx <- reactive({
+        factor(
+            ifelse(templatedInserts() & deletes() & randomInserts(),
+                "full",
+                ifelse(templatedInserts() & deletes() & !randomInserts(),
+                    "tempdel",
+                    ifelse(templatedInserts() & !deletes() & randomInserts(),
+                        "temprand",
+                        ifelse(templatedInserts() & !deletes() & !randomInserts(),
+                            "templated",
+                            ifelse(!templatedInserts() & deletes() & randomInserts(),
+                                "randdel",
+                                ifelse(!templatedInserts() & deletes() & !randomInserts(),
+                                    "deletion",
+                                    ifelse(!templatedInserts() & !deletes() & randomInserts(),
+                                        "random",
+                                        "WT"
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            levels = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full")
+        )
     })
 }
 
