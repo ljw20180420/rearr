@@ -16,7 +16,7 @@ source("helpers/baseSubstitute.R")
 source("helpers/positionalStatistics.R")
 source("helpers/microHomology.R")
 source("helpers/classicClassify.R")
-source("helpers/continuousDistribution.R")
+source("helpers/distribution.R")
 source("helpers/pairwise.R")
 source("helpers/polygonInsertion.R")
 source("helpers/arcDeletion.R")
@@ -34,6 +34,7 @@ ui <- navbarPage(
     ),
     sidebar = sidebar(
         fileInput("algfiles", "Alignment file", multiple = TRUE),
+        fileInput("sgRNAfile", "sgRNA file")
     ),
     tabPanel("alignments browser",
         uiOutput("browserReadRangeUI"),
@@ -68,14 +69,14 @@ ui <- navbarPage(
         selectInput("claClaMode", "mode", choices = c("pie", "waffle")),
         plotOutput("claClaPlot", height = "1000px")
     ),
-    tabPanel("continuous distribution",
-        selectInput("conDistriTarget", "what", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion"), multiple = TRUE),
+    tabPanel("distribution",
+        selectInput("conDistriTarget", "what", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete"), multiple = TRUE),
         selectInput("conDistriMode", "mode", choices = c("continuous", "discrete")),
         plotOutput("conDisPlot")
     ),
     tabPanel("pairwise plot",
-        selectInput("pairwiseX", "x", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion")),
-        selectInput("pairwiseY", "y", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion")),
+        selectInput("pairwiseX", "x", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
+        selectInput("pairwiseY", "y", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
         selectInput("pairwiseXscale", "x scale", choices = c("identity", "log10")),
         selectInput("pairwiseYscale", "y scale", choices = c("identity", "log10")),
         selectInput("pairwiseMethod", "method", choices = c("auto", "lm", "glm", "gam", "loess")),
@@ -90,6 +91,14 @@ ui <- navbarPage(
     tabPanel("arc deletion",
         plotOutput("arcDelete1Plot"),
         plotOutput("arcDelete2Plot")
+    ),
+    tabPanel("kpLogo",
+        numericInput("kpLogoKmer", "kmer", 1, min = 1, max = 10, step = 1),
+        sliderInput("kpLogoRegion", "region", 1, 1, c(1, 1)),
+        selectInput("kpLogoMethod", "method", choices = c("weight", "background")),
+        numericInput("kpLogoCountThres", "count threshold", 0, min = 0),
+        selectInput("kpLogoTarget", "target", choices = c("templated insertion", "random insertion", "insertion", "deletion", "templated indel")),
+        plotOutput("kpLogoPlot")
     )
 )
 
@@ -98,102 +107,67 @@ server <- function(input, output) {
     ################################
     # sidebar
     ################################
-    algLines <- reactive({
-        readAlgfiles(input$algfiles)
+    sgRNAs <- reactive({
+        readLines(input$sgRNAfile$datapath)
     })
-    headers <- reactive({
-        algLines()[seq(1, length(algLines()), 3)] |> strsplit("\t")
+    algTibble <- reactive({
+        algLines <- lapply(
+            input$algfiles$datapath,
+            function(datapath) {
+                readLines(gzfile(datapath))
+                }
+            ) |> unlist()
+        algLines[seq(1, length(algLines), 3)] |> I() |> read_tsv(
+            col_names = c("index", "count", "score", "refId", "upDangle", "ref1Start", "query1Start", "ref1End", "query1End", "randInsert", "ref2Start", "query2Start", "ref2End", "query2End", "downDangle", "cut1", "cut2"),
+            col_types = "iidiciiiiciiiicii",
+            col_select = -1,
+            na = character()
+        ) |>
+        mutate(
+            refLine = algLines[seq(2, length(algLines), 3)],
+            queryLine = algLines[seq(3, length(algLines), 3)],
+            refNoGap = refLine |> str_replace_all("-", ""),
+            ref1Len = refNoGap |> vapply(function(x) gregexpr("[acgtn]", x)[[1]][2], 0, USE.NAMES = FALSE),
+            cut2 = cut2 - ref1Len,
+            ref2Start = ref2Start - ref1Len,
+            ref2End = ref2End - ref1Len,
+            ref2Len = nchar(refNoGap) - ref1Len,
+            upInsert = ifelse(ref1End > cut1, ref1End - cut1, 0),
+            upDelete = ifelse(ref1End < cut1, cut1 - ref1End, 0),
+            downInsert = ifelse(ref2Start < cut2, cut2 - ref2Start, 0),
+            downDelete = ifelse(ref2Start > cut2, ref2Start - cut2, 0),
+            templatedInsert = upInsert + downInsert,
+            delete = upDelete + downDelete,
+            insert = nchar(randInsert) + templatedInsert
+        )
     })
-    counts <- reactive({
-        headers() |> vapply(function(x) as.integer(x[2]), 0)
-    })
-    totalCount <- reactive({
-        sum(counts())
-    })
-    scores <- reactive({
-        headers() |> vapply(function(x) as.double(x[3]), 0)
-    })
-    refIds <- reactive({
-        headers() |> vapply(function(x) as.integer(x[4]), 0)
-    })
-    refAllSeqs <- reactive({
-        algLines()[seq(2, length(algLines()), 3)] |> str_replace_all("-", "")
-    })
-    cuts1 <- reactive({
-        headers() |> vapply(function(x) as.integer(x[16]), 0)
-    })
-    ref1Lens <- reactive({
-        ref1Lens <- refAllSeqs() |> vapply(function(x) gregexpr("[acgtn]", x)[[1]][2], 0)
-        attr(ref1Lens, "names") <- NULL
-        return(ref1Lens)
-    })
-    cuts2 <- reactive({
-        headers() |> vapply(function(x) as.integer(x[17]), 0) - ref1Lens()
-    })
-    ref2Lens <- reactive({
-        nchar(refAllSeqs()) - ref1Lens()
-    })
-    ref1ends <- reactive({
-        headers() |> vapply(function(x) as.integer(x[8]), 0)
-    })
-    ref2starts <- reactive({
-        headers() |> vapply(function(x) as.integer(x[11]), 0) - ref1Lens()
-    })
-    maxCut1 <- reactive({
-        max(cuts1())
-    })
-    maxCut2 <- reactive({
-        max(cuts2())
-    })
-    maxCut1down <- reactive({
-        max(ref1Lens() - cuts1())
-    })
-    maxCut2down <- reactive({
-        max(ref2Lens() - cuts2())
-    })
-    upInserts <- reactive({
-        ifelse(ref1ends() > cuts1(), ref1ends() - cuts1(), 0)
-    })
-    upDeletes <- reactive({
-        ifelse(ref1ends() < cuts1(), cuts1() - ref1ends(), 0)
-    })
-    randomInserts <- reactive({
-        headers() |> vapply(function(x) as.integer(nchar(x[10])), 0)
-    })
-    maxRandomInsert <- reactive({
-        randomInserts() |> max()
-    })
-    downInserts <- reactive({
-        ifelse(ref2starts() < cuts2(), cuts2() - ref2starts(), 0)
-    })
-    downDeletes <- reactive({
-        ifelse(ref2starts() > cuts2(), ref2starts() - cuts2(), 0)
-    })
-    templatedInserts <- reactive({
-        upInserts() + downInserts()
-    })
-    deletes <- reactive({
-        upDeletes() + downDeletes()
-    })
-    inserts <- reactive({
-        randomInserts() + templatedInserts()
+    algMetaData <- reactive({
+        tibble(
+            totalCount = sum(algTibble()$count),
+            maxCut1 = max(algTibble()$cut1),
+            maxCut2 = max(algTibble()$cut2),
+            maxCut1down = max(algTibble()$ref1Len - algTibble()$cut1),
+            maxCut2down = max(algTibble()$ref2Len - algTibble()$cut2),
+            maxRandInsert = max(nchar(algTibble()$randInsert))
+        )
     })
 
     ################################
     # alignment browser
     ################################
+    browserReadRange <- reactiveVal(NULL)
+    observe({
+        browserReadRange(input$browserReadRange)
+    })
     output$browserReadRangeUI <- renderUI({
         req(input$algfiles)
-        alignNum <- length(algLines()) / 3
-        numericRangeInput("browserReadRange", "read range to browse", value = c(1, min(1000, alignNum)), min = 1, max = alignNum, step = 1)
-    })
-    allMd <- reactive({
-        getMarkdownFromAlign(algLines(), input$browserReadRange[1], input$browserReadRange[2])
+        browserReadRange(NULL)
+        numericRangeInput("browserReadRange", "read range to browse", value = c(1, min(1000, nrow(algTibble()))), min = 1, max = nrow(algTibble()), step = 1)
     })
     output$alignments <- renderText({
         req(input$algfiles)
-        req(input$browserReadRange)
-        paste(allMd(), collapse = "")
+        req(browserReadRange())
+        paste(getMarkdownFromAlign(algTibble()[browserReadRange()[1]:browserReadRange()[2],]), collapse = "")
     })
 
     #########################################################
@@ -205,20 +179,15 @@ server <- function(input, output) {
         req(input$alignOneCut1)
         req(input$alignOneCut2)
         req(input$alignOneQuery)
-
         alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOnePAM1, input$alignOnePAM2, input$alignOneQuery)
     })
 
     #########################################################
     # base substitution frequency
     #########################################################
-    subFreq <- reactive({
-        countBaseSubstitute(algLines(), counts())
-    })
-
     output$baseSubFreqPlot <- renderPlot({
         req(input$algfiles)
-        subFreq() |>
+        algTibble() |> countBaseSubstitute() |>
             ggplot(aes(sub, count)) +
             geom_col() +
             scale_y_continuous(expand = c(0, 0))
@@ -228,69 +197,67 @@ server <- function(input, output) {
     # positional statistics
     #################################
     refGapMat <- reactive({
-        algLines()[seq(2, length(algLines()), 3)] |> extendToSameLength()
+        algTibble()$refLine |> extendToSameLength()
     })
     ref1Mat <- reactive({
-        refAllSeqs() |> substr(1, ref1Lens()) |> extendToAlignCut(cuts1())
+        algTibble()$refNoGap |> substr(1, algTibble()$ref1Len) |> extendToAlignCut(algTibble()$cut1)
     })
     ref2Mat <- reactive({
-        refAllSeqs() |> substr(ref1Lens() + 1, nchar(refAllSeqs())) |> extendToAlignCut(cuts2())
+        algTibble()$refNoGap |> substr(algTibble()$ref1Len + 1, algTibble()$ref1Len + algTibble()$ref2Len) |> extendToAlignCut(algTibble()$cut2)
     })
     queryAllSeqs <- reactive({
-        tmpMat <- algLines()[seq(3, length(algLines()), 3)] |> extendToSameLength() |> t() |> as.vector()
-        vectorToStringVector(tmpMat[(refGapMat() |> t() |> as.vector()) != '-'], nchar(refAllSeqs()))
+        tmpMat <- algTibble()$queryLine |> extendToSameLength() |> t() |> as.vector()
+        vectorToStringVector(tmpMat[(refGapMat() |> t() |> as.vector()) != '-'], algTibble()$ref1Len + algTibble()$ref2Len)
     })
     query1Mat <- reactive({
-        queryAllSeqs() |> substr(1, ref1Lens()) |> extendToAlignCut(cuts1())
+        queryAllSeqs() |> substr(1, algTibble()$ref1Len) |> extendToAlignCut(algTibble()$cut1)
     })
     query2Mat <- reactive({
-        queryAllSeqs() |> substr(ref1Lens() + 1, nchar(queryAllSeqs())) |> extendToAlignCut(cuts2())
+        queryAllSeqs() |> substr(algTibble()$ref1Len + 1, nchar(queryAllSeqs())) |> extendToAlignCut(algTibble()$cut2)
     })
     base1Freq <- reactive({
-        getPositionalBaseFreq(query1Mat(), counts())
+        getPositionalBaseFreq(query1Mat(), algTibble()$count)
     })
     base2Freq <- reactive({
-        getPositionalBaseFreq(query2Mat(), counts())
+        getPositionalBaseFreq(query2Mat(), algTibble()$count)
     })
     base1Tibble <- reactive({
-        base1Freq() |> posMatrixToTibble(maxCut1())
+        base1Freq() |> posMatrixToTibble(algMetaData()$maxCut1)
     })
     base2Tibble <- reactive({
-        base2Freq() |> posMatrixToTibble(maxCut2())
+        base2Freq() |> posMatrixToTibble(algMetaData()$maxCut2)
     })
     MSD1Tibble <- reactive({
-        getPositionalMSDTibble(query1Mat(), ref1Mat(), counts(), maxCut1())
+        getPositionalMSDTibble(query1Mat(), ref1Mat(), algTibble()$count, algMetaData()$maxCut1)
     })
     MSD2Tibble <- reactive({
-        getPositionalMSDTibble(query2Mat(), ref2Mat(), counts(), maxCut2())
+        getPositionalMSDTibble(query2Mat(), ref2Mat(), algTibble()$count, algMetaData()$maxCut2)
     })
     insert1Count <- reactive({
-        refList <- algLines()[seq(2, length(algLines()), 3)] |> vapply(function(x) substr(x, 1, gregexpr("[acgtn]", x)[[1]][3] - 1), "") |> strsplit("")
-        calInsertionCount(refList, cuts1(), maxCut1down())
+        algTibble()$refLine |> vapply(function(x) substr(x, 1, gregexpr("[acgtn]", x)[[1]][3] - 1), "", USE.NAMES = FALSE) |> strsplit("") |> calInsertionCount(cuts = algTibble()$cut1, maxCutDown = algMetaData()$maxCut1down)
     })
     insert2Count <- reactive({
-        refList <- algLines()[seq(2, length(algLines()), 3)] |> vapply(function(x) substr(x, gregexpr("[acgtn]", x)[[1]][2] + 1, nchar(x)), "") |> strsplit("")
-        calInsertionCount(refList, cuts2(), maxCut2down())
+        algTibble()$refLine |> vapply(function(x) substr(x, gregexpr("[acgtn]", x)[[1]][2] + 1, nchar(x)), "", USE.NAMES = FALSE) |> strsplit("") |> calInsertionCount(cuts = algTibble()$cut2, maxCutDown = algMetaData()$maxCut2down)
     })
     read1Tibble <- reactive({
-        getPositionalReads(query1Mat(), counts(), totalCount() * 0.001, maxCut1())
+        getPositionalReads(query1Mat(), algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut1)
     })
     read2Tibble <- reactive({
-        getPositionalReads(query2Mat(), counts(), totalCount() * 0.001, maxCut2())
+        getPositionalReads(query2Mat(), algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut2)
     })
     snp1Tibble <- reactive({
         queryMat <- query1Mat()
         refMat <- toupper(ref1Mat())
         queryMat[queryMat != refMat & queryMat != "-"] = "S"
         queryMat[queryMat == refMat] = "M"
-        getPositionalReads(queryMat, counts(), totalCount() * 0.001, maxCut1())
+        getPositionalReads(queryMat, algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut1)
     })
     snp2Tibble <- reactive({
         queryMat <- query2Mat()
         refMat <- toupper(ref2Mat())
         queryMat[queryMat != refMat & queryMat != "-"] = "S"
         queryMat[queryMat == refMat] = "M"
-        getPositionalReads(queryMat, counts(), totalCount() * 0.001, maxCut2())
+        getPositionalReads(queryMat, algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut2)
     })
 
     output$posBaseRef1Plot <- renderPlot({
@@ -303,15 +270,15 @@ server <- function(input, output) {
         else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD1Tibble(), insert1Count())
         } else if (input$positionalMode == "read base") {
-            drawPositionalReads(read1Tibble(), maxCut1(), maxCut1down())
+            drawPositionalReads(read1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down)
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(snp1Tibble(), maxCut1(), maxCut1down())
+            drawPositionalSnps(snp1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down)
         } else if (input$positionalMode == "logo probability") {
-            drawPositionalLogo(base1Freq()[2:5,], 'prob', "ACGT")
+            drawPositionalLogo(base1Freq()[2:5,], "prob", "ACGT")
         } else if (input$positionalMode == "logo bits") {
-            drawPositionalLogo(base1Freq()[2:5,], 'bits', "ACGT")
+            drawPositionalLogo(base1Freq()[2:5,], "bits", "ACGT")
         } else if (input$positionalMode == "logo custom") {
-            drawPositionalLogo(base1Freq()[2:5,], 'custom', "ACGT")
+            drawPositionalLogo(base1Freq()[2:5,], "custom", "ACGT")
         }
     })
 
@@ -325,15 +292,15 @@ server <- function(input, output) {
         else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD2Tibble(), insert2Count())
         } else if (input$positionalMode == "read base") {
-            drawPositionalReads(read2Tibble(), maxCut2(), maxCut2down())
+            drawPositionalReads(read2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down)
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(snp2Tibble(), maxCut2(), maxCut2down())
+            drawPositionalSnps(snp2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down)
         } else if (input$positionalMode == "logo probability") {
-            drawPositionalLogo(base2Freq()[2:5,], 'prob', "ACGT")
+            drawPositionalLogo(base2Freq()[2:5,], "prob", "ACGT")
         } else if (input$positionalMode == "logo bits") {
-            drawPositionalLogo(base2Freq()[2:5,], 'bits', "ACGT")
+            drawPositionalLogo(base2Freq()[2:5,], "bits", "ACGT")
         } else if (input$positionalMode == "logo custom") {
-            drawPositionalLogo(base2Freq()[2:5,], 'custom', "ACGT")
+            drawPositionalLogo(base2Freq()[2:5,], "custom", "ACGT")
         }
     })
 
@@ -341,11 +308,11 @@ server <- function(input, output) {
     # micro homology
     #############################
     uniqTibble <- reactive({
-        tibble(refId = refIds(), index = seq_len(length(refIds())), cut1 = cuts1(), cut2 = cuts2()) |> filter(refId == as.integer(microRefId())) |> summarise(index = first(index), cut1 = first(cut1), cut2 = first(cut2))
+        algTibble() |> select(refId, cut1, cut2) |> rownames_to_column(var = "index") |> mutate(index = as.integer(index)) |> filter(refId == as.integer(microRefId())) |> summarise(index = first(index), cut1 = first(cut1), cut2 = first(cut2))
     })
     mhTibble <- reactive({
-        refSeq <- refAllSeqs()[uniqTibble()$index]
-        ref1Len <- ref1Lens()[uniqTibble()$index]
+        refSeq <- algTibble()$refNoGap[uniqTibble()$index]
+        ref1Len <- algTibble()$ref1Len[uniqTibble()$index]
         getMicroHomologyTibble(
             substr(refSeq, 1, ref1Len),
             substr(refSeq, ref1Len + 1, nchar(refSeq)),
@@ -356,7 +323,7 @@ server <- function(input, output) {
         mhTibble() |> filter(pos1up - pos1low >= input$microThres)
     })
     refEnd1Start2Tibble <- reactive({
-        getRefEnd1Start2Tibble(ref1ends(), ref2starts(), cuts1(), cuts2(), refIds(), counts(), as.integer(microRefId()))    
+        getRefEnd1Start2Tibble(algTibble(), as.integer(microRefId()))    
     })
     refEnd1Start2TibbleMicro <- reactive({
         getRefEnd1Start2TibbleMicro(refEnd1Start2Tibble(), mhTibbleSub())
@@ -369,23 +336,23 @@ server <- function(input, output) {
     })
     observe({
         microRefId(NULL)
-        updateSelectInput(inputId = "microRefId", choices = refIds() |> unique())
+        updateSelectInput(inputId = "microRefId", choices = algTibble()$refId |> unique())
     }) |> bindEvent(input$algfiles)
     output$mh_matrix_plot <- renderPlot({
         req(input$algfiles)
         req(microRefId())
         cat("render plot")
-        drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), maxCut1(), maxCut2(), maxCut1down(), maxCut2down(), input$microMode)
+        drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), algMetaData()$maxCut1, algMetaData()$maxCut2, algMetaData()$maxCut1down, algMetaData()$maxCut2down, input$microMode)
     })
 
     ##############################
     # classic classification
     ##############################
     indelTypeTibble <- reactive({
-        getIndelTypes(inserts(), deletes(), counts())
+        getIndelTypes(algTibble())
     })
     indelTypeTibbleEx <- reactive({
-        getIndelTypesEx(templatedInserts(), deletes(), randomInserts(), counts())
+        getIndelTypesEx(algTibble())
     })
 
     output$claClaPlot <- renderPlot({
@@ -408,16 +375,13 @@ server <- function(input, output) {
     ##############################
     # distribution plot
     ##############################
-    distriTibble <- reactive({
-        getDistriTibble(counts(), scores(), cuts1(), cuts2(), ref1Lens(), ref2Lens(), ref1ends(), ref2starts(), upInserts(), downInserts(), randomInserts(), templatedInserts(), inserts(), upDeletes(), downDeletes(), deletes())
-    })
     output$conDisPlot <- renderPlot({
         req(input$algfiles)
         req(input$conDistriTarget)
         if (input$conDistriMode == "discrete") {
-            distriTibble() |> select(c("count", input$conDistriTarget)) |> discreteDistribution()
+            algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(c("count", input$conDistriTarget)) |> discreteDistribution()
         } else if (input$conDistriMode == "continuous") {
-            distriTibble() |> select(c("count", input$conDistriTarget)) |> continuousDistribution()
+            algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(c("count", input$conDistriTarget)) |> continuousDistribution()
         }
     })
 
@@ -427,7 +391,7 @@ server <- function(input, output) {
     output$pairwisePlot <- renderPlot({
         req(input$algfiles)
         req(input$pairwiseX != input$pairwiseY)
-        ggFig <- distriTibble() |> select(input$pairwiseX, input$pairwiseY) |> pairwisePlot(input$pairwiseXscale, input$pairwiseYscale, input$pairwiseMethod, input$pairwiseSpan)
+        ggFig <- algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(input$pairwiseX, input$pairwiseY) |> pairwisePlot(input$pairwiseXscale, input$pairwiseYscale, input$pairwiseMethod, input$pairwiseSpan)
         output$pairwiseWarning <- renderText({
             capture.output(ggFig, type = "message")
         })
@@ -438,7 +402,7 @@ server <- function(input, output) {
     # polygon insertion
     ###############################
     polyInsTibble <- reactive({
-        getPolyInsTibble(algLines()[seq(2, length(algLines()), 3)], counts(), ref1Lens(), cuts1(), cuts2())
+        getPolyInsTibble(algTibble())
     })
     polyInsTibble1 <- reactive({
         polyInsTibble() |> select(count, insPos1, insLen1) |> rename(insPos = insPos1, insLen = insLen1) |> unnest(c(insPos, insLen)) |> summarise(count = sum(count), .by = c(insPos, insLen))
@@ -455,18 +419,18 @@ server <- function(input, output) {
 
     output$polyInsert1Plot <- renderPlot({
         req(input$algfiles)
-        plotPolyInsTibble(polyXY1(), c(-maxCut1(), maxCut1down() + maxRandomInsert()))
+        plotPolyInsTibble(polyXY1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down + algMetaData()$maxRandInsert))
     })
     output$polyInsert2Plot <- renderPlot({
         req(input$algfiles)
-        plotPolyInsTibble(polyXY2(), c(-maxCut2() - maxRandomInsert(), maxCut2down()))
+        plotPolyInsTibble(polyXY2(), c(-algMetaData()$maxCut2 - algMetaData()$maxRandInsert, algMetaData()$maxCut2down))
     })
 
     ###############################
     # arc deletion
     ###############################
     arcDelTibble <- reactive({
-        getArcDelTibble(algLines()[seq(2, length(algLines()), 3)], algLines()[seq(3, length(algLines()), 3)], counts(), ref1Lens(), cuts1(), cuts2())
+        getArcDelTibble(algTibble())
     })
     arcDelTibble1 <- reactive({
         arcDelTibble() |> select(count, delStart1, delEnd1) |> rename(delStart = delStart1, delEnd = delEnd1) |> unnest(c(delStart, delEnd)) |> summarise(count = sum(count), .by = c(delStart, delEnd))
@@ -477,12 +441,19 @@ server <- function(input, output) {
 
     output$arcDelete1Plot <- renderPlot({
         req(input$algfiles)
-        plotArcDelTibble(arcDelTibble1(), c(-maxCut1(), maxCut1down()))
+        plotArcDelTibble(arcDelTibble1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down))
     })
     output$arcDelete2Plot <- renderPlot({
         req(input$algfiles)
-        plotArcDelTibble(arcDelTibble2(), c(-maxCut2(), maxCut2down()))
+        plotArcDelTibble(arcDelTibble2(), c(-algMetaData()$maxCut2, algMetaData()$maxCut2down))
     })
+
+    ################################
+    # kpLogo
+    ################################
+    # output$kpLogoPlot <- renderPlot({
+        
+    # })
 }
 
 # Run the app ----
