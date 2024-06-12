@@ -5,6 +5,7 @@ library(shinyWidgets)
 library(reshape2)
 library(scales)
 library(ggseqlogo)
+library(ggforce)
 library(waffle)
 
 options(shiny.maxRequestSize = 100 * 1024^3)
@@ -15,6 +16,10 @@ source("helpers/baseSubstitute.R")
 source("helpers/positionalStatistics.R")
 source("helpers/microHomology.R")
 source("helpers/classicClassify.R")
+source("helpers/continuousDistribution.R")
+source("helpers/pairwise.R")
+source("helpers/polygonInsertion.R")
+source("helpers/arcDeletion.R")
 
 # Define UI ----
 ui <- navbarPage(
@@ -54,6 +59,7 @@ ui <- navbarPage(
     ),
     tabPanel("micro homology",
         selectInput("microRefId", "reference id", choices = NULL),
+        selectInput("microMode", "microhomology count display mode", choices = c("repeat", "separate")),
         numericInput("microThres", "minimal micro homology length", value = 4, min = 1),
         plotOutput("mh_matrix_plot")
     ),
@@ -63,7 +69,27 @@ ui <- navbarPage(
         plotOutput("claClaPlot", height = "1000px")
     ),
     tabPanel("continuous distribution",
-        selectInput("conDistriTarget", "what", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion"))
+        selectInput("conDistriTarget", "what", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion"), multiple = TRUE),
+        selectInput("conDistriMode", "mode", choices = c("continuous", "discrete")),
+        plotOutput("conDisPlot")
+    ),
+    tabPanel("pairwise plot",
+        selectInput("pairwiseX", "x", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion")),
+        selectInput("pairwiseY", "y", choices = c("alignment score", "cut1", "cut2", "ref1 length", "ref2 Length", "alignment end in ref1", "alignment start in ref2", "upstream insertion", "downstream insertion", "random insertion", "templated insertion", "insertion", "upstream deletion", "downstream deletion", "deletion")),
+        selectInput("pairwiseXscale", "x scale", choices = c("identity", "log10")),
+        selectInput("pairwiseYscale", "y scale", choices = c("identity", "log10")),
+        selectInput("pairwiseMethod", "method", choices = c("auto", "lm", "glm", "gam", "loess")),
+        numericInput("pairwiseSpan", "span", 0.75, min = 0, max = 1, step = 0.01),
+        plotOutput("pairwisePlot"),
+        textOutput("pairwiseWarning")
+    ),
+    tabPanel("polygon insertion",
+        plotOutput("polyInsert1Plot"),
+        plotOutput("polyInsert2Plot")
+    ),
+    tabPanel("arc deletion",
+        plotOutput("arcDelete1Plot"),
+        plotOutput("arcDelete2Plot")
     )
 )
 
@@ -133,6 +159,9 @@ server <- function(input, output) {
     })
     randomInserts <- reactive({
         headers() |> vapply(function(x) as.integer(nchar(x[10])), 0)
+    })
+    maxRandomInsert <- reactive({
+        randomInserts() |> max()
     })
     downInserts <- reactive({
         ifelse(ref2starts() < cuts2(), cuts2() - ref2starts(), 0)
@@ -312,11 +341,8 @@ server <- function(input, output) {
     # micro homology
     #############################
     uniqTibble <- reactive({
-        tibble(refId = refIds(), index = seq_len(length(refIds())), cut1 = cuts1(), cut2 = cuts2()) |> filter(refId == as.integer(input$microRefId)) |> summarise(index = first(index), cut1 = first(cut1), cut2 = first(cut2))
+        tibble(refId = refIds(), index = seq_len(length(refIds())), cut1 = cuts1(), cut2 = cuts2()) |> filter(refId == as.integer(microRefId())) |> summarise(index = first(index), cut1 = first(cut1), cut2 = first(cut2))
     })
-    observe({
-        updateSelectInput(inputId = "microRefId", label = "reference id", choices = refIds() |> unique())
-    }) |> bindEvent(input$algfiles)
     mhTibble <- reactive({
         refSeq <- refAllSeqs()[uniqTibble()$index]
         ref1Len <- ref1Lens()[uniqTibble()$index]
@@ -330,15 +356,26 @@ server <- function(input, output) {
         mhTibble() |> filter(pos1up - pos1low >= input$microThres)
     })
     refEnd1Start2Tibble <- reactive({
-        getRefEnd1Start2Tibble(ref1ends(), ref2starts(), cuts1(), cuts2(), refIds(), counts(), as.integer(input$microRefId))    
+        getRefEnd1Start2Tibble(ref1ends(), ref2starts(), cuts1(), cuts2(), refIds(), counts(), as.integer(microRefId()))    
     })
     refEnd1Start2TibbleMicro <- reactive({
         getRefEnd1Start2TibbleMicro(refEnd1Start2Tibble(), mhTibbleSub())
     })
+
+    # Use microRefId as a proxy of input$microRefId. updateSelectInput will not update input$microRefId until the client send the updated values back to the server. microRefId helps to block renderPlot until input$microRefId got updated.
+    microRefId <- reactiveVal()
+    observe({
+        microRefId(input$microRefId)
+    })
+    observe({
+        microRefId(NULL)
+        updateSelectInput(inputId = "microRefId", choices = refIds() |> unique())
+    }) |> bindEvent(input$algfiles)
     output$mh_matrix_plot <- renderPlot({
         req(input$algfiles)
-        req(input$microRefId)
-        drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), maxCut1(), maxCut2(), maxCut1down(), maxCut2down())
+        req(microRefId())
+        cat("render plot")
+        drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), maxCut1(), maxCut2(), maxCut1down(), maxCut2down(), input$microMode)
     })
 
     ##############################
@@ -366,6 +403,85 @@ server <- function(input, output) {
                 indelTypeWafflePlot(indelTypeTibble())
             }
         }
+    })
+
+    ##############################
+    # distribution plot
+    ##############################
+    distriTibble <- reactive({
+        getDistriTibble(counts(), scores(), cuts1(), cuts2(), ref1Lens(), ref2Lens(), ref1ends(), ref2starts(), upInserts(), downInserts(), randomInserts(), templatedInserts(), inserts(), upDeletes(), downDeletes(), deletes())
+    })
+    output$conDisPlot <- renderPlot({
+        req(input$algfiles)
+        req(input$conDistriTarget)
+        if (input$conDistriMode == "discrete") {
+            distriTibble() |> select(c("count", input$conDistriTarget)) |> discreteDistribution()
+        } else if (input$conDistriMode == "continuous") {
+            distriTibble() |> select(c("count", input$conDistriTarget)) |> continuousDistribution()
+        }
+    })
+
+    ##############################
+    # pairwise plot
+    ##############################
+    output$pairwisePlot <- renderPlot({
+        req(input$algfiles)
+        req(input$pairwiseX != input$pairwiseY)
+        ggFig <- distriTibble() |> select(input$pairwiseX, input$pairwiseY) |> pairwisePlot(input$pairwiseXscale, input$pairwiseYscale, input$pairwiseMethod, input$pairwiseSpan)
+        output$pairwiseWarning <- renderText({
+            capture.output(ggFig, type = "message")
+        })
+        ggFig
+    })
+
+    ###############################
+    # polygon insertion
+    ###############################
+    polyInsTibble <- reactive({
+        getPolyInsTibble(algLines()[seq(2, length(algLines()), 3)], counts(), ref1Lens(), cuts1(), cuts2())
+    })
+    polyInsTibble1 <- reactive({
+        polyInsTibble() |> select(count, insPos1, insLen1) |> rename(insPos = insPos1, insLen = insLen1) |> unnest(c(insPos, insLen)) |> summarise(count = sum(count), .by = c(insPos, insLen))
+    })
+    polyInsTibble2 <- reactive({
+        polyInsTibble() |> select(count, insPos2, insLen2) |> rename(insPos = insPos2, insLen = insLen2) |> unnest(c(insPos, insLen)) |> summarise(count = sum(count), .by = c(insPos, insLen))
+    })
+    polyXY1 <- reactive({
+        getPolyXY(polyInsTibble1(), "down")
+    })
+    polyXY2 <- reactive({
+        getPolyXY(polyInsTibble2(), "up")
+    })
+
+    output$polyInsert1Plot <- renderPlot({
+        req(input$algfiles)
+        plotPolyInsTibble(polyXY1(), c(-maxCut1(), maxCut1down() + maxRandomInsert()))
+    })
+    output$polyInsert2Plot <- renderPlot({
+        req(input$algfiles)
+        plotPolyInsTibble(polyXY2(), c(-maxCut2() - maxRandomInsert(), maxCut2down()))
+    })
+
+    ###############################
+    # arc deletion
+    ###############################
+    arcDelTibble <- reactive({
+        getArcDelTibble(algLines()[seq(2, length(algLines()), 3)], algLines()[seq(3, length(algLines()), 3)], counts(), ref1Lens(), cuts1(), cuts2())
+    })
+    arcDelTibble1 <- reactive({
+        arcDelTibble() |> select(count, delStart1, delEnd1) |> rename(delStart = delStart1, delEnd = delEnd1) |> unnest(c(delStart, delEnd)) |> summarise(count = sum(count), .by = c(delStart, delEnd))
+    })
+    arcDelTibble2 <- reactive({
+        arcDelTibble() |> select(count, delStart2, delEnd2) |> rename(delStart = delStart2, delEnd = delEnd2) |> unnest(c(delStart, delEnd)) |> summarise(count = sum(count), .by = c(delStart, delEnd))
+    })
+
+    output$arcDelete1Plot <- renderPlot({
+        req(input$algfiles)
+        plotArcDelTibble(arcDelTibble1(), c(-maxCut1(), maxCut1down()))
+    })
+    output$arcDelete2Plot <- renderPlot({
+        req(input$algfiles)
+        plotArcDelTibble(arcDelTibble2(), c(-maxCut2(), maxCut2down()))
     })
 }
 
