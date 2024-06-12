@@ -54,12 +54,13 @@ drawMicroHomologyHeatmap <- function(mhTibbleSub, refEnd1Start2TibbleMicro, maxC
         coord_equal(ratio = 1)
 }
 
-getRefEnd1Start2Tibble <- function(ref1ends, ref2starts, cuts1, cuts2, refIds, counts, microRefId) {
-    tibble(
-        pos1 = ref1ends - cuts1,
-        pos2 = ref2starts - cuts2,
-        refId = refIds,
-        count = counts
+getRefEnd1Start2Tibble <- function(algTibble, microRefId) {
+    algTibble |> mutate(
+        pos1 = ref1End - cut1,
+        pos2 = ref2Start - cut2,
+        refId = refId,
+        count = count,
+        .keep = "used"
     ) |> filter(refId == microRefId) |> summarise(count = sum(count), .by = c("pos1", "pos2")) |> mutate(shift = pos1 - pos2)
 }
 

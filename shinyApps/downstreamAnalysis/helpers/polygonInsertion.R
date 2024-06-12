@@ -1,5 +1,5 @@
-getPolyInsTibble <- function(refLines, counts, ref1Lens, cuts1, cuts2) {
-    insRegs <- gregexpr("-+", refLines)
+getPolyInsTibble <- function(algTibble) {
+    insRegs <- gregexpr("-+", algTibble$refLine)
     insLens <- lapply(
         insRegs,
         function(insReg) {
@@ -10,7 +10,7 @@ getPolyInsTibble <- function(refLines, counts, ref1Lens, cuts1, cuts2) {
         }
     )
     polyInsTibble <- tibble(
-        count = counts,
+        count = algTibble$count,
         insPos1 = vector("list", length(insRegs)),
         insPos2 = vector("list", length(insRegs)),
         insLen1 = vector("list", length(insRegs)),
@@ -23,10 +23,10 @@ getPolyInsTibble <- function(refLines, counts, ref1Lens, cuts1, cuts2) {
         clen <- cumsum(attributes(insRegs[[i]])$match.length)
         insPos <- insRegs[[i]] - 1 - c(0, clen[seq_len(length(clen) - 1)])
         insLen <- attributes(insRegs[[i]])$match.length
-        mask1 <- insPos <= ref1Lens[i]
-        mask2 <- insPos >= ref1Lens[i]
-        polyInsTibble$insPos1[[i]] <- insPos[mask1] - cuts1[i]
-        polyInsTibble$insPos2[[i]] <- insPos[mask2] - ref1Lens[i] - cuts2[i]
+        mask1 <- insPos <= algTibble$ref1Len[i]
+        mask2 <- insPos >= algTibble$ref1Len[i]
+        polyInsTibble$insPos1[[i]] <- insPos[mask1] - algTibble$cut1[i]
+        polyInsTibble$insPos2[[i]] <- insPos[mask2] - algTibble$ref1Len[i] - algTibble$cut2[i]
         polyInsTibble$insLen1[[i]] <- insLen[mask1]
         polyInsTibble$insLen2[[i]] <- insLen[mask2]
     }

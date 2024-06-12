@@ -1,13 +1,13 @@
-getIndelTypes <- function(inserts, deletes, counts) {
-    tibble(
+getIndelTypes <- function(algTibble) {
+    algTibble |> mutate(
         indelType = factor(
             ifelse(
-                inserts & !deletes,
+                insert & !delete,
                 "insertion",
                 ifelse(
-                    deletes & !inserts,
+                    delete & !insert,
                     "deletion",
-                    ifelse(inserts & deletes,
+                    ifelse(insert & delete,
                         "indel",
                         "WT"
                     )
@@ -15,26 +15,27 @@ getIndelTypes <- function(inserts, deletes, counts) {
             ),
             levels = c("WT", "deletion", "insertion", "indel")
         ),
-        count = counts
+        count = count,
+        .keep = "used"
     ) |> summarise(count = sum(count), .by = "indelType")
 }
 
-getIndelTypesEx <- function(templatedInserts, deletes, randomInserts, counts) {
-    tibble(
+getIndelTypesEx <- function(algTibble) {
+    algTibble |> mutate(
         indelType = factor(
-            ifelse(templatedInserts & deletes & randomInserts,
+            ifelse(templatedInsert & delete & nchar(randInsert),
                 "full",
-                ifelse(templatedInserts & deletes & !randomInserts,
+                ifelse(templatedInsert & delete & !nchar(randInsert),
                     "tempdel",
-                    ifelse(templatedInserts & !deletes & randomInserts,
+                    ifelse(templatedInsert & !delete & nchar(randInsert),
                         "temprand",
-                        ifelse(templatedInserts & !deletes & !randomInserts,
+                        ifelse(templatedInsert & !delete & !nchar(randInsert),
                             "templated",
-                            ifelse(!templatedInserts & deletes & randomInserts,
+                            ifelse(!templatedInsert & delete & nchar(randInsert),
                                 "randdel",
-                                ifelse(!templatedInserts & deletes & !randomInserts,
+                                ifelse(!templatedInsert & delete & !nchar(randInsert),
                                     "deletion",
-                                    ifelse(!templatedInserts & !deletes & randomInserts,
+                                    ifelse(!templatedInsert & !delete & nchar(randInsert),
                                         "random",
                                         "WT"
                                     )
@@ -46,7 +47,8 @@ getIndelTypesEx <- function(templatedInserts, deletes, randomInserts, counts) {
             ),
             levels = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full")
         ),
-        count = counts
+        count = count,
+        .keep = "used"
     ) |> summarise(count = sum(count), .by = "indelType")
 }
 

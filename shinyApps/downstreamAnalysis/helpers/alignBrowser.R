@@ -1,11 +1,3 @@
-readAlgfiles <- function(algfiles) {
-    algLiness <- vector(mode = "list", length = nrow(algfiles))
-    for (i in seq_len(nrow(algfiles))) {
-        algLiness[[i]] <- readLines(gzfile(algfiles$datapath[i]))
-    }
-    return(unlist(algLiness))
-}
-
 arrangeInsertion <- function(query, insertion, insertionCollapse) {
     insertionLines <- c("")
     for (i in seq_len(length(insertionCollapse))) {
@@ -60,54 +52,47 @@ snpHighlight <- function(refSeg, querySeg) {
     mdStr <- paste0(mdStr, substr(querySeg, start, nchar(querySeg)))
 }
 
-getMarkdownFromAlign <- function(algLines, algStart, algEnd) {
-    allMd <- rep("", length(algLines) / 3 * 2)
-    for (i in seq(algStart, algEnd)) {
-        fields <- str_split_1(algLines[3 * i - 2], "\t")
-        count <- fields[2]
-        refId <- fields[4]
-        cut1 <- as.integer(fields[16])
-        reference <- algLines[3 * i - 1] |> str_replace_all("-", "")
-        ref1Len <- gregexpr("[acgtn]", reference)[[1]][2]
-        cut2 <- as.integer(fields[17]) - ref1Len
-        refMd <- paste0(
-            sprintf("<span style=\"background-color: lightgrey;\">%10s%s", refId, substr(reference, 1, cut1 - 1)),
-            sprintf('<span style=\"letter-spacing: -0.3em;\">%s|</span>', substr(reference, cut1, cut1)),
-            sprintf('<span style=\"color: red;\">%s</span>', substr(reference, cut1 + 1, ref1Len)),
-            sprintf('<span style=\"color: blue;\">%s</span>', substr(reference, ref1Len + 1, ref1Len + cut2 - 1)),
-            sprintf('<span style=\"color: blue; letter-spacing: -0.3em;\">%s</span><span style=\"letter-spacing: -0.3em;\">|</span>', substr(reference, ref1Len + cut2, ref1Len + cut2)),
-            sprintf("%s</span>", substr(reference, ref1Len + cut2 + 1, nchar(reference)))
+getMarkdownFromAlign <- function(algTibble) {
+    allMd <- rep("", nrow(algTibble) * 2)
+    for (i in seq_len(nrow(algTibble))) {
+        allMd[2 * i - 1] <- paste0(
+            sprintf("<span style=\"background-color: lightgrey;\">%10s%s", algTibble$refId[i], substr(algTibble$refNoGap[i], 1, algTibble$cut1[i] - 1)),
+            sprintf('<span style=\"letter-spacing: -0.3em;\">%s|</span>', substr(algTibble$refNoGap[i], algTibble$cut1[i], algTibble$cut1[i])),
+            sprintf('<span style=\"color: red;\">%s</span>', substr(algTibble$refNoGap[i], algTibble$cut1[i] + 1, algTibble$ref1Len[i])),
+            sprintf('<span style=\"color: blue;\">%s</span>', substr(algTibble$refNoGap[i], algTibble$ref1Len[i] + 1, algTibble$ref1Len[i] + algTibble$cut2[i] - 1)),
+            sprintf('<span style=\"color: blue; letter-spacing: -0.3em;\">%s</span><span style=\"letter-spacing: -0.3em;\">|</span>', substr(algTibble$refNoGap[i], algTibble$ref1Len[i] + algTibble$cut2[i], algTibble$ref1Len[i] + algTibble$cut2[i])),
+            sprintf("%s</span>", substr(algTibble$refNoGap[i], algTibble$ref1Len[i] + algTibble$cut2[i] + 1, nchar(algTibble$refNoGap[i])))
         )
-        allMd[2 * i - 1] <- refMd
-        query <- algLines[3 * i]
-        insertion <- algLines[3 * i - 1] |> gregexpr(pattern = '-+') |> _[[1]]
+        insertion <- algTibble$refLine[i] |> gregexpr(pattern = '-+') |> _[[1]]
         if (insertion[1] == -1) {
-            queryMd <- sprintf("<details><summary style=\"list-style-position: outside;\">%10s%s</summary></details>", count, query)
+            queryMd <- sprintf("<details><summary style=\"list-style-position: outside;\">%10d%s</summary></details>", algTibble$count[i], algTibble$queryLine[i])
             allMd[2 * i] <- queryMd
             next
         }
         insertionCollapse <- insertion - c(0, head(cumsum(attr(insertion, which = "match.length")), -1))
-        insertionLines <- arrangeInsertion(query, insertion, insertionCollapse)
+        insertionLines <- arrangeInsertion(algTibble$queryLine[i], insertion, insertionCollapse)
         queryMd <- "<details style=\"margin: 0, 0, 0, 0; padding: 0, 0, 0, 0;\"><summary style=\"list-style-position: outside;\">"
         if (insertion[1] == 1) {
-            queryMd <- sprintf("%s%s<span style=\"letter-spacing: -0.3em;\">%s</span>", queryMd, sprintf("%9s", substr(count, 1, length(count) - 1)), substr(count, length(count), length(count)))
+            countStr <- as.character(algTibble$count[i])
+            countLen <- nchar(countStr)
+            queryMd <- sprintf("%s%s<span style=\"letter-spacing: -0.3em;\">%s</span>", queryMd, sprintf("%9s", substr(countStr, 1, countLen - 1)), substr(countStr, countLen, countLen))
         } else {
-            queryMd <- sprintf("%s%10s", queryMd, count)
+            queryMd <- sprintf("%s%10d", queryMd, algTibble$count[i])
         }
         start <- 1
         refStart <- 1
         for (j in seq_len(length(insertion))) {
             refEnd <- insertionCollapse[j] - 1
-            mdHigh <- snpHighlight(substr(reference, refStart, refEnd - 1), substr(query, start, insertion[j] - 2))
+            mdHigh <- snpHighlight(substr(algTibble$refNoGap[i], refStart, refEnd - 1), substr(algTibble$queryLine[i], start, insertion[j] - 2))
             refStart <- refEnd + 1
-            lastBase <- substr(query, insertion[j] - 1, insertion[j] - 1)
-            if (lastBase != toupper(substr(reference, refEnd, refEnd)) && lastBase != "-") {
+            lastBase <- substr(algTibble$queryLine[i], insertion[j] - 1, insertion[j] - 1)
+            if (lastBase != toupper(substr(algTibble$refNoGap[i], refEnd, refEnd)) && lastBase != "-") {
                 lastBase <- sprintf("<span style=\"color: red;\">%s</span>", lastBase)
             }
             queryMd <- sprintf("%s%s<span style=\"letter-spacing: -0.3em;\">%s|</span>", queryMd, mdHigh, lastBase)
             start <- insertion[j] + attr(insertion, which = "match.length")[j]
         }
-        mdHigh <- snpHighlight(substr(reference, refStart, nchar(reference)), substr(query, start, nchar(query)))
+        mdHigh <- snpHighlight(substr(algTibble$refNoGap[i], refStart, nchar(algTibble$refNoGap[i])), substr(algTibble$queryLine[i], start, nchar(algTibble$queryLine[i])))
         queryMd <- sprintf("%s%s</summary>%s</details>",
             queryMd,
             mdHigh,

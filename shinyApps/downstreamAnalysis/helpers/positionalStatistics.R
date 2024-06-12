@@ -91,7 +91,7 @@ downSampleMatrix <- function(mat, counts, thresCount) {
         }
     }
     mat <- as_tibble(mat)
-    mat |> mutate(count = counts, cls = clses) |> summarise(across(colnames(mat), ~ .x[which.max(counts)]), count = sum(count), .by = "cls") |> select(-"cls")
+    mat |> mutate(count = counts, cls = clses) |> summarise(across(colnames(mat), ~ .x[which.max(count)]), count = sum(count), .by = "cls") |> select(-"cls")
 }
 
 getPositionalReads <- function(queryMat, counts, thresCount, cut) {

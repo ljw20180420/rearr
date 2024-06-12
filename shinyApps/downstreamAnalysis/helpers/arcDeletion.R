@@ -1,8 +1,8 @@
-getArcDelTibble <- function(refLines, queryLines, counts, ref1Lens, cuts1, cuts2) {
-    lposes <- refLines |> strsplit("") |> lapply(function(refLine){c(0, cumsum(refLine != "-"))})
-    delRegs <- queryLines |> gregexpr(pattern = "-+")
+getArcDelTibble <- function(algTibble) {
+    lposes <- algTibble$refLine |> strsplit("") |> lapply(function(refLine){c(0, cumsum(refLine != "-"))})
+    delRegs <- algTibble$queryLine |> gregexpr(pattern = "-+")
     arcDelTibble <- tibble(
-        count = counts,
+        count = algTibble$count,
         delStart1 = vector("list", length(delRegs)),
         delEnd1 = vector("list", length(delRegs)),
         delStart2 = vector("list", length(delRegs)),
@@ -14,12 +14,12 @@ getArcDelTibble <- function(refLines, queryLines, counts, ref1Lens, cuts1, cuts2
         }
         delStart <- lposes[[i]][delRegs[[i]]]
         delEnd <- delStart + attributes(delRegs[[i]])$match.length
-        mask1 <- delStart < ref1Lens[i]
-        mask2 <- delEnd > ref1Lens[i]
-        arcDelTibble$delStart1[[i]] <- delStart[mask1] - cuts1[i]
-        arcDelTibble$delEnd1[[i]] <- pmin(delEnd[mask1], ref1Lens[i]) - cuts1[i]
-        arcDelTibble$delStart2[[i]] <- pmax(delStart[mask2], ref1Lens[i]) - ref1Lens[i] - cuts2[i]
-        arcDelTibble$delEnd2[[i]] <- delEnd[mask2] - ref1Lens[i] - cuts2[i]
+        mask1 <- delStart < algTibble$ref1Len[i]
+        mask2 <- delEnd > algTibble$ref1Len[i]
+        arcDelTibble$delStart1[[i]] <- delStart[mask1] - algTibble$cut1[i]
+        arcDelTibble$delEnd1[[i]] <- pmin(delEnd[mask1], algTibble$ref1Len[i]) - algTibble$cut1[i]
+        arcDelTibble$delStart2[[i]] <- pmax(delStart[mask2], algTibble$ref1Len[i]) - algTibble$ref1Len[i] - algTibble$cut2[i]
+        arcDelTibble$delEnd2[[i]] <- delEnd[mask2] - algTibble$ref1Len[i] - algTibble$cut2[i]
     }
     return(arcDelTibble)
 }
