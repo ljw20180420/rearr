@@ -60,7 +60,6 @@ getRefEnd1Start2Tibble <- function(algTibble, microRefId) {
         pos2 = ref2Start - cut2,
         refId = refId,
         count = count,
-        .keep = "used"
     ) |> filter(refId == microRefId) |> summarise(count = sum(count), .by = c("pos1", "pos2")) |> mutate(shift = pos1 - pos2)
 }
 
