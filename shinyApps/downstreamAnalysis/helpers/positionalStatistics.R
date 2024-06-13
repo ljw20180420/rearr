@@ -98,7 +98,7 @@ getPositionalReads <- function(queryMat, counts, thresCount, cut) {
     queryTibbleDown <- downSampleMatrix(queryMat, counts, thresCount)
     cumCounts <- cumsum(queryTibbleDown$count)
     vertCent <- c(cumCounts[1] / 2, (cumCounts[-length(cumCounts)] + cumCounts[-1]) / 2)
-    queryTibbleDown |> select(-"count") |> as.matrix() |> `colnames<-`(seq_len(ncol(queryTibbleDown) - 1)) |> melt() |> filter(value != "-") |> mutate(x = Var2 - cut - 0.5, y = vertCent[Var1], value = value, height = queryTibbleDown$count[Var1], .keep = "used")
+    queryTibbleDown |> select(-"count") |> as.matrix() |> `colnames<-`(seq_len(ncol(queryTibbleDown) - 1)) |> melt() |> filter(value != "-") |> mutate(x = Var2 - cut - 0.5, y = vertCent[Var1], value = value, height = queryTibbleDown$count[Var1]) |> select(x, y, value, height)
 }
 
 drawPositionalReads <- function(readTibble, maxCut, maxCutdown) {

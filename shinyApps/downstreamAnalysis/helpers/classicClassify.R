@@ -15,8 +15,7 @@ getIndelTypes <- function(algTibble) {
             ),
             levels = c("WT", "deletion", "insertion", "indel")
         ),
-        count = count,
-        .keep = "used"
+        count = count
     ) |> summarise(count = sum(count), .by = "indelType")
 }
 
@@ -47,8 +46,7 @@ getIndelTypesEx <- function(algTibble) {
             ),
             levels = c("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full")
         ),
-        count = count,
-        .keep = "used"
+        count = count
     ) |> summarise(count = sum(count), .by = "indelType")
 }
 

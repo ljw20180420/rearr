@@ -34,7 +34,6 @@ ui <- navbarPage(
     ),
     sidebar = sidebar(
         fileInput("algfiles", "Alignment file", multiple = TRUE),
-        fileInput("sgRNAfile", "sgRNA file")
     ),
     tabPanel("alignments browser",
         uiOutput("browserReadRangeUI"),
@@ -93,23 +92,31 @@ ui <- navbarPage(
         plotOutput("arcDelete2Plot")
     ),
     tabPanel("kpLogo",
+        fileInput("sgRNAfile", "sgRNA file"),
         numericInput("kpLogoKmer", "kmer", 1, min = 1, max = 10, step = 1),
-        sliderInput("kpLogoRegion", "region", 1, 1, c(1, 1)),
+        sliderInput("kpLogoRegion", "region", 0, 0, c(0, 0)),
         selectInput("kpLogoMethod", "method", choices = c("weight", "background")),
         numericInput("kpLogoCountThres", "count threshold", 0, min = 0),
-        selectInput("kpLogoTarget", "target", choices = c("templated insertion", "random insertion", "insertion", "deletion", "templated indel")),
-        plotOutput("kpLogoPlot")
+        selectInput("kpLogoTarget", "target", choices = c("templated insertion", "random insertion", "insertion", "deletion", "templated indel", "indel", "wild type")),
+        htmlOutput("kpLogoImage")
     )
 )
 
 # Define server logic ----
-server <- function(input, output) {
+server <- function(input, output, session) {
+    ################################
+    # session start
+    ################################
+    paste0("www/", session$token) |> dir.create()
+    ################################
+    # session end
+    ################################
+    onSessionEnded(function() {
+        unlink(paste0("www/", session$token), recursive = TRUE)
+    })
     ################################
     # sidebar
     ################################
-    sgRNAs <- reactive({
-        readLines(input$sgRNAfile$datapath)
-    })
     algTibble <- reactive({
         algLines <- lapply(
             input$algfiles$datapath,
@@ -155,6 +162,7 @@ server <- function(input, output) {
     ################################
     # alignment browser
     ################################
+    # use browserReadRange as a proxy of input$browserReadRange to prevent render output$alignments twice (one before input$browserReadRange is returned by client, and one after that)
     browserReadRange <- reactiveVal(NULL)
     observe({
         browserReadRange(input$browserReadRange)
@@ -173,13 +181,15 @@ server <- function(input, output) {
     #########################################################
     # single alignment
     #########################################################
+    algOneRefFile <- tempfile(tmpdir=paste0("www/", session$token))
+    algOneAlgFile <- tempfile(tmpdir=paste0("www/", session$token))
     output$alignPair <- renderText({
         req(input$alignOneRef1)
         req(input$alignOneRef2)
         req(input$alignOneCut1)
         req(input$alignOneCut2)
         req(input$alignOneQuery)
-        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOnePAM1, input$alignOnePAM2, input$alignOneQuery)
+        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOnePAM1, input$alignOnePAM2, input$alignOneQuery, algOneRefFile, algOneAlgFile)
     })
 
     #########################################################
@@ -451,10 +461,71 @@ server <- function(input, output) {
     ################################
     # kpLogo
     ################################
-    # output$kpLogoPlot <- renderPlot({
-        
-    # })
+    outputKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
+    weightKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
+    targetKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
+    bgFileKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
+    sgRNAs <- reactive({
+        readLines(input$sgRNAfile$datapath)
+    })
+    # use kpLogoRegion as a proxy of input$kpLogoRegion to prevent render output$kpLogoPlot twice (one before input$kpLogoRegion is returned by client, and one after that)
+    kpLogoRegion <- reactiveVal(c(0, 0))
+    observe({
+        kpLogoRegion(input$kpLogoRegion)
+    })
+    observe({
+        kpLogoRegion(c(0, 0))
+        sgLen <- nchar(sgRNAs()[1])
+        updateSliderInput(inputId = "kpLogoRegion", value = c(max(sgLen - 5, 1), sgLen), min = 1, max = sgLen, step = 1)
+    }) |> bindEvent(input$sgRNAfile$datapath)
+    algTarget <- reactive({
+        if (input$kpLogoTarget == "templated insertion") {
+            algTarget <- algTibble() |> mutate(target = as.logical(templatedInsert))
+        } else if (input$kpLogoTarget == "random insertion") {
+            algTarget <- algTibble() |> mutate(target = as.logical(randInsert))
+        } else if (input$kpLogoTarget == "insertion") {
+            algTarget <- algTibble() |> mutate(target = as.logical(insert))
+        } else if (input$kpLogoTarget == "deletion") {
+            algTarget <- algTibble() |> mutate(target = as.logical(delete))
+        } else if (input$kpLogoTarget == "templated indel") {
+            algTarget <- algTibble() |> mutate(target = templatedInsert & delete)
+        } else if (input$kpLogoTarget == "indel") {
+            algTarget <- algTibble() |> mutate(target = insert & delete)
+        } else if (input$kpLogoTarget == "wild type") {
+            algTarget <- algTibble() |> mutate(target = !insert & !delete)
+        }
+        algTarget <- algTarget |> summarise(count = sum(count), targetCount = sum(count * target), .by = refId) |> filter(count > input$kpLogoCountThres) |> mutate(sgRNA = sgRNAs()[refId + 1]) |> select(-"refId")
+        if (input$kpLogoMethod == "weight") {
+            algTarget <- algTarget |> mutate(sgRNA = sgRNA, weight = targetCount/count) |> select(sgRNA, weight)
+        }
+        return(algTarget)
+    })
+    output$kpLogoImage <- renderText({
+        req(input$algfiles)
+        req(kpLogoRegion()[2] > 0)
+        if (input$kpLogoMethod == "weight") {
+            algTarget() |> write_tsv(weightKpLogo, col_names = FALSE)
+            system2("kpLogo", args = c(
+                weightKpLogo, "-o", outputKpLogo, "-region", paste(kpLogoRegion()[1], kpLogoRegion()[2], sep = ","), "-weighted", "-k", input$kpLogoKmer
+            ))
+        } else if (input$kpLogoMethod == "background") {
+            algTarget() |> select(sgRNA, targetCount) |> uncount(targetCount) |> write_tsv(targetKpLogo, col_names = FALSE)
+            algTarget() |> select(sgRNA, count) |> uncount(count) |> write_tsv(bgFileKpLogo, col_names = FALSE)
+            system2("kpLogo", args = c(
+                targetKpLogo, "-o", outputKpLogo, "-region", paste(kpLogoRegion()[1], kpLogoRegion()[2], sep = ","), "-bgfile", bgFileKpLogo, "-k", input$kpLogoKmer
+            ))
+        }
+        sprintf('<iframe style="height:600px; width:100%%" src="%s.all.pdf"></iframe>', sub("^www", "", outputKpLogo))
+    })
 }
+
+################################
+# app end
+################################
+onStop(function() {
+    unlink("www/*", recursive = TRUE)
+    unlink(c(".RData", "done"))
+})
 
 # Run the app ----
 shinyApp(ui = ui, server = server)

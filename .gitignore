@@ -28,3 +28,4 @@ shinyApps/helpers/Sushi-master/*
 **/genome
 .dockerignore
 hg19
+**/www
