@@ -10,16 +10,7 @@ library(waffle)
 
 options(shiny.maxRequestSize = 100 * 1024^3)
 
-source("helpers/alignBrowser.R")
-source("helpers/alignOne.R")
-source("helpers/baseSubstitute.R")
-source("helpers/positionalStatistics.R")
-source("helpers/microHomology.R")
-source("helpers/classicClassify.R")
-source("helpers/distribution.R")
-source("helpers/pairwise.R")
-source("helpers/polygonInsertion.R")
-source("helpers/arcDeletion.R")
+dir(path = "helpers", full.names = TRUE) |> lapply(source)
 
 # Define UI ----
 ui <- navbarPage(
@@ -34,12 +25,14 @@ ui <- navbarPage(
     ),
     sidebar = sidebar(
         fileInput("algfiles", "Alignment file", multiple = TRUE),
+        fileInput("sgRNAfile", "sgRNA file"),
+        selectInput("editTarget", "edit target", choices = c("templated insertion", "random insertion", "insertion", "deletion", "templated indel", "indel", "wild type"))
     ),
-    tabPanel("alignments browser",
+    tabPanel("browser",
         uiOutput("browserReadRangeUI"),
         htmlOutput("alignments", class = "alignments", inline = TRUE)
     ),
-    tabPanel("align one pair",
+    tabPanel("one",
         textInput("alignOneRef1", label = "reference1", value = ""),
         textInput("alignOneRef2", label = "reference2", value = ""),
         numericInput("alignOneCut1", "cut1", value = NA, min = 0),
@@ -49,21 +42,21 @@ ui <- navbarPage(
         textInput("alignOneQuery", label = "query read", value = ""),
         htmlOutput("alignPair", class = "alignments", inline = TRUE)
     ),
-    tabPanel("base substitution frequencies",
+    tabPanel("base",
         plotOutput("baseSubFreqPlot")
     ),
-    tabPanel("positional statistics",
+    tabPanel("position",
         selectInput("positionalMode", "display mode", choices = c("histgram base", "histgram indel", "read base", "read snp", "logo probability", "logo bits", "logo custom"), selected = "histgram base"),
         plotOutput("posBaseRef1Plot"),
         plotOutput("posBaseRef2Plot")
     ),
-    tabPanel("micro homology",
+    tabPanel("MMEJ",
         selectInput("microRefId", "reference id", choices = NULL),
         selectInput("microMode", "microhomology count display mode", choices = c("repeat", "separate")),
         numericInput("microThres", "minimal micro homology length", value = 4, min = 1),
         plotOutput("mh_matrix_plot")
     ),
-    tabPanel("classic classify",
+    tabPanel("classify",
         checkboxInput("claClaDistinctTemp", "discriminate templated insertion and random insertion"),
         selectInput("claClaMode", "mode", choices = c("pie", "waffle")),
         plotOutput("claClaPlot", height = "1000px")
@@ -73,7 +66,7 @@ ui <- navbarPage(
         selectInput("conDistriMode", "mode", choices = c("continuous", "discrete")),
         plotOutput("conDisPlot")
     ),
-    tabPanel("pairwise plot",
+    tabPanel("pairwise",
         selectInput("pairwiseX", "x", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
         selectInput("pairwiseY", "y", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
         selectInput("pairwiseXscale", "x scale", choices = c("identity", "log10")),
@@ -83,22 +76,24 @@ ui <- navbarPage(
         plotOutput("pairwisePlot"),
         textOutput("pairwiseWarning")
     ),
-    tabPanel("polygon insertion",
+    tabPanel("polygon",
         plotOutput("polyInsert1Plot"),
         plotOutput("polyInsert2Plot")
     ),
-    tabPanel("arc deletion",
+    tabPanel("arc",
         plotOutput("arcDelete1Plot"),
         plotOutput("arcDelete2Plot")
     ),
     tabPanel("kpLogo",
-        fileInput("sgRNAfile", "sgRNA file"),
         numericInput("kpLogoKmer", "kmer", 1, min = 1, max = 10, step = 1),
         sliderInput("kpLogoRegion", "region", 0, 0, c(0, 0)),
         selectInput("kpLogoMethod", "method", choices = c("weight", "background")),
         numericInput("kpLogoCountThres", "count threshold", 0, min = 0),
-        selectInput("kpLogoTarget", "target", choices = c("templated insertion", "random insertion", "insertion", "deletion", "templated indel", "indel", "wild type")),
-        htmlOutput("kpLogoImage")
+        uiOutput("kpLogoIframe")
+    ),
+    tabPanel("kmer",
+        uiOutput("kmerRangeUI"),
+        uiOutput("kmerIframe")
     )
 )
 
@@ -117,6 +112,9 @@ server <- function(input, output, session) {
     ################################
     # sidebar
     ################################
+    sgRNAs <- reactive({
+        readLines(input$sgRNAfile$datapath)
+    })
     algTibble <- reactive({
         algLines <- lapply(
             input$algfiles$datapath,
@@ -157,6 +155,23 @@ server <- function(input, output, session) {
             maxCut2down = max(algTibble()$ref2Len - algTibble()$cut2),
             maxRandInsert = max(nchar(algTibble()$randInsert))
         )
+    })
+    editTarget <- reactive({
+        if (input$editTarget == "templated insertion") {
+            return(as.logical(algTibble()$templatedInsert))
+        } else if (input$editTarget == "random insertion") {
+            return(as.logical(algTibble()$randInsert))
+        } else if (input$editTarget == "insertion") {
+            return(as.logical(algTibble()$insert))
+        } else if (input$editTarget == "deletion") {
+            return(as.logical(algTibble()$delete))
+        } else if (input$editTarget == "templated indel") {
+            return(algTibble()$templatedInsert & algTibble()$delete)
+        } else if (input$editTarget == "indel") {
+            return(algTibble()$insert & algTibble()$delete)
+        } else if (input$editTarget == "wild type") {
+            return(!algTibble()$insert & !algTibble()$delete)
+        }
     })
 
     ################################
@@ -465,9 +480,6 @@ server <- function(input, output, session) {
     weightKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
     targetKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
     bgFileKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
-    sgRNAs <- reactive({
-        readLines(input$sgRNAfile$datapath)
-    })
     # use kpLogoRegion as a proxy of input$kpLogoRegion to prevent render output$kpLogoPlot twice (one before input$kpLogoRegion is returned by client, and one after that)
     kpLogoRegion <- reactiveVal(c(0, 0))
     observe({
@@ -479,43 +491,38 @@ server <- function(input, output, session) {
         updateSliderInput(inputId = "kpLogoRegion", value = c(max(sgLen - 5, 1), sgLen), min = 1, max = sgLen, step = 1)
     }) |> bindEvent(input$sgRNAfile$datapath)
     algTarget <- reactive({
-        if (input$kpLogoTarget == "templated insertion") {
-            algTarget <- algTibble() |> mutate(target = as.logical(templatedInsert))
-        } else if (input$kpLogoTarget == "random insertion") {
-            algTarget <- algTibble() |> mutate(target = as.logical(randInsert))
-        } else if (input$kpLogoTarget == "insertion") {
-            algTarget <- algTibble() |> mutate(target = as.logical(insert))
-        } else if (input$kpLogoTarget == "deletion") {
-            algTarget <- algTibble() |> mutate(target = as.logical(delete))
-        } else if (input$kpLogoTarget == "templated indel") {
-            algTarget <- algTibble() |> mutate(target = templatedInsert & delete)
-        } else if (input$kpLogoTarget == "indel") {
-            algTarget <- algTibble() |> mutate(target = insert & delete)
-        } else if (input$kpLogoTarget == "wild type") {
-            algTarget <- algTibble() |> mutate(target = !insert & !delete)
-        }
-        algTarget <- algTarget |> summarise(count = sum(count), targetCount = sum(count * target), .by = refId) |> filter(count > input$kpLogoCountThres) |> mutate(sgRNA = sgRNAs()[refId + 1]) |> select(-"refId")
-        if (input$kpLogoMethod == "weight") {
-            algTarget <- algTarget |> mutate(sgRNA = sgRNA, weight = targetCount/count) |> select(sgRNA, weight)
-        }
-        return(algTarget)
+        getKpLogoAlgTarget(algTibble(), sgRNAs(), editTarget(), input$kpLogoCountThres, input$kpLogoMethod)
     })
-    output$kpLogoImage <- renderText({
+    output$kpLogoIframe <- renderUI({
         req(input$algfiles)
+        req(input$sgRNAfile)
         req(kpLogoRegion()[2] > 0)
-        if (input$kpLogoMethod == "weight") {
-            algTarget() |> write_tsv(weightKpLogo, col_names = FALSE)
-            system2("kpLogo", args = c(
-                weightKpLogo, "-o", outputKpLogo, "-region", paste(kpLogoRegion()[1], kpLogoRegion()[2], sep = ","), "-weighted", "-k", input$kpLogoKmer
-            ))
-        } else if (input$kpLogoMethod == "background") {
-            algTarget() |> select(sgRNA, targetCount) |> uncount(targetCount) |> write_tsv(targetKpLogo, col_names = FALSE)
-            algTarget() |> select(sgRNA, count) |> uncount(count) |> write_tsv(bgFileKpLogo, col_names = FALSE)
-            system2("kpLogo", args = c(
-                targetKpLogo, "-o", outputKpLogo, "-region", paste(kpLogoRegion()[1], kpLogoRegion()[2], sep = ","), "-bgfile", bgFileKpLogo, "-k", input$kpLogoKmer
-            ))
-        }
-        sprintf('<iframe style="height:600px; width:100%%" src="%s.all.pdf"></iframe>', sub("^www", "", outputKpLogo))
+        plotKpLogoAlgTarget(algTarget(), input$kpLogoMethod, kpLogoRegion(), input$kpLogoKmer, outputKpLogo, weightKpLogo, targetKpLogo, bgFileKpLogo)
+    })
+
+    #####################################
+    # kmer frequencies
+    #####################################
+    kmerPdfTemp <- tempfile(tmpdir=paste0("www/", session$token))
+    # use kmerRange as a proxy of input$kmerRange to prevent render output$kmerIframe twice (one before input$kmerRange is returned by client, and one after that)
+    kmerRange <- reactiveVal(c(0, 0))
+    observe({
+        kmerRange(input$kmerRange)
+    })
+    output$kmerRangeUI <- renderUI({
+        req(input$sgRNAfile)
+        kmerRange(c(0, 0))
+        sgLen <- nchar(sgRNAs()[1])
+        numericRangeInput("kmerRange", "kmer range", value = rep(max(1, sgLen - 3), 2), min = 1, max = sgLen, step = 1)
+    })
+    kmerTibble <- reactive({
+        algTibble() |> mutate(kmer = substr(sgRNAs()[refId], kmerRange()[1], kmerRange()[2]), target = editTarget()) |> summarise(count = sum(count), .by = c(kmer, target))
+    })
+    output$kmerIframe <- renderUI({
+        req(input$algfiles)
+        req(input$sgRNAfile)
+        req(kmerRange()[2] > 0)
+        plotKmerFrequencies(kmerTibble(), kmerPdfTemp)
     })
 }
 
