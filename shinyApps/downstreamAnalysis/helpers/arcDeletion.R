@@ -24,11 +24,13 @@ getArcDelTibble <- function(algTibble) {
     return(arcDelTibble)
 }
 
-plotArcDelTibble <- function(arcDelTibble, limits) {
-    arcDelTibble |>
+plotArcDelTibble <- function(arcDelTibble, limits, arcDeleteTempFile) {
+    ggFig <- arcDelTibble |>
         ggplot(aes(x0 = (delStart + delEnd) / 2, y0 = 0, r = (delEnd - delStart) / 2, start = - pi / 2, end = pi / 2)) +
         geom_arc(aes(linewidth = count), alpha = 0.1) +
         scale_linewidth_continuous(range = c(0.1, 2)) +
         scale_x_continuous(limits = limits, name = "pos", expand = c(0, 0)) +
         scale_y_continuous(name = NULL, expand = c(0, 0))
+    ggsave(paste0(arcDeleteTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = paste0(sub("^www/", "", arcDeleteTempFile), ".pdf"), height = "600px", width = "100%")
 }

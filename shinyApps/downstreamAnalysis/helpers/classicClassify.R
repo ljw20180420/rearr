@@ -50,12 +50,12 @@ getIndelTypesEx <- function(algTibble) {
     ) |> summarise(count = sum(count), .by = "indelType")
 }
 
-indelTypePiePlot <- function(indelTypeTibble) {
+indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
     fillColors <- RColorBrewer::brewer.pal(8, "Set1")
     if (nrow(indelTypeTibble) == 4) {
         fillColors <- fillColors[c(1, 2, 3, 6)]
     }
-    indelTypeTibble |>
+    ggFig <- indelTypeTibble |>
         mutate(percent = count / sum(count), perlabel = scales::percent(percent, accuracy = 0.01)) |>
         mutate(typeCount = sprintf("%s: %d", indelType, count)) |>
         mutate(
@@ -76,16 +76,20 @@ indelTypePiePlot <- function(indelTypeTibble) {
         scale_fill_manual(values = fillColors) +
         coord_polar(theta = "y") +
         theme(text = element_text(size = 30))
+    ggsave(paste0(classifyTempFile, ".pdf"), plot = ggFig)
+    tags$iframe(src = paste0(sub("^www/", "", classifyTempFile), ".pdf"), height = "1200px", width = "100%")
 }
 
-indelTypeWafflePlot <- function(indelTypeTibble) {
+indelTypeWafflePlot <- function(indelTypeTibble, classifyTempFile) {
     fillColors <- RColorBrewer::brewer.pal(8, "Set1")
     if (nrow(indelTypeTibble) == 4) {
         fillColors <- fillColors[c(1, 2, 3, 6)]
     }
-    ggplot(indelTypeTibble, aes(fill = indelType, values = count)) +
-    geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
-    scale_fill_manual(limits = indelTypeTibble$indelType |> levels(), values = fillColors) +
-    coord_equal() +
-    theme(text = element_text(size = 30))
+    ggFig <- ggplot(indelTypeTibble, aes(fill = indelType, values = count)) +
+        geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
+        scale_fill_manual(limits = indelTypeTibble$indelType |> levels(), values = fillColors) +
+        coord_equal() +
+        theme(text = element_text(size = 30))
+    ggsave(paste0(classifyTempFile, ".pdf"), plot = ggFig)
+    tags$iframe(src = paste0(sub("^www/", "", classifyTempFile), ".pdf"), height = "1200px", width = "100%")
 }

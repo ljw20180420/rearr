@@ -36,7 +36,7 @@ getMicroHomologyTibble <- function(ref1, ref2, cut1, cut2) {
     )
 }
 
-drawMicroHomologyHeatmap <- function(mhTibbleSub, refEnd1Start2TibbleMicro, maxCut1, maxCut2, maxCut1down, maxCut2down, mode) {
+drawMicroHomologyHeatmap <- function(mhTibbleSub, refEnd1Start2TibbleMicro, maxCut1, maxCut2, maxCut1down, maxCut2down, mode, mhMatrixTempFile) {
     if (mode == "separate") {
         refEnd1Start2TibbleMicro <- bind_rows(
             refEnd1Start2TibbleMicro |> filter(cls == 0),
@@ -44,7 +44,7 @@ drawMicroHomologyHeatmap <- function(mhTibbleSub, refEnd1Start2TibbleMicro, maxC
         )
     }
     mhPosTibble <- mhTibbleSub |> mutate(nacol = NA) |> pivot_longer(cols = c("pos1low", "pos1up", "nacol"), values_to = "mhPos1") |> mutate(mhPos2 = mhPos1 - shift) |> select(mhPos1, mhPos2)
-    ggplot(refEnd1Start2TibbleMicro) +
+    ggFig <- ggplot(refEnd1Start2TibbleMicro) +
         geom_tile(aes(x = pos2, y = pos1, fill = log10(count + 1)), height = 1, width = 1) +
         geom_path(aes(x = mhPos2, y = mhPos1), data = mhPosTibble) +
         scale_x_continuous(limits = c(-maxCut2 - 1, maxCut2down + 1), expand=c(0, 0)) +
@@ -52,6 +52,8 @@ drawMicroHomologyHeatmap <- function(mhTibbleSub, refEnd1Start2TibbleMicro, maxC
         scale_fill_gradientn(limits = c(0, NA), colors = c("blue", "white", "red")) +
         scale_size_area(max_size = 2) +
         coord_equal(ratio = 1)
+    ggsave(paste0(mhMatrixTempFile, ".pdf"), plot = ggFig)
+    tags$iframe(src = paste0(sub("^www/", "", mhMatrixTempFile), ".pdf"), height = "1200px", width = "100%")
 }
 
 getRefEnd1Start2Tibble <- function(algTibble, microRefId) {
