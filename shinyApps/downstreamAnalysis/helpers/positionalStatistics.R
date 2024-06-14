@@ -29,14 +29,16 @@ posMatrixToTibble <- function(mat, cut) {
     )
 }
 
-drawPositionalStatic <- function(inputTibble, insertCount) {
-    inputTibble |>
+drawPositionalStatic <- function(inputTibble, insertCount, posBaseRefTempFile) {
+    ggFig <- inputTibble |>
         ggplot(aes(pos, count)) +
         geom_col(aes(fill = type), width = 1) +
         geom_step(aes(pos, count, color = "black"), data = insertCount[2:(nrow(insertCount) - 1),], direction = "mid") +
         scale_x_continuous(name = "position relative to cut", expand = c(0, 0)) +
         scale_y_continuous(expand = c(0, 0)) +
         scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
+    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
 }
 
 getPositionalBaseFreq <- function(queryMat, counts) {
@@ -101,25 +103,31 @@ getPositionalReads <- function(queryMat, counts, thresCount, cut) {
     queryTibbleDown |> select(-"count") |> as.matrix() |> `colnames<-`(seq_len(ncol(queryTibbleDown) - 1)) |> melt() |> filter(value != "-") |> mutate(x = Var2 - cut - 0.5, y = vertCent[Var1], value = value, height = queryTibbleDown$count[Var1]) |> select(x, y, value, height)
 }
 
-drawPositionalReads <- function(readTibble, maxCut, maxCutdown) {
-    ggplot(readTibble, aes(x = x, y = y, fill = value, height = height)) + 
-    geom_tile(width = 1) + 
-    scale_fill_manual(values = c("A" = "darkgreen", "C" = "blue", "G" = "gold", "T" = "red")) +
-    scale_x_continuous(name = "position relative to cut", limits = c(-maxCut, maxCutdown), expand = c(0, 0)) +
-    scale_y_continuous(name = "reads", expand = c(0, 0))
+drawPositionalReads <- function(readTibble, maxCut, maxCutdown, posBaseRefTempFile) {
+    ggFig <- ggplot(readTibble, aes(x = x, y = y, fill = value, height = height)) + 
+        geom_tile(width = 1) + 
+        scale_fill_manual(values = c("A" = "darkgreen", "C" = "blue", "G" = "gold", "T" = "red")) +
+        scale_x_continuous(name = "position relative to cut", limits = c(-maxCut, maxCutdown), expand = c(0, 0)) +
+        scale_y_continuous(name = "reads", expand = c(0, 0))
+    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
 }
 
-drawPositionalSnps <- function(snpTibble, maxCut, maxCutdown) {
-    ggplot(snpTibble, aes(x = x, y = y, fill = value, height = height)) + 
-    geom_tile(width = 1) + 
-    scale_fill_manual(values = c("M" = "darkgreen", "S" = "red")) +
-    scale_x_continuous(name = "position relative to cut", limits = c(-maxCut, maxCutdown), expand = c(0, 0)) +
-    scale_y_continuous(name = "reads", expand = c(0, 0))
+drawPositionalSnps <- function(snpTibble, maxCut, maxCutdown, posBaseRefTempFile) {
+    ggFig <- ggplot(snpTibble, aes(x = x, y = y, fill = value, height = height)) + 
+        geom_tile(width = 1) + 
+        scale_fill_manual(values = c("M" = "darkgreen", "S" = "red")) +
+        scale_x_continuous(name = "position relative to cut", limits = c(-maxCut, maxCutdown), expand = c(0, 0)) +
+        scale_y_continuous(name = "reads", expand = c(0, 0))
+    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
 }
 
-drawPositionalLogo <- function(baseFreq, method, namespace) {
-    ggplot() +
-    geom_logo(data = baseFreq, method = method, namespace = namespace) +
-    scale_x_continuous(breaks = NULL) +
-    theme_logo()
+drawPositionalLogo <- function(baseFreq, method, namespace, posBaseRefTempFile) {
+    ggFig <- ggplot() +
+        geom_logo(data = baseFreq, method = method, namespace = namespace) +
+        scale_x_continuous(breaks = NULL) +
+        theme_logo()
+    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
 }

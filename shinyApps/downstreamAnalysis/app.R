@@ -43,28 +43,28 @@ ui <- navbarPage(
         htmlOutput("alignPair", class = "alignments", inline = TRUE)
     ),
     tabPanel("base",
-        plotOutput("baseSubFreqPlot")
+        uiOutput("baseSubFreqPlot")
     ),
     tabPanel("position",
         selectInput("positionalMode", "display mode", choices = c("histgram base", "histgram indel", "read base", "read snp", "logo probability", "logo bits", "logo custom"), selected = "histgram base"),
-        plotOutput("posBaseRef1Plot"),
-        plotOutput("posBaseRef2Plot")
+        uiOutput("posBaseRef1Plot"),
+        uiOutput("posBaseRef2Plot")
     ),
     tabPanel("MMEJ",
         selectInput("microRefId", "reference id", choices = NULL),
         selectInput("microMode", "microhomology count display mode", choices = c("repeat", "separate")),
         numericInput("microThres", "minimal micro homology length", value = 4, min = 1),
-        plotOutput("mh_matrix_plot")
+        uiOutput("mhMatrixPlot")
     ),
     tabPanel("classify",
         checkboxInput("claClaDistinctTemp", "discriminate templated insertion and random insertion"),
         selectInput("claClaMode", "mode", choices = c("pie", "waffle")),
-        plotOutput("claClaPlot", height = "1000px")
+        uiOutput("claClaPlot")
     ),
     tabPanel("distribution",
-        selectInput("conDistriTarget", "what", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete"), multiple = TRUE),
-        selectInput("conDistriMode", "mode", choices = c("continuous", "discrete")),
-        plotOutput("conDisPlot")
+        selectInput("distriTarget", "what", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete"), multiple = TRUE),
+        selectInput("distriMode", "mode", choices = c("continuous", "discrete")),
+        uiOutput("distriPlot")
     ),
     tabPanel("pairwise",
         selectInput("pairwiseX", "x", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
@@ -73,16 +73,16 @@ ui <- navbarPage(
         selectInput("pairwiseYscale", "y scale", choices = c("identity", "log10")),
         selectInput("pairwiseMethod", "method", choices = c("auto", "lm", "glm", "gam", "loess")),
         numericInput("pairwiseSpan", "span", 0.75, min = 0, max = 1, step = 0.01),
-        plotOutput("pairwisePlot"),
+        uiOutput("pairwisePlot"),
         textOutput("pairwiseWarning")
     ),
     tabPanel("polygon",
-        plotOutput("polyInsert1Plot"),
-        plotOutput("polyInsert2Plot")
+        uiOutput("polyInsert1Plot"),
+        uiOutput("polyInsert2Plot")
     ),
     tabPanel("arc",
-        plotOutput("arcDelete1Plot"),
-        plotOutput("arcDelete2Plot")
+        uiOutput("arcDelete1Plot"),
+        uiOutput("arcDelete2Plot")
     ),
     tabPanel("kpLogo",
         numericInput("kpLogoKmer", "kmer", 1, min = 1, max = 10, step = 1),
@@ -210,12 +210,15 @@ server <- function(input, output, session) {
     #########################################################
     # base substitution frequency
     #########################################################
-    output$baseSubFreqPlot <- renderPlot({
+    baseSubFreqTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$baseSubFreqPlot <- renderUI({
         req(input$algfiles)
-        algTibble() |> countBaseSubstitute() |>
+        ggFig <- algTibble() |> countBaseSubstitute() |>
             ggplot(aes(sub, count)) +
             geom_col() +
             scale_y_continuous(expand = c(0, 0))
+        ggsave(paste0(baseSubFreqTempFile, ".pdf"), plot = ggFig)
+        tags$iframe(src = paste0(sub("^www/", "", classifyTempFile), ".pdf"), height = "1200px", width = "100%")
     })
 
     #################################
@@ -285,47 +288,44 @@ server <- function(input, output, session) {
         getPositionalReads(queryMat, algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut2)
     })
 
-    output$posBaseRef1Plot <- renderPlot({
+    posBaseRef1TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    posBaseRef2TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$posBaseRef1Plot <- renderUI({
         req(input$algfiles)
         req(input$positionalMode)
-
         if (input$positionalMode == "histgram base") {
-            drawPositionalStatic(base1Tibble(), insert1Count())
-        }
-        else if (input$positionalMode == "histgram indel") {
-            drawPositionalStatic(MSD1Tibble(), insert1Count())
+            drawPositionalStatic(base1Tibble(), insert1Count(), posBaseRef1TempFile)
+        } else if (input$positionalMode == "histgram indel") {
+            drawPositionalStatic(MSD1Tibble(), insert1Count(), posBaseRef1TempFile)
         } else if (input$positionalMode == "read base") {
-            drawPositionalReads(read1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down)
+            drawPositionalReads(read1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(snp1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down)
+            drawPositionalSnps(snp1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
         } else if (input$positionalMode == "logo probability") {
-            drawPositionalLogo(base1Freq()[2:5,], "prob", "ACGT")
+            drawPositionalLogo(base1Freq()[2:5,], "prob", "ACGT", posBaseRef1TempFile)
         } else if (input$positionalMode == "logo bits") {
-            drawPositionalLogo(base1Freq()[2:5,], "bits", "ACGT")
+            drawPositionalLogo(base1Freq()[2:5,], "bits", "ACGT", posBaseRef1TempFile)
         } else if (input$positionalMode == "logo custom") {
-            drawPositionalLogo(base1Freq()[2:5,], "custom", "ACGT")
+            drawPositionalLogo(base1Freq()[2:5,], "custom", "ACGT", posBaseRef1TempFile)
         }
     })
-
-    output$posBaseRef2Plot <- renderPlot({
+    output$posBaseRef2Plot <- renderUI({
         req(input$algfiles)
         req(input$positionalMode)
-
         if (input$positionalMode == "histgram base") {
-            drawPositionalStatic(base2Tibble(), insert2Count())
-        }
-        else if (input$positionalMode == "histgram indel") {
-            drawPositionalStatic(MSD2Tibble(), insert2Count())
+            drawPositionalStatic(base2Tibble(), insert2Count(), posBaseRef2TempFile)
+        } else if (input$positionalMode == "histgram indel") {
+            drawPositionalStatic(MSD2Tibble(), insert2Count(), posBaseRef2TempFile)
         } else if (input$positionalMode == "read base") {
-            drawPositionalReads(read2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down)
+            drawPositionalReads(read2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(snp2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down)
+            drawPositionalSnps(snp2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
         } else if (input$positionalMode == "logo probability") {
-            drawPositionalLogo(base2Freq()[2:5,], "prob", "ACGT")
+            drawPositionalLogo(base2Freq()[2:5,], "prob", "ACGT", posBaseRef2TempFile)
         } else if (input$positionalMode == "logo bits") {
-            drawPositionalLogo(base2Freq()[2:5,], "bits", "ACGT")
+            drawPositionalLogo(base2Freq()[2:5,], "bits", "ACGT", posBaseRef2TempFile)
         } else if (input$positionalMode == "logo custom") {
-            drawPositionalLogo(base2Freq()[2:5,], "custom", "ACGT")
+            drawPositionalLogo(base2Freq()[2:5,], "custom", "ACGT", posBaseRef2TempFile)
         }
     })
 
@@ -363,11 +363,13 @@ server <- function(input, output, session) {
         microRefId(NULL)
         updateSelectInput(inputId = "microRefId", choices = algTibble()$refId |> unique())
     }) |> bindEvent(input$algfiles)
-    output$mh_matrix_plot <- renderPlot({
+
+    mhMatrixTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$mhMatrixPlot <- renderUI({
         req(input$algfiles)
         req(microRefId())
         cat("render plot")
-        drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), algMetaData()$maxCut1, algMetaData()$maxCut2, algMetaData()$maxCut1down, algMetaData()$maxCut2down, input$microMode)
+        drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), algMetaData()$maxCut1, algMetaData()$maxCut2, algMetaData()$maxCut1down, algMetaData()$maxCut2down, input$microMode, mhMatrixTempFile)
     })
 
     ##############################
@@ -380,19 +382,20 @@ server <- function(input, output, session) {
         getIndelTypesEx(algTibble())
     })
 
-    output$claClaPlot <- renderPlot({
+    classifyTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$claClaPlot <- renderUI({
         req(input$algfiles)
         if (input$claClaDistinctTemp) {
             if (input$claClaMode == "pie") {
-                indelTypePiePlot(indelTypeTibbleEx())
+                indelTypeTibbleEx() |> indelTypePiePlot(classifyTempFile)
             } else if (input$claClaMode == "waffle") {
-                indelTypeWafflePlot(indelTypeTibbleEx())
+                indelTypeTibbleEx() |> indelTypeWafflePlot(classifyTempFile)
             }
         } else {
             if (input$claClaMode == "pie") {
-                indelTypePiePlot(indelTypeTibble())
+                indelTypeTibble() |> indelTypePiePlot(classifyTempFile)
             } else if (input$claClaMode == "waffle") {
-                indelTypeWafflePlot(indelTypeTibble())
+                indelTypeTibble() |> indelTypeWafflePlot(classifyTempFile)
             }
         }
     })
@@ -400,27 +403,30 @@ server <- function(input, output, session) {
     ##############################
     # distribution plot
     ##############################
-    output$conDisPlot <- renderPlot({
+    distriTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$distriPlot <- renderUI({
         req(input$algfiles)
-        req(input$conDistriTarget)
-        if (input$conDistriMode == "discrete") {
-            algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(c("count", input$conDistriTarget)) |> discreteDistribution()
-        } else if (input$conDistriMode == "continuous") {
-            algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(c("count", input$conDistriTarget)) |> continuousDistribution()
+        req(input$distriTarget)
+        if (input$distriMode == "discrete") {
+            algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(c("count", input$distriTarget)) |> discreteDistribution(distriTempFile)
+        } else if (input$distriMode == "continuous") {
+            algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(c("count", input$distriTarget)) |> continuousDistribution(distriTempFile)
         }
     })
 
     ##############################
     # pairwise plot
     ##############################
-    output$pairwisePlot <- renderPlot({
+    pairwiseTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$pairwisePlot <- renderUI({
         req(input$algfiles)
         req(input$pairwiseX != input$pairwiseY)
         ggFig <- algTibble() |> mutate(randInsert = nchar(randInsert)) |> select(input$pairwiseX, input$pairwiseY) |> pairwisePlot(input$pairwiseXscale, input$pairwiseYscale, input$pairwiseMethod, input$pairwiseSpan)
         output$pairwiseWarning <- renderText({
             capture.output(ggFig, type = "message")
         })
-        ggFig
+        ggsave(paste0(pairwiseTempFile, ".pdf"), plot = ggFig)
+        tags$iframe(src = paste0(sub("^www/", "", pairwiseTempFile), ".pdf"), height = "1200px", width = "100%")
     })
 
     ###############################
@@ -442,13 +448,15 @@ server <- function(input, output, session) {
         getPolyXY(polyInsTibble2(), "up")
     })
 
-    output$polyInsert1Plot <- renderPlot({
+    polyInsert1TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    polyInsert2TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$polyInsert1Plot <- renderUI({
         req(input$algfiles)
-        plotPolyInsTibble(polyXY1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down + algMetaData()$maxRandInsert))
+        plotPolyInsTibble(polyXY1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down + algMetaData()$maxRandInsert), polyInsert1TempFile )
     })
-    output$polyInsert2Plot <- renderPlot({
+    output$polyInsert2Plot <- renderUI({
         req(input$algfiles)
-        plotPolyInsTibble(polyXY2(), c(-algMetaData()$maxCut2 - algMetaData()$maxRandInsert, algMetaData()$maxCut2down))
+        plotPolyInsTibble(polyXY2(), c(-algMetaData()$maxCut2 - algMetaData()$maxRandInsert, algMetaData()$maxCut2down), polyInsert2TempFile )
     })
 
     ###############################
@@ -464,22 +472,20 @@ server <- function(input, output, session) {
         arcDelTibble() |> select(count, delStart2, delEnd2) |> rename(delStart = delStart2, delEnd = delEnd2) |> unnest(c(delStart, delEnd)) |> summarise(count = sum(count), .by = c(delStart, delEnd))
     })
 
-    output$arcDelete1Plot <- renderPlot({
+    arcDelete1TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    arcDelete2TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    output$arcDelete1Plot <- renderUI({
         req(input$algfiles)
-        plotArcDelTibble(arcDelTibble1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down))
+        plotArcDelTibble(arcDelTibble1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down), arcDelete1TempFile)
     })
-    output$arcDelete2Plot <- renderPlot({
+    output$arcDelete2Plot <- renderUI({
         req(input$algfiles)
-        plotArcDelTibble(arcDelTibble2(), c(-algMetaData()$maxCut2, algMetaData()$maxCut2down))
+        plotArcDelTibble(arcDelTibble2(), c(-algMetaData()$maxCut2, algMetaData()$maxCut2down), arcDelete2TempFile)
     })
 
     ################################
     # kpLogo
     ################################
-    outputKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
-    weightKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
-    targetKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
-    bgFileKpLogo <- tempfile(tmpdir=paste0("www/", session$token))
     # use kpLogoRegion as a proxy of input$kpLogoRegion to prevent render output$kpLogoPlot twice (one before input$kpLogoRegion is returned by client, and one after that)
     kpLogoRegion <- reactiveVal(c(0, 0))
     observe({
@@ -493,17 +499,21 @@ server <- function(input, output, session) {
     algTarget <- reactive({
         getKpLogoAlgTarget(algTibble(), sgRNAs(), editTarget(), input$kpLogoCountThres, input$kpLogoMethod)
     })
+
+    outputKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    weightKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    targetKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    bgFileKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
     output$kpLogoIframe <- renderUI({
         req(input$algfiles)
         req(input$sgRNAfile)
         req(kpLogoRegion()[2] > 0)
-        plotKpLogoAlgTarget(algTarget(), input$kpLogoMethod, kpLogoRegion(), input$kpLogoKmer, outputKpLogo, weightKpLogo, targetKpLogo, bgFileKpLogo)
+        plotKpLogoAlgTarget(algTarget(), input$kpLogoMethod, kpLogoRegion(), input$kpLogoKmer, outputKpLogoTempFile, weightKpLogoTempFile, targetKpLogoTempFile, bgFileKpLogoTempFile)
     })
 
     #####################################
     # kmer frequencies
     #####################################
-    kmerPdfTemp <- tempfile(tmpdir=paste0("www/", session$token))
     # use kmerRange as a proxy of input$kmerRange to prevent render output$kmerIframe twice (one before input$kmerRange is returned by client, and one after that)
     kmerRange <- reactiveVal(c(0, 0))
     observe({
@@ -518,11 +528,13 @@ server <- function(input, output, session) {
     kmerTibble <- reactive({
         algTibble() |> mutate(kmer = substr(sgRNAs()[refId], kmerRange()[1], kmerRange()[2]), target = editTarget()) |> summarise(count = sum(count), .by = c(kmer, target))
     })
+
+    kmerPdfTempFile <- tempfile(tmpdir=paste0("www/", session$token))
     output$kmerIframe <- renderUI({
         req(input$algfiles)
         req(input$sgRNAfile)
         req(kmerRange()[2] > 0)
-        plotKmerFrequencies(kmerTibble(), kmerPdfTemp)
+        plotKmerFrequencies(kmerTibble(), kmerPdfTempFile)
     })
 }
 
