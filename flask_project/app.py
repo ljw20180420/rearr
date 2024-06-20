@@ -163,13 +163,5 @@ def inspect(taskId):
     result = AsyncResult(taskId)
     return result.status
 
-@flaskApp.get("/flower")
-def flower():
-    return redirect('http://www.rearr.xyz:5555', code=301)
-
-@flaskApp.get("/shiny")
-def shiny():
-    return redirect('http://www.rearr.xyz:3838', code=301)
-
 if __name__ == "__main__":
     flaskApp.run()

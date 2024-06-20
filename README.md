@@ -1,8 +1,5 @@
 # Download
-```{bash}
-git clone git@github.com:ljw20180420/sx_lcy.git
-git clone https://github.com/ljw20180420/sx_lcy.git
-```
+https://github.com/ljw20180420/sx_lcy/releases
 
 # Install
 ```{bash}
@@ -35,20 +32,19 @@ target.alg: alignments
 
 # TODO
 ```[tasklist]
+- [ ] asgi is more advance than wsgi
+- [ ] unittest
+- [ ] DuckDB is faster than tidyverse
 - [ ] add a link to genome in install.sh
 - [ ] add a snakemake workflow
 - [ ] add CDCI support by github action
 - [ ] resemble indelphi
 - [ ] implement tidymodels (need to install tidymodels in shiny rocker, which must not be installed through CRAN)
-- [ ] merge shiny APP visualize alg file into single APP with multiple tabPanels in narbarPage
 - [ ] explore base
 - [ ] feature choose
 - [ ] AI review
 - [ ] PCR
 - [ ] CDN
-- [ ] Rewrite post_process in R
-- [ ] Sequence heatmap, and more visualizations
-- [ ] Make single target version a special case of screening case (merge normal mode with barcode mode)
 - [ ] Modulerize native installation
 - [ ] Substitute native installation into Dockerfiles
 - [ ] Optimize DockerFiles by merge install commands
@@ -64,7 +60,6 @@ target.alg: alignments
 - [ ] Add shiny app for kpLogo
 - [ ] Deploy to JCloud
 - [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
-- [ ] Move all downstream analyses to shiny App
 - [ ] Automatic document
 - [ ] Python program all run in shiny, so only need a python shiny docker
 - [ ] R program all run in shiny, so only need rocker/shiny-verse image
@@ -74,9 +69,6 @@ target.alg: alignments
 ```[tasklist]
 - [ ] Use GNU autotools to install Rearrangement
 - [ ] Hi-C apps
-- [ ] Uniprot database
-- [ ] RNA structure prediction
-- [ ] Protein structure prediction (Alphafold2)
 - [ ] DeepFri
 - [ ] PDB structure prediction
 - [ ] molecular dynamics simulation
