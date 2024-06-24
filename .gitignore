@@ -27,3 +27,5 @@ shinyApps/helpers/Sushi-master/*
 **/tmp
 genome
 .dockerignore
+*.crt
+*.key
