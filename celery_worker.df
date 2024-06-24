@@ -2,7 +2,10 @@ FROM python:latest
 LABEL maintainer="ljw2017@sjtu.edu.cn"
 WORKDIR /app
 RUN pip install celery[redis]
-COPY ["./", "/app/"]
+COPY ["./install.sh", "./pv-1.8.5.zip", "./correct_micro_homology.awk", "./removeDuplicates.sh", "/app/"]
+COPY ["./Rearrangement", "/app/Rearrangement"]
+COPY ["./demultiplex", "/app/demultiplex"]
+COPY ["./sx", "/app/sx"]
 RUN ./install.sh core sx && cd / && rm -rf /app
 COPY ["./flask_project/celery_project/", "/app/celery_project/"]
 COPY ["./rearrTest.sh", "./workFlow.mak", "/app/"]

@@ -83,13 +83,18 @@ services:
     image: nginx:latest
     ports:
       - "8080:8080"
+      - "8081:8081"
       - "5555:5555"
+      - "5556:5556"
       - "3838:3838"
-      - "80:80"
-      - "443:443"
+      - "3839:3839"
+      - "8000:8000"
+      - "7999:7999"
+      - "8001:8001"
+      - "8002:8002"
     volumes:
       - "./nginx/conf/:/etc/nginx/conf.d/:ro"
-      - "./homepage.html:/usr/share/nginx/html/index.html:ro"
+      - "./nginx/html/:/usr/share/nginx/html/:ro"
       - "./openssl/:/etc/ssl/:ro"
 
   shiny:
