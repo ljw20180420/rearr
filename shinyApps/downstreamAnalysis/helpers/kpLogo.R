@@ -19,5 +19,5 @@ plotKpLogoAlgTarget <- function(algTarget, method, region, kmer, outputKpLogoTem
             targetKpLogoTempFile, "-o", outputKpLogoTempFile, "-region", paste(region[1], region[2], sep = ","), "-bgfile", bgFileKpLogoTempFile, "-k", kmer
         ))
     }
-    return(tags$iframe(src = paste0(sub("^www", "", outputKpLogoTempFile), ".all.pdf"), height = "1000px", width = "100%"))
+    return(tags$iframe(src = paste0(sub("^www/", "", outputKpLogoTempFile), ".all.pdf"), height = "1000px", width = "100%"))
 }
