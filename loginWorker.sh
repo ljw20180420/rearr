@@ -17,11 +17,6 @@ then
     chown $(id -un):$(id -gn) genome
 fi
 
-mkdir -p flask_project/tmp
-chmod a+w flask_project/tmp
-mkdir -p shinyApps/downstreamAnalysis/www
-chmod a+w shinyApps/downstreamAnalysis/www
-
 dataPath=$(realpath $1)
 if [ -z $dataPath ]
 then

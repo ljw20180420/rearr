@@ -29,3 +29,4 @@ genome
 .dockerignore
 *.crt
 *.key
+shinyApps/downstreamAnalysis/www

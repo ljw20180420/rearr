@@ -34,6 +34,15 @@ target.post: file ready to align
 target.alg: alignments
 ```
 
+# Setup the docker based server
+First, you need docker: https://docs.docker.com/engine/install/ubuntu
+Maybe you need to configure the proxy of docker daemon: https://docs.docker.com/config/daemon/systemd
+```{list}
+cd sx_lcy
+./pre-compose-up.sh
+docker compose up -d
+```
+
 # TODO
 ```[tasklist]
 - [ ] asgi is more advance than wsgi
