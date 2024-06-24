@@ -452,11 +452,11 @@ server <- function(input, output, session) {
     polyInsert2TempFile <- tempfile(tmpdir=paste0("www/", session$token))
     output$polyInsert1Plot <- renderUI({
         req(input$algfiles)
-        plotPolyInsTibble(polyXY1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down + algMetaData()$maxRandInsert), polyInsert1TempFile )
+        plotPolyInsTibble(polyXY1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down + algMetaData()$maxRandInsert), polyInsert1TempFile)
     })
     output$polyInsert2Plot <- renderUI({
         req(input$algfiles)
-        plotPolyInsTibble(polyXY2(), c(-algMetaData()$maxCut2 - algMetaData()$maxRandInsert, algMetaData()$maxCut2down), polyInsert2TempFile )
+        plotPolyInsTibble(polyXY2(), c(-algMetaData()$maxCut2 - algMetaData()$maxRandInsert, algMetaData()$maxCut2down), polyInsert2TempFile)
     })
 
     ###############################

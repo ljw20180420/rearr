@@ -2,7 +2,7 @@ FROM rocker/shiny-verse:latest
 RUN apt-get update && apt-get install -y --no-install-recommends libbz2-dev gawk
 COPY ["./install.sh", "./kpLogo-1.1.zip", "/app/"]
 RUN cd /app && ./install.sh kpLogo && cd / && rm -rf /app
-RUN R -e 'BiocManager::install(c("diffloop", "rtracklayer", "HiContacts", "GenomicFeatures"), ask = FALSE)'
+RUN R -e 'BiocManager::install(c("rtracklayer", "HiContacts", "GenomicFeatures"), ask = FALSE)'
 RUN R -e 'library(devtools); install_github("PhanstielLab/Sushi")'
 RUN R -e 'library(devtools); install_github("aryeelab/diffloop")'
 RUN R -e 'install.packages(c("shinyjs", "shinyWidgets", "ggrepel", "spatstat", "ggseqlogo", "ggforce", "waffle"))'

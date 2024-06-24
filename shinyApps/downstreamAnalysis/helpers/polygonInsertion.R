@@ -54,5 +54,5 @@ plotPolyInsTibble <- function(polyXY, limits, polyInsertTempFile) {
         scale_x_continuous(limits = limits, name = "pos", expand = c(0, 0)) +
         scale_y_continuous(name = "count", expand = c(0, 0))
     ggsave(paste0(polyInsertTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
-    tags$iframe(src = paste0(sub("^www", "", polyInsertTempFile), ".pdf"), height = "600px", width = "100%")
+    tags$iframe(src = paste0(sub("^www/", "", polyInsertTempFile), ".pdf"), height = "600px", width = "100%")
 }
