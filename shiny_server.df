@@ -6,3 +6,5 @@ RUN R -e 'BiocManager::install(c("rtracklayer", "HiContacts", "GenomicFeatures")
 RUN R -e 'library(devtools); install_github("PhanstielLab/Sushi")'
 RUN R -e 'library(devtools); install_github("aryeelab/diffloop")'
 RUN R -e 'install.packages(c("shinyjs", "shinyWidgets", "ggrepel", "spatstat", "ggseqlogo", "ggforce", "waffle"))'
+RUN apt install -y --no-install-recommends ghostscript imagemagick
+RUN sed -i -r '/<policy domain="coder" rights="none" pattern="(PS|PS2|PS3|EPS|PDF|XPS)"/{s/^/<!-- /; s/$/ -->/}' /etc/ImageMagick-*/policy.xml
