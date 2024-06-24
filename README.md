@@ -6,6 +6,10 @@ https://github.com/ljw20180420/sx_lcy/releases
 It is recommanded to use rearr in docker. If you want to install natively, cd into the project fold and execute ./install/sh core sx
 ```
 
+# Install rootless docker
+First, install docker engine (refer to https://docs.docker.com/engine/install)
+Then install rootless docker (https://docs.docker.com/engine/security/rootless/#install)
+
 # Usage
 ```{bash}
 See rearrTest.sh
