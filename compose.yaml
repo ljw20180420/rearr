@@ -89,7 +89,8 @@ services:
     volumes:
       - "./nginx/conf/:/etc/nginx/conf.d/:ro"
       - "./nginx/html/:/usr/share/nginx/html/:ro"
-      - "./openssl/:/etc/ssl/:ro"
+      # - "./openssl/:/etc/ssl/:ro"
+      - "./certbot/letsencrypt/:/etc/letsencrypt/:ro"
 
   shiny:
     restart: always

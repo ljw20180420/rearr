@@ -1,0 +1,21 @@
+# TODO: not use root user
+
+FROM ubuntu:latest AS rearr_core_build
+LABEL maintainer="ljw2017@sjtu.edu.cn"
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev
+COPY ["./", "/app/"]
+RUN ./install.sh core
+
+FROM scratch
+COPY --from=rearr_core_build /usr/local/share/awk/ /usr/local/share/awk/
+COPY --from=rearr_core_build /usr/local/bin/ /usr/local/bin/
+# install python
+# RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip
+# RUN pip install -U pip && pip install pyinstaller numpy scipy flask
+# # install system enviroments
+# RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-dev r-base libcurl4-openssl-dev libssl-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev cmake bash gawk bsdmainutils libncursesw5-dev pandoc samtools bedtools bowtie2 cutadapt ghostscript imagemagick
+# # fix policy problem of imagemagick
+# RUN sed -i -r 's#<policy domain="coder" rights="none" pattern="(PS|PS2|PS3|EPS|PDF|XPS)" />#<!-- policy domain="coder" rights="none" pattern="\1" />#g' /etc/ImageMagick-6/policy.xml
+# # install R packages
+# RUN apt-get install -y --no-install-recommends r-cran-jsonlite r-cran-ggforce r-cran-reticulate r-cran-ggtext r-cran-cairo r-cran-ggseqlogo && Rscript -e 'install.packages(c("tidyverse", "patchwork", "this.path", "waffle"))'
