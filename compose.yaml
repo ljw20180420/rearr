@@ -21,7 +21,7 @@ services:
       - redis
     restart: always
     container_name: celery_beat
-    image: ljwdocker1989/celery_flower
+    image: ljwdocker1989/celery_flower:latest
     build:
       context: .
       dockerfile: celery_flower.df
@@ -33,7 +33,7 @@ services:
       - redis
     restart: always
     container_name: celery_worker
-    image: ljwdocker1989/celery_worker
+    image: ljwdocker1989/celery_worker:latest
     build:
       context: .
       dockerfile: celery_worker.df
@@ -49,7 +49,7 @@ services:
       - worker
     restart: always
     container_name: flask_app
-    image: ljwdocker1989/flask_app
+    image: ljwdocker1989/flask_app:latest
     build:
       context: .
       dockerfile: flask.df
@@ -67,7 +67,7 @@ services:
       - worker
     restart: always
     container_name: celery_flower
-    image: ljwdocker1989/celery_flower
+    image: ljwdocker1989/celery_flower:latest
     build:
       context: .
       dockerfile: celery_flower.df
@@ -94,7 +94,7 @@ services:
   shiny:
     restart: always
     container_name: shiny_server
-    image: ljwdocker1989/shiny_server
+    image: ljwdocker1989/shiny_server:latest
     build:
       context: .
       dockerfile: ./shiny_server.df
