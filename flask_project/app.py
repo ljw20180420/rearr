@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import os, tempfile, io, zipfile, re
-from flask import Flask, render_template, request, send_file, send_from_directory, redirect
+from flask import Flask, render_template, request, send_file, send_from_directory
 from celery_project.tasks import celeryUpload, celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryGetReference, celeryGetSpliters
 from celery.result import AsyncResult
-from werkzeug.middleware.proxy_fix import ProxyFix
+# from werkzeug.middleware.proxy_fix import ProxyFix
 
 flaskApp = Flask(__name__, static_folder="vue_project/dist/assets", template_folder="vue_project/dist", static_url_path="/assets")
-flaskApp.wsgi_app = ProxyFix(flaskApp.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+# flaskApp.wsgi_app = ProxyFix(flaskApp.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 flaskApp.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024
 
 @flaskApp.route('/favicon.ico')
