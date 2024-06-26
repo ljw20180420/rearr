@@ -56,7 +56,7 @@ useHandleConnections({
 async function upload(event, idx) {
     files.value = event.target.files;
     try{
-        const response = await axios.putForm("/upload", {
+        const response = await axios.putForm(base_url + "/upload", {
             files: files.value,
         },
         {
@@ -104,13 +104,15 @@ watch(() => node.data,
         immediate: true,
     }
 )
+
+const base_url = import.meta.env.BASE_URL;
 </script>
 
 <template>
     <div>
         <div v-for="obj, i in node.data">
             <span>{{ obj.name }}: </span>
-            <a v-if="Object.keys(obj).includes('taskId')" :href="'/download/' + obj.taskId">{{ obj.taskId }}</a>
+            <a v-if="Object.keys(obj).includes('taskId')" :href="base_url + '/download/' + obj.taskId">{{ obj.taskId }}</a>
             <br>
             <input v-if="obj.type == 'value'" v-model="node.data[i].value">
             <div v-else-if="obj.type == 'file' || obj.type == 'files'">

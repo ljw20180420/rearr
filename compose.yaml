@@ -58,9 +58,7 @@ services:
     environment:
       CELERY_BROKER: amqp://rabbitmq:5672
       CELERY_BACKEND: redis://redis:6379/0
-      CELERY_FLOWER: http://flower:5555
-      SHINY_SERVER: http://shiny:3838
-    command: waitress-serve app:flaskApp
+    command: waitress-serve --url-prefix=/workflow app:flaskApp
 
   flower:
     depends_on:
@@ -73,7 +71,7 @@ services:
     build:
       context: .
       dockerfile: celery_flower.df
-    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower
+    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
 
   nginx:
     depends_on:
@@ -85,12 +83,13 @@ services:
     image: nginx:latest
     ports:
       - "80:80"
-      - "443:443"
+      # - "443:443"
     volumes:
       - "./nginx/conf/:/etc/nginx/conf.d/:ro"
       - "./nginx/html/:/usr/share/nginx/html/:ro"
       # - "./openssl/:/etc/ssl/:ro"
-      - "./certbot/letsencrypt/:/etc/letsencrypt/:ro"
+      # - "./certbot/letsencrypt/:/etc/letsencrypt/:ro"
+    # command: [nginx-debug, '-g', 'daemon off;']
 
   shiny:
     restart: always

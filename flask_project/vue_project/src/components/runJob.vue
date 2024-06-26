@@ -44,13 +44,13 @@ async function runJob() {
             if (taskId == null) {
                 continue;
             }
-            const response = await axios.get("inspect/" + taskId);
+            const response = await axios.get(base_url + "/inspect/" + taskId);
             if (response.data != "SUCCESS") {
                 alert("job: " + taskId + " is " + response.data);
                 return;
             }
         }
-        const response = await axios.putForm("/runJob/" + node.id, node.data.values);
+        const response = await axios.putForm(base_url + "/runJob/" + node.id, node.data.values);
         for (let rdt of response.data) {
             let found = false;
             for (let edge of connectedEdges.value) {
@@ -77,6 +77,8 @@ async function runJob() {
         alert(error);
     }
 }
+
+const base_url = import.meta.env.BASE_URL;
 </script>
 
 <template>

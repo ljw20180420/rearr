@@ -15,6 +15,7 @@ dir(path = "helpers", full.names = TRUE) |> lapply(source)
 # Define UI ----
 ui <- navbarPage(
     "downstream analysis",
+    theme = bslib::bs_theme(version = 5),
     tags$head(
         tags$style(HTML("
             .alignments {
@@ -218,7 +219,7 @@ server <- function(input, output, session) {
             geom_col() +
             scale_y_continuous(expand = c(0, 0))
         ggsave(paste0(baseSubFreqTempFile, ".pdf"), plot = ggFig)
-        tags$iframe(src = paste0(sub("^www/", "", classifyTempFile), ".pdf"), height = "1200px", width = "100%")
+        tags$iframe(src = paste0(sub("^www/", "", baseSubFreqTempFile), ".pdf"), height = "1200px", width = "100%")
     })
 
     #################################
