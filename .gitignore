@@ -31,5 +31,5 @@ genome
 *.key
 shinyApps/downstreamAnalysis/www
 .env.local
-chat-ui
-llama.cpp
+chat-ui/*
+!chat-ui/.env.local
