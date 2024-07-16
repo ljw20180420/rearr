@@ -30,3 +30,6 @@ genome
 *.crt
 *.key
 shinyApps/downstreamAnalysis/www
+.env.local
+chat-ui
+llama.cpp

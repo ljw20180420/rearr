@@ -100,3 +100,21 @@ services:
       dockerfile: ./shiny_server.df
     volumes:
       - "./shinyApps/:/srv/shiny-server/:rw"
+
+  chat-ui-db:
+    depends_on:
+      - Phi-3-mini-4k-instruct-gguf
+    restart: always
+    container_name: chat-ui-db
+    image: ghcr.io/huggingface/chat-ui-db
+    volumes:
+      - "./chat-ui/.env.local:/app/.env.local"
+      - "./chat-ui/data:/data"
+
+  Phi-3-mini-4k-instruct-gguf:
+    restart: always
+    container_name: Phi-3-mini-4k-instruct-gguf
+    image: ghcr.io/ggerganov/llama.cpp:server
+    volumes:
+      - "./chat-ui/llama.cpp:/models"
+    command: -m /models/Phi-3-mini-4k-instruct-q4.gguf --host 0.0.0.0 -c 4096
