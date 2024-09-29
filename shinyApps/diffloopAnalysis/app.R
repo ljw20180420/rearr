@@ -310,7 +310,7 @@ server <- function(input, output) {
             if (nrow(filterLoopList()[[i]]@rowData) == 0) {
                 next
             }
-            loopWidthsList[[i]] <- tibble(filter = paste0("filter", i), count = filterLoopList()[[i]]@counts |> rowSums(), loopWidth = filterLoopList()[[i]]@rowData$loopWidth)
+            loopWidthsList[[i]] <- tibble(filter = paste0("filter", i), count = filterLoopList()[[i]]@counts[, input[[paste0("filter", i)]]] |> as.matrix() |> rowSums(), loopWidth = filterLoopList()[[i]]@rowData$loopWidth)
         }
         loopWidthsList |> bind_rows(tibble(filter = character(0), count = double(0), loopWidth = integer(0)))
     })
