@@ -29,4 +29,4 @@ endif
 %.target.fa %.pair.fa: %
 	sxExtractSpliter.sh $< >$<.target.fa 3>$<.pair.fa
 
-.PRECIOUS: %.count %.1.bt2 %.demultiplex %.alg %.ref %.post %.csv.primer+barcode.fa
+.PRECIOUS: %.count %.1.bt2 %.demultiplex %.alg %.ref %.post %.csv.target.fa

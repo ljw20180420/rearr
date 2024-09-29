@@ -45,6 +45,14 @@ docker compose up -d
 
 # TODO
 ```[tasklist]
+- [ ] convert alg to sam
+- [ ] use iframe output for diffloopAnalysis(Pair)
+- [ ] add shiny python to nginx server
+- [ ] rewrite vueflow by reactiveVal
+- [ ] use fuzzy render for heatmap
+- [ ] add info to shiny app widget
+- [ ] Celery flower does not work properly on server. Maybe permission problem.
+- [ ] fix one alignment bug in shiny server docker (gawk: fatal: cannot open source file `correct_micro_homology.awk' for reading: No such file or directory; cannot create dir '/srv/shiny-server/downstreamAnalysis/app_cache', reason 'Permission denied')
 - [ ] asgi is more advance than wsgi
 - [ ] unittest
 - [ ] DuckDB is faster than tidyverse
@@ -80,6 +88,7 @@ docker compose up -d
 
 # TODO (Long term)
 ```[tasklist]
+- [ ] 4C normalization algorithm
 - [ ] Use GNU autotools to install Rearrangement
 - [ ] Hi-C apps
 - [ ] DeepFri
