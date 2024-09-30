@@ -8,11 +8,13 @@ library(rtracklayer)
 library(GenomicFeatures)
 library(shinyjs)
 library(shinyWidgets)
+library(halfmoon)
 
 chromInfo <- getChromInfoFromUCSC("hg19")
 
 source("../helpers/mangoFDRPValue.R")
-source("../helpers/stat_ecdf_weighted.R")
+
+library(spatstat)
 
 options(shiny.maxRequestSize = 1000 * 1024^2)
 
@@ -260,9 +262,9 @@ server <- function(input, output) {
         minLoopWidth <- min(loops()@rowData$loopWidth)
         maxLoopWidth <- max(loops()@rowData$loopWidth)
         widthFilter <- numericRangeInput("loopWidthRange", "loop width range", value = c(minLoopWidth, maxLoopWidth), min = minLoopWidth, max = maxLoopWidth, step = 1)
-        maxLoopCount <- max(max(loops()@counts), 1)
+        maxLoopCount <- max(max(loops()@counts), 2)
         minLoopCount <- min(min(loops()@counts), maxLoopCount)
-        countFilter <- numericRangeInput("loopCountRange", "loop count range", value = c(minLoopCount, maxLoopCount), min = minLoopCount, max = maxLoopCount, step = 1)
+        countFilter <- numericRangeInput("loopCountRange", "loop count range", value = c(max(minLoopCount, 2), maxLoopCount), min = minLoopCount, max = maxLoopCount, step = 1)
         tagList(widthFilter, countFilter)
     })
 
@@ -369,8 +371,8 @@ server <- function(input, output) {
 
     loopWidthCdfGG <- reactive({
         loopWidths() |> 
-            ggplot(aes(x = loopWidth, color = filter)) + 
-            stat_ecdf(weight = count, pad = FALSE)
+            ggplot(aes(x = loopWidth, color = filter)) +
+            geom_ecdf(aes(weights = count))
     })
 
     output$loopWidthCdfPlot <- renderPlot({
