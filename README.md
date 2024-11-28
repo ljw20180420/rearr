@@ -7,8 +7,8 @@ It is recommanded to use rearr in docker. If you want to install natively, cd in
 ```
 
 # Install rootless docker
-First, install docker engine (refer to https://docs.docker.com/engine/install)
-Then install rootless docker (https://docs.docker.com/engine/security/rootless/#install)
+First, install docker engine: https://docs.docker.com/engine/install
+Then install rootless docker: https://docs.docker.com/engine/security/rootless/#install
 
 # Usage
 ```{bash}
@@ -35,8 +35,13 @@ target.alg: alignments
 ```
 
 # Setup the docker based server
-First, you need docker: https://docs.docker.com/engine/install/ubuntu
-Maybe you need to configure the proxy of docker daemon: https://docs.docker.com/config/daemon/systemd
+First, you need docker: https://docs.docker.com/engine/install.
+Maybe you need to configure the proxy of docker daemon: https://docs.docker.com/engine/daemon/proxy.
+To access host loopback in rootless docker: https://forums.docker.com/t/no-longer-able-to-access-local-ips-in-rootless-docker-after-update/141890.
+Docker buildx does not respect the daemon proxy. One has to use system proxy, say
+```bash
+HTTPS_PROXY=socks5://127.0.0.1:1080 docker compose build
+```
 ```{list}
 cd sx_lcy
 ./pre-compose-up.sh
@@ -45,6 +50,15 @@ docker compose up -d
 
 # TODO
 ```[tasklist]
+- [ ] use fileext in tempfile
+- [ ] write all proxy value in proxy$val form
+- [ ] shiny add description
+- [ ] shiny display pdf in iframe tag
+- [ ] fix shiny second execution bug
+- [ ] get rid of pre-compose-up.sh
+- [ ] push images to atomhub
+- [ ] put each image in a folder
+- [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
 - [ ] use iframe output for diffloopAnalysis(Pair)
 - [ ] add shiny python to nginx server

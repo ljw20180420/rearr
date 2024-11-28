@@ -103,12 +103,12 @@ server <- function(input, output, session) {
     ################################
     # session start
     ################################
-    paste0("www/", session$token) |> dir.create()
+    file.path("www", session$token) |> dir.create()
     ################################
     # session end
     ################################
     onSessionEnded(function() {
-        unlink(paste0("www/", session$token), recursive = TRUE)
+        unlink(file.path("www", session$token), recursive = TRUE)
     })
     ################################
     # sidebar
@@ -197,8 +197,8 @@ server <- function(input, output, session) {
     #########################################################
     # single alignment
     #########################################################
-    algOneRefFile <- tempfile(tmpdir=paste0("www/", session$token))
-    algOneAlgFile <- tempfile(tmpdir=paste0("www/", session$token))
+    algOneRefFile <- tempfile(tmpdir=file.path("www", session$token))
+    algOneAlgFile <- tempfile(tmpdir=file.path("www", session$token))
     output$alignPair <- renderText({
         req(input$alignOneRef1)
         req(input$alignOneRef2)
@@ -211,15 +211,15 @@ server <- function(input, output, session) {
     #########################################################
     # base substitution frequency
     #########################################################
-    baseSubFreqTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    baseSubFreqTempFile <- tempfile(tmpdir=file.path("www", session$token), fileext=".pdf")
     output$baseSubFreqPlot <- renderUI({
         req(input$algfiles)
         ggFig <- algTibble() |> countBaseSubstitute() |>
             ggplot(aes(sub, count)) +
             geom_col() +
             scale_y_continuous(expand = c(0, 0))
-        ggsave(paste0(baseSubFreqTempFile, ".pdf"), plot = ggFig)
-        tags$iframe(src = paste0(sub("^www/", "", baseSubFreqTempFile), ".pdf"), height = "1200px", width = "100%")
+        ggsave(baseSubFreqTempFile, plot = ggFig)
+        tags$iframe(src = sub("^www/", "", baseSubFreqTempFile), height = "1200px", width = "100%")
     })
 
     #################################
@@ -289,8 +289,8 @@ server <- function(input, output, session) {
         getPositionalReads(queryMat, algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut2)
     })
 
-    posBaseRef1TempFile <- tempfile(tmpdir=paste0("www/", session$token))
-    posBaseRef2TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    posBaseRef1TempFile <- tempfile(tmpdir=file.path("www", session$token))
+    posBaseRef2TempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$posBaseRef1Plot <- renderUI({
         req(input$algfiles)
         req(input$positionalMode)
@@ -365,7 +365,7 @@ server <- function(input, output, session) {
         updateSelectInput(inputId = "microRefId", choices = algTibble()$refId |> unique())
     }) |> bindEvent(input$algfiles)
 
-    mhMatrixTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    mhMatrixTempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$mhMatrixPlot <- renderUI({
         req(input$algfiles)
         req(microRefId())
@@ -383,7 +383,7 @@ server <- function(input, output, session) {
         getIndelTypesEx(algTibble())
     })
 
-    classifyTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    classifyTempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$claClaPlot <- renderUI({
         req(input$algfiles)
         if (input$claClaDistinctTemp) {
@@ -404,7 +404,7 @@ server <- function(input, output, session) {
     ##############################
     # distribution plot
     ##############################
-    distriTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    distriTempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$distriPlot <- renderUI({
         req(input$algfiles)
         req(input$distriTarget)
@@ -418,7 +418,7 @@ server <- function(input, output, session) {
     ##############################
     # pairwise plot
     ##############################
-    pairwiseTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    pairwiseTempFile <- tempfile(tmpdir=file.path("www", session$token), fileext=".pdf")
     output$pairwisePlot <- renderUI({
         req(input$algfiles)
         req(input$pairwiseX != input$pairwiseY)
@@ -426,8 +426,8 @@ server <- function(input, output, session) {
         output$pairwiseWarning <- renderText({
             capture.output(ggFig, type = "message")
         })
-        ggsave(paste0(pairwiseTempFile, ".pdf"), plot = ggFig)
-        tags$iframe(src = paste0(sub("^www/", "", pairwiseTempFile), ".pdf"), height = "1200px", width = "100%")
+        ggsave(pairwiseTempFile, plot = ggFig)
+        tags$iframe(src = sub("^www/", "", pairwiseTempFile), height = "1200px", width = "100%")
     })
 
     ###############################
@@ -449,8 +449,8 @@ server <- function(input, output, session) {
         getPolyXY(polyInsTibble2(), "up")
     })
 
-    polyInsert1TempFile <- tempfile(tmpdir=paste0("www/", session$token))
-    polyInsert2TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    polyInsert1TempFile <- tempfile(tmpdir=file.path("www", session$token))
+    polyInsert2TempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$polyInsert1Plot <- renderUI({
         req(input$algfiles)
         plotPolyInsTibble(polyXY1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down + algMetaData()$maxRandInsert), polyInsert1TempFile)
@@ -473,8 +473,8 @@ server <- function(input, output, session) {
         arcDelTibble() |> select(count, delStart2, delEnd2) |> rename(delStart = delStart2, delEnd = delEnd2) |> unnest(c(delStart, delEnd)) |> summarise(count = sum(count), .by = c(delStart, delEnd))
     })
 
-    arcDelete1TempFile <- tempfile(tmpdir=paste0("www/", session$token))
-    arcDelete2TempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    arcDelete1TempFile <- tempfile(tmpdir=file.path("www", session$token))
+    arcDelete2TempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$arcDelete1Plot <- renderUI({
         req(input$algfiles)
         plotArcDelTibble(arcDelTibble1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down), arcDelete1TempFile)
@@ -501,10 +501,10 @@ server <- function(input, output, session) {
         getKpLogoAlgTarget(algTibble(), sgRNAs(), editTarget(), input$kpLogoCountThres, input$kpLogoMethod)
     })
 
-    outputKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
-    weightKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
-    targetKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
-    bgFileKpLogoTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    outputKpLogoTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    weightKpLogoTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    targetKpLogoTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    bgFileKpLogoTempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$kpLogoIframe <- renderUI({
         req(input$algfiles)
         req(input$sgRNAfile)
@@ -530,7 +530,7 @@ server <- function(input, output, session) {
         algTibble() |> mutate(kmer = substr(sgRNAs()[refId], kmerRange()[1], kmerRange()[2]), target = editTarget()) |> summarise(count = sum(count), .by = c(kmer, target))
     })
 
-    kmerPdfTempFile <- tempfile(tmpdir=paste0("www/", session$token))
+    kmerPdfTempFile <- tempfile(tmpdir=file.path("www", session$token))
     output$kmerIframe <- renderUI({
         req(input$algfiles)
         req(input$sgRNAfile)
@@ -543,8 +543,19 @@ server <- function(input, output, session) {
 # app end
 ################################
 onStop(function() {
-    unlink("www/*", recursive = TRUE)
-    unlink(c(".RData", "done"))
+    temps <- setdiff(
+        c(
+            list.files(
+                path="www",
+                all.files=TRUE,
+                full.names=TRUE,
+                include.dirs=TRUE
+            ),
+            c(".RData", "done")
+        ),
+        c("www/.gitignore", "www/.", "www/..")
+    )
+    unlink(temps, recursive=TRUE)
 })
 
 # Run the app ----

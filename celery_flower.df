@@ -1,2 +1,0 @@
-FROM mher/flower:latest
-COPY "./flask_project/celery_project/" "./celery_project/"

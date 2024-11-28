@@ -45,17 +45,14 @@ ui <- navbarPage(
     ),
     tabPanel("loop number",
         selectInput("numberCount", "number/count", choices = c("number", "count")),
-        plotOutput("loopNumPlot"),
-        downloadButton("loopNumDownload")
+        uiOutput("loopNumPlot")
     ),
     tabPanel("loop width",
         numericInput("loopWidthBin", "loop width bin number", value = 20, min = 0, step = 1),
-        plotOutput("loopWidthPlot"),
-        downloadButton("loopWidthDownload")
+        uiOutput("loopWidthPlot")
     ),
     tabPanel("loop width cumulative distribution",
-        plotOutput("loopWidthCdfPlot"),
-        downloadButton("loopWidthCdfDownload")
+        uiOutput("loopWidthCdfPlot")
     ),
     tabPanel("heat map",
         checkboxInput("balanced", "balanced", value = TRUE),
@@ -83,8 +80,17 @@ ui <- navbarPage(
     )
 )
 
-server <- function(input, output) {
-    beddir <- tempdir()
+server <- function(input, output, session) {
+    ################################
+    # session start
+    ################################
+    file.path("www", session$token, "beddir") |> dir.create(recursive=TRUE)
+    ################################
+    # session end
+    ################################
+    onSessionEnded(function() {
+        unlink(file.path("www", session$token), recursive = TRUE)
+    })
 
     samples <- reactive({
         input$loopFiles$name |> str_replace(".interactions.all.mango", "")
@@ -100,16 +106,34 @@ server <- function(input, output) {
         toggleState("vmax")
     }) |> bindEvent(input$setVminVmax)
 
+    # Use proxy$xxxxx as a proxy of input$xxxxx. update??????Input will not update input$xxxxx until the client send the updated values back to the server. proxy$xxxxx helps to block renderUI until input$xxxxx got updated.
+    proxy <- reactiveValues(
+        resolution = NULL,
+        aggResolution = NULL,
+        chromosome = NULL,
+        start = NULL,
+        end = NULL
+    )
+    observe({
+        for (name in names(proxy)) {
+            proxy[[name]] <- input[[name]]
+        }
+    })
     observe({
         req(input$hicFiles)
+        proxy$resolution <- NULL
+        proxy$aggResolution <- NULL
+        proxy$chromosome <- NULL
         updateSelectInput(inputId = "resolution", choices = resolutions())
         updateSelectInput(inputId = "aggResolution", choices = resolutions())
         updateSelectInput(inputId = "chromosome", choices = availableChromosomes(input$hicFiles$datapath)@seqnames)
     })
 
     observe({
-        req(input$chromosome)
-        chromSize <- chromInfo$size[chromInfo$chrom == input$chromosome]
+        req(proxy$chromosome)
+        proxy$start <- NULL
+        proxy$end <- NULL
+        chromSize <- chromInfo$size[chromInfo$chrom == proxy$chromosome]
         updateNumericInput(inputId = "start", value = 0)
         updateNumericInput(inputId = "end", value = chromSize, max = chromSize)
     })
@@ -135,13 +159,13 @@ server <- function(input, output) {
 
     loops <- reactive({
         for (i in seq_len(nrow(input$loopFiles))) {
-            file.rename(input$loopFiles$datapath[i], file.path(beddir, input$loopFiles$name[i]))
+            file.copy(input$loopFiles$datapath[i], file.path("www", session$token, "beddir", input$loopFiles$name[i]))
         }
         if (endsWith(input$loopFiles$name[1], ".bedpe")) {
-            loops <- loopsMake(beddir, samples = samples())
+            loops <- loopsMake(file.path("www", session$token, "beddir"), samples = samples())
             loops <- mergeAnchors(loops, input$mergegap)
         } else {
-            loops <- loopsMake.mango(beddir, samples = samples(), mergegap = input$mergegap)
+            loops <- loopsMake.mango(file.path("www", session$token, "beddir"), samples = samples(), mergegap = input$mergegap)
         }
         loops |> mangoFDRPValue(nbins = input$nbins)
     })
@@ -333,59 +357,35 @@ server <- function(input, output) {
         }
     }
 
-    loopNumGG <- reactive({
-        tibble(filter = paste0("filter", seq_len(input$filterNum)), loopNum = loopNums()) |>
+    loopNumTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    output$loopNumPlot <- renderUI({
+        reqInputs()
+        ggObj <- tibble(filter = paste0("filter", seq_len(input$filterNum)), loopNum = loopNums()) |>
             ggplot(aes(filter, loopNum)) +
             geom_col()
+        ggsave(paste0(loopNumTempFile, ".pdf"), plot = ggObj)
+        tags$iframe(src = paste0(sub("^www/", "", loopNumTempFile), ".pdf"), height = "1200px", width = "100%")
     })
 
-    output$loopNumPlot <- renderPlot({
+    loopWidthTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    output$loopWidthPlot <- renderUI({
         reqInputs()
-        loopNumGG()
-    })
-
-    output$loopNumDownload <- downloadHandler(
-        filename = "loopNum.pdf",
-        content = function(file) {
-            ggsave(file, loopNumGG())
-        }
-    )
-
-    loopWidthGG <- reactive({
-        loopWidths() |>
+        ggObj <- loopWidths() |>
             ggplot(aes(x = loopWidth, weight = count, color = filter)) +
             stat_bin(geom = "line", bins = input$loopWidthBin, position = "identity")
+        ggsave(paste0(loopWidthTempFile, ".pdf"), plot = ggObj)
+        tags$iframe(src = paste0(sub("^www/", "", loopWidthTempFile), ".pdf"), height = "1200px", width = "100%")
     })
 
-    output$loopWidthPlot <- renderPlot({
+    loopWidthCdfTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    output$loopWidthCdfPlot <- renderUI({
         reqInputs()
-        loopWidthGG()
-    })
-
-    output$loopWidthDownload <- downloadHandler(
-        filename = "loopWidth.pdf",
-        content = function(file) {
-            ggsave(file, loopWidthGG())
-        }
-    )
-
-    loopWidthCdfGG <- reactive({
-        loopWidths() |> 
+        ggObj <- loopWidths() |> 
             ggplot(aes(x = loopWidth, color = filter)) +
             geom_ecdf(aes(weights = count))
+        ggsave(paste0(loopWidthCdfTempFile, ".pdf"), plot = ggObj)
+        tags$iframe(src = paste0(sub("^www/", "", loopWidthCdfTempFile), ".pdf"), height = "1200px", width = "100%")
     })
-
-    output$loopWidthCdfPlot <- renderPlot({
-        reqInputs()
-        loopWidthCdfGG()
-    })
-
-    output$loopWidthCdfDownload <- downloadHandler(
-        filename = "loopWidthCdf.pdf",
-        content = function(file) {
-            ggsave(file, loopWidthCdfGG())
-        }
-    )
 
     bedpeFiles <- reactive({
         bedpeFiles <- vector('list', input$filterNum)
@@ -402,108 +402,121 @@ server <- function(input, output) {
         return(bedpeFiles)
     })
 
-    output$heatMapPlot <- renderUI({
-        req(input$hicFiles)
-        plotOutputList <- vector('list', 2 * input$filterNum)
-        for (i in seq_len(input$filterNum)) {
-            plotOutputList[[2 * i - 1]] <- plotOutput(paste0("heatMap", i), width = "1000px", height = "1000px")
-            plotOutputList[[2 * i]] <- downloadButton(paste0("heatMap", i, "download"))
-        }
-        tagList(plotOutputList)
-    })
-
     heatMapGGList <- reactive({
         balanced <- ifelse(input$balanced, "balanced", "count")
         maxDistance <- switch(input$horizontal + 1, NULL, input$maxDistance)
         heatMapGGList <- vector('list', input$filterNum)
         for (i in seq_len(input$filterNum)) {
             loops <- bedpeFiles()[[i]] |> import() |> InteractionSet::makeGInteractionsFromGRangesPairs()
-            heatMapGGList[[i]] <- hic() |> refocus(paste0(input$chromosome, ":", input$start, "-", input$end)) |> zoom(as.integer(input$resolution)) |> plotMatrix(use.scores = balanced, scale = input$scale, loops = loops, maxDistance = maxDistance)
+            heatMapGGList[[i]] <- hic() |> refocus(paste0(proxy$chromosome, ":", proxy$start, "-", proxy$end)) |> zoom(as.integer(proxy$resolution)) |> plotMatrix(use.scores = balanced, scale = input$scale, loops = loops, maxDistance = maxDistance)
         }
         return(heatMapGGList)
     })
 
+    heatMapTempFile <- tempfile(tmpdir=file.path("www", session$token))
     observe({
         reqInputs()
         req(input$hicFiles)
-        req(input$chromosome)
-        req(input$start)
-        req(input$end)
-        req(input$resolution)
+        req(proxy$chromosome)
+        req(proxy$start)
+        req(proxy$end)
+        req(proxy$resolution)
+
+        # render UIs for holding iframe
+        output$heatMapPlot <- renderUI({
+            # isolate prevents renderUI from automatic update, it is update only if bindEvent is satisfied
+            isolate({
+                plotOutputList <- vector('list', input$filterNum)
+                for (i in seq_len(input$filterNum)) {
+                    plotOutputList[[i]] <- uiOutput(paste0("heatMap", i))
+                }
+                tagList(plotOutputList)
+            })
+        })
+
+        # core code to generate iframe
         for (i in seq_len(input$filterNum)) {
             local({
                 my_i <- i
-                output[[paste0("heatMap", my_i)]] <- renderPlot({
+                output[[paste0("heatMap", my_i)]] <- renderUI({
+                    # isolate prevents renderUI from automatic update, it is update only if bindEvent is satisfied
                     isolate({
-                        heatMapGGList()[[my_i]]
+                        heatMapTempFileIter <- paste0(heatMapTempFile, ".", my_i, ".pdf")
+                        ggsave(heatMapTempFileIter, plot = heatMapGGList()[[my_i]])
+                        tags$iframe(src = sub("^www/", "", heatMapTempFileIter), height = "1200px", width = "100%")
                     })
                 })
-                output[[paste0("heatMap", my_i, "download")]] <- downloadHandler(
-                    filename = paste0("heatMap", my_i, ".pdf"),
-                    content = function(file) {
-                        ggsave(file, heatMapGGList()[[my_i]])
-                    }
-                )
             })
         }
     }) |> bindEvent(input$renderHeat)
 
-    output$aggregatePlot <- renderUI({
-        req(input$hicFiles)
-        imageOutputList = vector("list", 2 * input$filterNum)
-        for (i in seq_len(input$filterNum)) {
-            imageOutputList[[2 * i - 1]] <- imageOutput(paste0("aggregate", i), width = "400px", height = "400px")
-            imageOutputList[[2 * i]] <- downloadButton(paste0("aggregate", i, "download"))
-        }
-        tagList(imageOutputList)
-    })
-
+    aggregateTempFile <- tempfile(tmpdir=file.path("www", session$token))
     observe({
         reqInputs()
         req(input$hicFiles)
-        req(input$aggResolution)
-        flankBps <- input$flank * as.integer(input$aggResolution)
+        req(proxy$aggResolution)
+
+        # render UIs for holding iframe
+        output$aggregatePlot <- renderUI({
+            # isolate prevents renderUI from automatic update, it is update only if bindEvent is satisfied
+            isolate({
+                imageOutputList = vector("list", input$filterNum)
+                for (i in seq_len(input$filterNum)) {
+                    imageOutputList[[i]] <- uiOutput(paste0("aggregate", i))
+                }
+                tagList(imageOutputList)
+            })
+        })
+
+        # core code to generate iframe
+        flankBps <- input$flank * as.integer(proxy$aggResolution)
         for (i in seq_len(input$filterNum)) {
             local({
                 my_i <- i
-                clpyFile <- tempfile(fileext = ".clpy")
-                pngFile <- sub(".clpy$", ".png", clpyFile)
+                clpyFile <- paste0(aggregateTempFile, ".", my_i, ".clpy")
+                pdfFile <- sub(".clpy$", ".pdf", clpyFile)
                 if (!is.null(input$view)) {
-                    coolpupCmd = sprintf("coolpup.py --view %s --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", input$view$datapath, flankBps, clpyFile, input$normalization, input$hicFiles$datapath, input$aggResolution, bedpeFiles()[[my_i]])
+                    coolpupCmd = sprintf("coolpup.py --view %s --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", input$view$datapath, flankBps, clpyFile, input$normalization, input$hicFiles$datapath, proxy$aggResolution, bedpeFiles()[[my_i]])
                 } else {
-                    coolpupCmd = sprintf("coolpup.py --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", flankBps, clpyFile, input$normalization, input$hicFiles$datapath, input$aggResolution, bedpeFiles()[[my_i]])
+                    coolpupCmd = sprintf("coolpup.py --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", flankBps, clpyFile, input$normalization, input$hicFiles$datapath, proxy$aggResolution, bedpeFiles()[[my_i]])
                 }
                 coolpupCmd |> system()
                 if (input$setVminVmax) {
                     req(input$vmin)
                     req(input$vmax)
-                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %f --vmax %f", clpyFile, pngFile, input$vmin, input$vmax)
+                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %f --vmax %f", clpyFile, pdfFile, input$vmin, input$vmax)
                 } else {
-                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s", clpyFile, pngFile)
+                    plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s", clpyFile, pdfFile)
                 }
                 plotpupCmd |> system()
-                output[[paste0("aggregate", my_i)]] <- renderImage(
-                    {
-                        list(src = pngFile)
-                    },
-                    deleteFile = FALSE 
-                )
-                output[[paste0("aggregate", my_i, "download")]] <- downloadHandler(
-                    filename = paste0("aggregate", my_i, ".pdf"),
-                    content = function(file) {
-                        if (input$setVminVmax) {
-                            req(input$vmin)
-                            req(input$vmax)
-                            plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s --vmin %f --vmax %f", clpyFile, file, input$vmin, input$vmax)
-                        } else {
-                            plotpupCmd = sprintf("plotpup.py --input_pups %s -o %s", clpyFile, file)
-                        }
-                        plotpupCmd |> system()
-                    }
-                )
+                output[[paste0("aggregate", my_i)]] <- renderUI({
+                    # isolate prevents renderUI from automatic update, it is update only if bindEvent is satisfied
+                    isolate({
+                        tags$iframe(src = sub("^www/", "", pdfFile), height = "1200px", width = "100%")
+                    })
+                })
             })
         }
     }) |> bindEvent(input$renderAggregate)
 }
+
+################################
+# app end
+################################
+onStop(function() {
+    temps <- setdiff(
+        c(
+            list.files(
+                path="www",
+                all.files=TRUE,
+                full.names=TRUE,
+                include.dirs=TRUE
+            ),
+            c(".RData", "done")
+        ),
+        c("www/.gitignore", "www/.", "www/..")
+    )
+    unlink(temps, recursive=TRUE)
+})
 
 shinyApp(ui = ui, server = server)

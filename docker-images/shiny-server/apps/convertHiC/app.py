@@ -44,7 +44,7 @@ def server(input, output, session):
     def downloadHic():
         req(input.uploadAllValidPairs())
         tempdir = tempfile.mkdtemp()
-        helperPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../helpers")
+        helperPath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "helpers")
         inputFile = input.uploadAllValidPairs()[0]['datapath']
         outputFile = os.path.join(tempdir, f'''{os.path.splitext(input.uploadAllValidPairs()[0]["name"])[0]}.hic''')
         subprocess.check_output(f'''{os.path.join(helperPath, "hicpro2juicebox.sh")} -i {inputFile} -o {tempdir} -g {os.path.join(helperPath, "hg19.chrom.sizes")} -j {os.path.join(helperPath, "juicer_tools_1.22.01.jar")}''', shell=True)
