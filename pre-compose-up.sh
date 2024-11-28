@@ -2,10 +2,11 @@
 
 # This is a script to run before docker compose
 
+chmod a+w docker-images/shiny-server/diffloopAnalysis/www
+chmod a+w docker-images/shiny-server/diffloopAnalysisPair/www
+chmod a+w docker-images/shiny-server/downstreamAnalysis/www
 mkdir -p flask_project/tmp
 chmod a+w flask_project/tmp
-mkdir -p shinyApps/downstreamAnalysis/www
-chmod a+w shinyApps/downstreamAnalysis/www
 mkdir -p chat-ui/data/db
 chmod a+w chat-ui/data/db
 mkdir -p chat-ui/llama.cpp

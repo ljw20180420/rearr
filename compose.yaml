@@ -24,7 +24,7 @@ services:
     image: ljwdocker1989/celery_flower:latest
     build:
       context: .
-      dockerfile: celery_flower.df
+      dockerfile: dockerfiles/celery_flower.df
     command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
 
   worker:
@@ -36,7 +36,7 @@ services:
     image: ljwdocker1989/celery_worker:latest
     build:
       context: .
-      dockerfile: celery_worker.df
+      dockerfile: dockerfiles/celery_worker.df
     volumes:
       - "./flask_project/tmp:/app/tmp"
       - "./genome:/app/genome:ro"
@@ -52,7 +52,7 @@ services:
     image: ljwdocker1989/flask_app:latest
     build:
       context: .
-      dockerfile: flask.df
+      dockerfile: dockerfiles/flask.df
     volumes:
       - "./flask_project/tmp:/app/tmp"
     environment:
@@ -70,7 +70,7 @@ services:
     image: ljwdocker1989/celery_flower:latest
     build:
       context: .
-      dockerfile: celery_flower.df
+      dockerfile: dockerfiles/celery_flower.df
     command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
 
   nginx:
@@ -98,9 +98,11 @@ services:
     image: ljwdocker1989/shiny_server:latest
     build:
       context: .
-      dockerfile: ./shiny_server.df
+      dockerfile: docker-images/shiny-server/shiny_server.df
     volumes:
-      - "./shinyApps/:/srv/shiny-server/:rw"
+      - "./docker-images/shiny-server/apps:/srv/shiny-server"
+      - "./docker-images/shiny-server/conf:/etc/shiny-server"
+      - "./docker-images/shiny-server/logs:/var/log/shiny-server"
 
   chat-ui-db:
     depends_on:
