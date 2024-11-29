@@ -1,13 +1,13 @@
 library(shiny)
 library(bslib)
+library(shinyjs)
+library(shinyWidgets)
 library(tidyverse)
 library(diffloop)
 library(GenomicRanges)
 library(HiContacts)
 library(rtracklayer)
 library(GenomicFeatures)
-library(shinyjs)
-library(shinyWidgets)
 library(halfmoon)
 
 chromInfo <- getChromInfoFromUCSC("hg19")
@@ -18,65 +18,187 @@ library(spatstat)
 
 options(shiny.maxRequestSize = 1000 * 1024^2)
 
-ui <- navbarPage(
-    "Diffloop Analysis",
+# This App use diffloop to analyze loop data.
+ui <- page_sidebar(
     sidebar = sidebar(
-        helpText("This App use diffloop to analyze loop data."),
-        fileInput("loopFiles", "Loop files (bedpe or mango)", multiple = TRUE),
-        numericInput("mergegap", "merge gap", value = 500),
-        numericInput("nbins", "nbins", value = 10, min = 0, step = 1),
-
-        numericInput("FDR", "FDR", value = 1, min = 0, max = 1, step = 0.01),
-        numericInput("PValue", "PValue", value = 1, min = 0, max = 1, step = 0.01),
-
-        numericInput("maxgap", "max gap between blackList/annotation and anchor", value = 0, min = 0, step = 100),
-
-        fileInput("blackListFiles", "black list regions (bed files)", multiple = TRUE),
-
-        fileInput("annotFiles", "annotation files", multiple = TRUE),
-
-        uiOutput("globalFilters"),
-
-        fileInput("hicFiles", "hic files"),
-
-        numericInput("filterNum", "filter number", value = 1, min = 1, step = 1),
-
-        uiOutput("filters")
+        tooltip(
+            fileInput("loopFiles", "loop files", multiple = TRUE),
+            r"(bedpe\mango loop files, multiple files are supported)"
+        ),
+        tooltip(
+            numericInput("mergegap", "merge gap", value = 500),
+            "anchors within this threshold will be merged"
+        ),
+        tooltip(
+            numericInput("nbins", "nbins", value = 10, min = 0, step = 1),
+            "bin numbers of binomial model used to calculate loop FDR and p-value by mangoCorrection"
+        ),
+        tooltip(
+            numericInput("FDR", "FDR", value = 1, min = 0, max = 1, step = 0.01),
+            "FDR threshold for loops"
+        ),
+        tooltip(
+            numericInput("PValue", "PValue", value = 1, min = 0, max = 1, step = 0.01),
+            "p-value threshold for loops"
+        ),
+        tooltip(
+            numericInput("maxgap", "max gap", value = 0, min = 0, step = 100),
+            "loop anchor within this threshold to blackList/annotation is considered interacting"
+        ),
+        tooltip(
+            fileInput("blackListFiles", "black list regions", multiple = TRUE),
+            "bed files specifies the black list regions excluded from analysis, multiple bed files are supported"
+        ),
+        tooltip(
+            fileInput("annotFiles", "annotation files", multiple = TRUE),
+            "bed files specifies the genome annotations, which are used to filter loops"
+        ),
+        tooltip(
+            uiOutput("globalFilters"),
+            "global filters applied to all loop files"
+        ),
+        tooltip(
+            fileInput("hicFile", "HiC file"),
+            "HiC or HiChIP file"
+        ),
+        tooltip(
+            numericInput("filterNum", "local filter number", value = 1, min = 1, step = 1),
+            "number of local filter"
+        ),
+        tooltip(
+            uiOutput("filters"),
+            "local filters of loops, all analyses will be applied to all local filters"
+        )
     ),
-    tabPanel("loop number",
-        selectInput("numberCount", "number/count", choices = c("number", "count")),
-        uiOutput("loopNumPlot")
-    ),
-    tabPanel("loop width",
-        numericInput("loopWidthBin", "loop width bin number", value = 20, min = 0, step = 1),
-        uiOutput("loopWidthPlot")
-    ),
-    tabPanel("loop width cumulative distribution",
-        uiOutput("loopWidthCdfPlot")
-    ),
-    tabPanel("heat map",
-        checkboxInput("balanced", "balanced", value = TRUE),
-        checkboxInput("horizontal", "horizontal", value = TRUE),
-        selectInput("scale", "scale", choices = c('log10', 'log2', 'linear', 'exp0.2')),
-        selectInput("resolution", "resolution", choices = NULL),
-        selectInput("chromosome", "chromosome", choices = NULL),
-        numericInput("start", "start", value = NA, min = 0),
-        numericInput("end", "end", value = NA, min = 0),
-        numericInput("maxDistance", "max distance", value = 1000000, min = 100000, step = 10000),
-        actionButton("renderHeat", "render heatmap"),
-        uiOutput("heatMapPlot")
-    ),
-    tabPanel("aggregate",
-        useShinyjs(),
-        selectInput("normalization", "normalization", choices = c("weight", "''")),
-        selectInput("aggResolution", "resolution", choices = NULL),
-        numericInput("flank", "flanking bins", value = 10, min = 0, step = 1),
-        fileInput("view", "view file in bed which defines which regions of the chromosomes to use"),
-        checkboxInput("setVminVmax", "set vmin and vmax", value = FALSE),
-        numericInput("vmin", "value for the lowest colour", value = NA),
-        numericInput("vmax", "value for the highest colour", value = NA),
-        actionButton("renderAggregate", "render aggregate"),
-        uiOutput("aggregatePlot")
+    navbarPage(
+        title = NULL,
+        tabPanel(
+            title=tooltip(
+                "loop number",
+                r"(accumulate and plot loop number\count)"
+            ),
+            tooltip(
+                selectInput("numberCount", "number/count", choices = c("number", "count")),
+                r"(accumulate loop number\count)"
+            ),
+            tooltip(
+                uiOutput("loopNumPlot"),
+                r"(bar plot of loop number\count)"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "loop width",
+                "plot loop count over loop width"
+            ),
+            tooltip(
+                numericInput("loopWidthBin", "loop width bin number", value = 20, min = 0, step = 1),
+                "bin number for loop width"
+            ),
+            tooltip(
+                uiOutput("loopWidthPlot"),
+                "loop count over loop width"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "loop width cumulative distribution",
+                "plot cumulative distribution function of loop width"
+            ),
+            tooltip(
+                uiOutput("loopWidthCdfPlot"),
+                "cumulative distribution function of loop width"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "heat map",
+                r"(plot HiC\HiChIP heatmap)"
+            ),
+            tooltip(
+                checkboxInput("balanced", "balanced", value = TRUE),
+                r"(use balanced HiC\HiChIP matrix)"
+            ),
+            tooltip(
+                checkboxInput("horizontal", "horizontal", value = TRUE),
+                "display diagonal horizontally"
+            ),
+            tooltip(
+                selectInput("scale", "scale", choices = c('log10', 'log2', 'linear', 'exp0.2')),
+                "scale of heatmap"
+            ),
+            tooltip(
+                selectInput("resolution", "resolution", choices = NULL),
+                "resolution of heatmap"
+            ),
+            tooltip(
+                selectInput("chromosome", "chromosome", choices = NULL),
+                "chromosome to display"
+            ),
+            tooltip(
+                numericInput("start", "start", value = NA, min = 0),
+                "0-based chromosome start position"
+            ),
+            tooltip(
+                numericInput("end", "end", value = NA, min = 0),
+                "0-based chromosome end position"
+            ),
+            tooltip(
+                numericInput("maxDistance", "max distance", value = 1000000, min = 100000, step = 10000),
+                "maximal interaction distance to display in horizontal mode"
+            ),
+            tooltip(
+                actionButton("renderHeat", "render heatmap"),
+                "press to (re)render heatmap"
+            ),
+            tooltip(
+                uiOutput("heatMapPlot"),
+                r"(HiC\HiChIP heatmap)"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "aggregate",
+                "plot aggregation heatmap"
+            ),
+            useShinyjs(),
+            tooltip(
+                selectInput("normalization", "normalization", choices = c("weight", "''")),
+                r"(column used to normalize HiC\HiChIP matrix for aggregation)"
+            ),
+            tooltip(
+                selectInput("aggResolution", "resolution", choices = NULL),
+                "aggregation resolution"
+            ),
+            tooltip(
+                numericInput("flank", "flanking bins", value = 10, min = 0, step = 1),
+                "flanking bins around aggregation center"
+            ),
+            tooltip(
+                fileInput("view", "view file"),
+                "bed file defining chromosome regions to aggregate"
+            ),
+            tooltip(
+                checkboxInput("setVminVmax", "set vmin and vmax", value = FALSE),
+                "manually set display scale of aggregation heatmap"
+            ),
+            tooltip(
+                numericInput("vmin", "value for the lowest colour", value = NA),
+                "minimal display value of aggregation heatmap"
+            ),
+            tooltip(
+                numericInput("vmax", "value for the highest colour", value = NA),
+                "maximal display value of aggregation heatmap"
+            ),
+            tooltip(
+                actionButton("renderAggregate", "render aggregate"),
+                "press to (re)render aggregation"
+            ),
+            tooltip(
+                uiOutput("aggregatePlot"),
+                "aggregation heatmap"
+            )
+        )
     )
 )
 
@@ -97,7 +219,7 @@ server <- function(input, output, session) {
     })
 
     resolutions <- reactive({
-        resolutions <- availableResolutions(input$hicFiles$datapath)
+        resolutions <- availableResolutions(input$hicFile$datapath)
         return(resolutions[resolutions >= 10000])
     })
 
@@ -107,26 +229,20 @@ server <- function(input, output, session) {
     }) |> bindEvent(input$setVminVmax)
 
     # Use proxy$xxxxx as a proxy of input$xxxxx. update??????Input will not update input$xxxxx until the client send the updated values back to the server. proxy$xxxxx helps to block renderUI until input$xxxxx got updated.
-    proxy <- reactiveValues(
-        resolution = NULL,
-        aggResolution = NULL,
-        chromosome = NULL,
-        start = NULL,
-        end = NULL
-    )
+    proxy <- reactiveValues()
     observe({
         for (name in names(proxy)) {
             proxy[[name]] <- input[[name]]
         }
     })
     observe({
-        req(input$hicFiles)
+        req(input$hicFile)
         proxy$resolution <- NULL
         proxy$aggResolution <- NULL
         proxy$chromosome <- NULL
         updateSelectInput(inputId = "resolution", choices = resolutions())
         updateSelectInput(inputId = "aggResolution", choices = resolutions())
-        updateSelectInput(inputId = "chromosome", choices = availableChromosomes(input$hicFiles$datapath)@seqnames)
+        updateSelectInput(inputId = "chromosome", choices = availableChromosomes(input$hicFile$datapath)@seqnames)
     })
 
     observe({
@@ -138,6 +254,19 @@ server <- function(input, output, session) {
         updateNumericInput(inputId = "end", value = chromSize, max = chromSize)
     })
 
+    output$globalFilters <- renderUI({
+        req(input$loopFiles)
+        proxy$loopWidthRange <- NULL
+        proxy$loopCountRange <- NULL
+        minLoopWidth <- min(loops()@rowData$loopWidth)
+        maxLoopWidth <- max(loops()@rowData$loopWidth)
+        widthFilter <- numericRangeInput("loopWidthRange", "loop width range", value = c(minLoopWidth, maxLoopWidth), min = minLoopWidth, max = maxLoopWidth, step = 1)
+        maxLoopCount <- max(max(loops()@counts), 2)
+        minLoopCount <- min(min(loops()@counts), maxLoopCount)
+        countFilter <- numericRangeInput("loopCountRange", "loop count range", value = c(max(minLoopCount, 2), maxLoopCount), min = minLoopCount, max = maxLoopCount, step = 1)
+        tagList(widthFilter, countFilter)
+    })
+
     output$filters <- renderUI({
         req(input$loopFiles)
         annoteNum <- ifelse(is.null(input$annotFiles), 0, nrow(input$annotFiles))
@@ -146,10 +275,13 @@ server <- function(input, output, session) {
             for (j in seq_len(annoteNum + 2)) {
                 p <- (i - 1) * (annoteNum + 2) + j
                 if (j == 1) {
+                    proxy[[paste0("filter", i)]] <- NULL
                     filterUIs[[p]] <- checkboxGroupInput(paste0("filter", i), paste0("filter", i), choices = samples(), selected = samples())
                 } else if (j == 2) {
+                    proxy[[paste0("filter", i, "TSS")]] <- NULL
                     filterUIs[[p]] <- selectInput(paste0("filter", i, "TSS"), "TSS", choices = c("off", "any", "either", "neither", "both"), selected = "off")
                 } else {
+                    proxy[[paste0("filter", i, "annote", j - 2)]] <- NULL
                     filterUIs[[p]] <- selectInput(paste0("filter", i, "annote", j - 2), input$annotFiles$name[j - 2], choices = c("off", "any", "either", "neither", "both"), selected = "any")
                 }
             }
@@ -281,17 +413,6 @@ server <- function(input, output, session) {
         return(maskAnnotLoopsFilterList)
     })
 
-    output$globalFilters <- renderUI({
-        req(input$loopFiles)
-        minLoopWidth <- min(loops()@rowData$loopWidth)
-        maxLoopWidth <- max(loops()@rowData$loopWidth)
-        widthFilter <- numericRangeInput("loopWidthRange", "loop width range", value = c(minLoopWidth, maxLoopWidth), min = minLoopWidth, max = maxLoopWidth, step = 1)
-        maxLoopCount <- max(max(loops()@counts), 2)
-        minLoopCount <- min(min(loops()@counts), maxLoopCount)
-        countFilter <- numericRangeInput("loopCountRange", "loop count range", value = c(max(minLoopCount, 2), maxLoopCount), min = minLoopCount, max = maxLoopCount, step = 1)
-        tagList(widthFilter, countFilter)
-    })
-
     maskLoopsWidth <- reactive({
         (loops()@rowData$loopWidth >= input$loopWidthRange[1]) & (loops()@rowData$loopWidth <= input$loopWidthRange[2])
     })
@@ -342,18 +463,20 @@ server <- function(input, output, session) {
     })
 
     hic <- reactive({
-        HiCExperiment::import(input$hicFiles$datapath, focus = "chrM", resolution = resolutions() |> tail(n = 1))
+        HiCExperiment::import(input$hicFile$datapath, focus = "chrM", resolution = resolutions() |> tail(n = 1))
     })
 
     reqInputs <- function() {
         req(input$loopFiles)
+        req(proxy$loopWidthRange)
+        req(proxy$loopCountRange)
         for (i in seq_len(input$filterNum)) {
-            req(input[[paste0("filter", i, "TSS")]])
+            req(proxy[[paste0("filter", i, "TSS")]])
             annoteNum <- ifelse(is.null(input$annotFiles), 0, nrow(input$annotFiles))
             for (j in seq_len(annoteNum)) {
-                req(input[[paste0("filter", i, "annote", j)]])
+                req(proxy[[paste0("filter", i, "annote", j)]])
             }
-            req(input[[paste0("filter", i)]])
+            req(proxy[[paste0("filter", i)]])
         }
     }
 
@@ -416,7 +539,7 @@ server <- function(input, output, session) {
     heatMapTempFile <- tempfile(tmpdir=file.path("www", session$token))
     observe({
         reqInputs()
-        req(input$hicFiles)
+        req(input$hicFile)
         req(proxy$chromosome)
         req(proxy$start)
         req(proxy$end)
@@ -453,7 +576,7 @@ server <- function(input, output, session) {
     aggregateTempFile <- tempfile(tmpdir=file.path("www", session$token))
     observe({
         reqInputs()
-        req(input$hicFiles)
+        req(input$hicFile)
         req(proxy$aggResolution)
 
         # render UIs for holding iframe
@@ -476,9 +599,9 @@ server <- function(input, output, session) {
                 clpyFile <- paste0(aggregateTempFile, ".", my_i, ".clpy")
                 pdfFile <- sub(".clpy$", ".pdf", clpyFile)
                 if (!is.null(input$view)) {
-                    coolpupCmd = sprintf("coolpup.py --view %s --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", input$view$datapath, flankBps, clpyFile, input$normalization, input$hicFiles$datapath, proxy$aggResolution, bedpeFiles()[[my_i]])
+                    coolpupCmd = sprintf("coolpup.py --view %s --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", input$view$datapath, flankBps, clpyFile, input$normalization, input$hicFile$datapath, proxy$aggResolution, bedpeFiles()[[my_i]])
                 } else {
-                    coolpupCmd = sprintf("coolpup.py --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", flankBps, clpyFile, input$normalization, input$hicFiles$datapath, proxy$aggResolution, bedpeFiles()[[my_i]])
+                    coolpupCmd = sprintf("coolpup.py --flank %d -o %s --seed 0 --weight-name %s %s::/resolutions/%s %s", flankBps, clpyFile, input$normalization, input$hicFile$datapath, proxy$aggResolution, bedpeFiles()[[my_i]])
                 }
                 coolpupCmd |> system()
                 if (input$setVminVmax) {

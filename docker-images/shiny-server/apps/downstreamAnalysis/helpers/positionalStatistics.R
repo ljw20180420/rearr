@@ -37,8 +37,8 @@ drawPositionalStatic <- function(inputTibble, insertCount, posBaseRefTempFile) {
         scale_x_continuous(name = "position relative to cut", expand = c(0, 0)) +
         scale_y_continuous(expand = c(0, 0)) +
         scale_color_identity(name = NULL, guide = guide_legend(), labels = "insertion")
-    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
-    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
+    ggsave(posBaseRefTempFile, plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = sub("^www/", "", posBaseRefTempFile), height = "600px", width = "100%")
 }
 
 getPositionalBaseFreq <- function(queryMat, counts) {
@@ -80,47 +80,44 @@ calInsertionCount <- function(refList, cuts, maxCutDown) {
     )
 }
 
-downSampleMatrix <- function(mat, counts, thresCount) {
-    cls <- 1
+resolutionMatrix <- function(mat, counts, resolution) {
+    totalCount <- sum(counts)
+    resolutionCount <- round(seq(1, totalCount + 1, length.out = resolution + 1))
+    resolutionMatrix <- matrix(0, resolution, ncol(mat))
     cumCount <- 0
-    clses <- rep(0, length(counts))
+    j <- 1
     for (i in seq_len(length(counts))) {
-        clses[i] <- cls
         cumCount <- cumCount + counts[i]
-        if (cumCount > thresCount) {
-            cls <- cls + 1
-            cumCount <- 0
+        if (cumCount < resolutionCount[j + 1]) {
+            resolutionMatrix[j,] <- resolutionMatrix[j,] + mat[i,] * counts[i]
+        } else {
+            resolutionMatrix[j,] <- resolutionMatrix[j,] + mat[i,] * (resolutionCount[j + 1] - 1 + counts[i] - cumCount)
+            j <- j + 1
+            while (resolutionCount[j + 1] <= cumCount) {
+                resolutionMatrix[j,] <- mat[i,] * (resolutionCount[j + 1] - resolutionCount[j])
+                j <- j + 1
+            }
+            resolutionMatrix[j,] <- mat[i,] * (cumCount - resolutionCount[j] + 1)
         }
     }
-    mat <- as_tibble(mat)
-    mat |> mutate(count = counts, cls = clses) |> summarise(across(colnames(mat), ~ .x[which.max(count)]), count = sum(count), .by = "cls") |> select(-"cls")
+    return(resolutionMatrix)
 }
 
-getPositionalReads <- function(queryMat, counts, thresCount, cut) {
-    queryTibbleDown <- downSampleMatrix(queryMat, counts, thresCount)
-    cumCounts <- cumsum(queryTibbleDown$count)
-    vertCent <- c(cumCounts[1] / 2, (cumCounts[-length(cumCounts)] + cumCounts[-1]) / 2)
-    queryTibbleDown |> select(-"count") |> as.matrix() |> `colnames<-`(seq_len(ncol(queryTibbleDown) - 1)) |> melt() |> filter(value != "-") |> mutate(x = Var2 - cut - 0.5, y = vertCent[Var1], value = value, height = queryTibbleDown$count[Var1]) |> select(x, y, value, height)
+getPositionalReads <- function(mat, counts, resolution, cut) {
+    resolutionMat <- resolutionMatrix(mat, counts, resolution)
+    resolutionCount <- round(seq(1, sum(counts) + 1, length.out = resolution + 1))
+    vertCent <- (resolutionCount[-length(resolutionCount)] + resolutionCount[-1]) / 2 - 1
+    resolutionMat |> melt() |> mutate(x = Var2 - cut - 0.5, y = vertCent[Var1], value = value, height = resolutionCount[Var1 + 1] - resolutionCount[Var1]) |> select(x, y, value, height)
 }
 
-drawPositionalReads <- function(readTibble, maxCut, maxCutdown, posBaseRefTempFile) {
-    ggFig <- ggplot(readTibble, aes(x = x, y = y, fill = value, height = height)) + 
+drawPositionalReads <- function(tibb, maxCut, maxCutdown, posBaseRefTempFile) {
+    ggFig <- ggplot(tibb, aes(x = x, y = y, fill = value, height = height)) + 
         geom_tile(width = 1) + 
-        scale_fill_manual(values = c("A" = "darkgreen", "C" = "blue", "G" = "gold", "T" = "red")) +
+        scale_fill_gradient(low = "white", high = "red") +
         scale_x_continuous(name = "position relative to cut", limits = c(-maxCut, maxCutdown), expand = c(0, 0)) +
         scale_y_continuous(name = "reads", expand = c(0, 0))
-    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
-    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
-}
-
-drawPositionalSnps <- function(snpTibble, maxCut, maxCutdown, posBaseRefTempFile) {
-    ggFig <- ggplot(snpTibble, aes(x = x, y = y, fill = value, height = height)) + 
-        geom_tile(width = 1) + 
-        scale_fill_manual(values = c("M" = "darkgreen", "S" = "red")) +
-        scale_x_continuous(name = "position relative to cut", limits = c(-maxCut, maxCutdown), expand = c(0, 0)) +
-        scale_y_continuous(name = "reads", expand = c(0, 0))
-    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
-    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
+    ggsave(posBaseRefTempFile, plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = sub("^www/", "", posBaseRefTempFile), height = "600px", width = "100%")
 }
 
 drawPositionalLogo <- function(baseFreq, method, namespace, posBaseRefTempFile) {
@@ -128,6 +125,6 @@ drawPositionalLogo <- function(baseFreq, method, namespace, posBaseRefTempFile) 
         geom_logo(data = baseFreq, method = method, namespace = namespace) +
         scale_x_continuous(breaks = NULL) +
         theme_logo()
-    ggsave(paste0(posBaseRefTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
-    tags$iframe(src = paste0(sub("^www/", "", posBaseRefTempFile), ".pdf"), height = "600px", width = "100%")
+    ggsave(posBaseRefTempFile, plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = sub("^www/", "", posBaseRefTempFile), height = "600px", width = "100%")
 }

@@ -1,48 +1,121 @@
 library(shiny)
 library(bslib)
+library(shinyWidgets)
 library(tidyverse)
 library(ggrepel)
 library(diffloop)
 library(GenomicRanges)
 # library(Sushi) only load exported functions, plotBedpe used in loopPlot is not exported by Sushi
-plotBedpe <- getFromNamespace("plotBedpe", "Sushi")
+# plotBedpe <- getFromNamespace("plotBedpe", "Sushi") cannot be used in loopPlot (maybe environment problem)
+.GlobalEnv$plotBedpe <- getFromNamespace("plotBedpe", "Sushi")
+# .GlobalEnv$plotBedpe <- Sushi:::plotBedpe # this cannot be used for CRAN packages
 
 source("../helpers/mangoFDRPValue.R")
 
 options(shiny.maxRequestSize = 1000 * 1024^2)
 
-ui <- navbarPage(
-    "Diffloop Analysis (Pair)",
+# This App use diffloop to analyze loop data which require equal length.
+ui <- page_sidebar(
     sidebar = sidebar(
-        helpText("This App use diffloop to analyze loop data which require equal length."),
-        fileInput("loopFiles", label = "Loop files (bedpe or mango)", multiple = TRUE),
-        textOutput("atLeastTwoFile"),
-        numericInput("mergegap", label = "merge gap", value = 500),
-        numericInput("nbins", label = "nbins", value = 10, min = 0, step = 1),
-        numericInput("FDR", label = "FDR", value = 1, min = 0, max = 1, step = 0.01),
-        numericInput("PValue", label = "PValue", value = 1, min = 0, max = 1, step = 0.01),
-        numericInput("maxgap", label = "max gap between blackList/annotation and anchor", value = 0, min = 0, step = 100),
-        fileInput("blackListFiles", label = "black list regions (bed files)", multiple = TRUE),
-        sliderInput("loopWidthRange", label = "loop width range", min = 0, max = 0, value = c(0, 0), step = 1),
-        sliderInput("loopCountRange", label = "loop count range", min = 0, max = 0, value = c(0, 0), step = 1),
+        tooltip(
+            fileInput("loopFiles", label = "loop files", multiple = TRUE),
+            r"(bedpe\mango loop files, at least two files are necessary)"
+        ),
+        tooltip(
+            numericInput("mergegap", label = "merge gap", value = 500),
+            "anchors within this threshold will be merged"
+        ),
+        tooltip(
+            numericInput("nbins", label = "nbins", value = 10, min = 0, step = 1),
+            "bin numbers of binomial model used to calculate loop FDR and p-value by mangoCorrection"
+        ),
+        tooltip(
+            numericInput("FDR", label = "FDR", value = 1, min = 0, max = 1, step = 0.01),
+            "FDR threshold for loops"
+        ),
+        tooltip(
+            numericInput("PValue", label = "PValue", value = 1, min = 0, max = 1, step = 0.01),
+            "p-value threshold for loops"
+        ),
+        tooltip(
+            numericInput("maxgap", label = "max gap", value = 0, min = 0, step = 100),
+            "loop anchor within this threshold to blackList/annotation is considered interacting"
+        ),
+        tooltip(
+            fileInput("blackListFiles", label = "black list regions", multiple = TRUE),
+            "bed files specifies the black list regions excluded from analysis, multiple bed files are supported"
+        ),
+        tooltip(
+            uiOutput("globalFilters"),
+            "global filters applied to all loop files"
+        )
     ),
-    tabPanel("loopDistance",
-        uiOutput("loopDistancePlot")
-    ),
-    tabPanel("pca",
-        uiOutput("sampleGroupsPca"),
-        uiOutput("pcaPlot")
-    ),
-    tabPanel("loopArc",
-        textInput("chromosome", label = "chromosome"),
-        numericInput("start", label = "start", value = NA, min = 0),
-        numericInput("end", label = "end", value = NA, min = 0),
-        uiOutput("loopArcPlot")
-    ),
-    tabPanel("diffloop",
-        uiOutput("sampleGroupsDiffloop"),
-        selectInput("diffloopMethod", "diffloop method", choices = c("edgeR", "Voom"), selected = "edgeR"),
-        downloadButton("downloadDiffloop")
+    navbarPage(
+        title=NULL,
+        tabPanel(
+            title=tooltip(
+                "loopDistance",
+                "plot proportion of counts at various distances"
+            ),
+            tooltip(
+                uiOutput("loopDistancePlot"),
+                "proportion of counts at various distances"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "pca",
+                "plot principal component analysis"
+            ),
+            tooltip(
+                uiOutput("sampleGroupsPca"),
+                "sample groups"
+            ),
+            tooltip(
+                uiOutput("pcaPlot"),
+                "principal component analysis"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "loopArc",
+                "plot loop arc diagram"
+            ),
+            tooltip(
+                textInput("chromosome", label = "chromosome"),
+                "chromosome name"
+            ),
+            tooltip(
+                numericInput("start", label = "start", value = NA, min = 0),
+                "0-based chromosome start"
+            ),
+            tooltip(
+                numericInput("end", label = "end", value = NA, min = 0),
+                "0-based chromosome end"
+            ),
+            tooltip(
+                uiOutput("loopArcPlot"),
+                "loop arc diagram"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "diffloop",
+                "call different loops"
+            ),
+            tooltip(
+                uiOutput("sampleGroupsDiffloop"),
+                "sample groups"
+            ),
+            tooltip(
+                selectInput("diffloopMethod", "diffloop method", choices = c("edgeR", "Voom"), selected = "edgeR"),
+                r"(method to call different loops (edgeR\Voom))"
+            ),
+            tooltip(
+                downloadButton("downloadDiffloop"),
+                "press to download different loop file"
+            )
+        )
     )
 )
 
@@ -58,36 +131,8 @@ server <- function(input, output, session) {
         unlink(file.path("www", session$token), recursive = TRUE)
     })
 
-    output$atLeastTwoFile <- renderText({
-        req(input$loopFiles)
-        if (length(input$loopFiles$datapath) == 1) {
-            return("Upload at least two files")
-        }
-        return(NULL)
-    })
-
     samples <- reactive({
         input$loopFiles$name |> str_replace(".interactions.all.mango", "")
-    })
-    
-    output$sampleGroupsPca <- renderUI({
-        req(input$loopFiles)
-        req(length(input$loopFiles$datapath) > 1)
-        sampleGroups <- vector('list', nrow(input$loopFiles))
-        for (i in seq_len(nrow(input$loopFiles))) {
-            sampleGroups[[i]] <- textInput(inputId = paste0(samples()[i], "Pca"), label = samples()[i], value = paste0("group", i))
-        }
-        tagList(sampleGroups)
-    })
-
-    output$sampleGroupsDiffloop <- renderUI({
-        req(input$loopFiles)
-        req(length(input$loopFiles$datapath) > 1)
-        sampleGroups <- vector('list', nrow(input$loopFiles))
-        for (i in seq_len(nrow(input$loopFiles))) {
-            sampleGroups[[i]] <- textInput(inputId = paste0(samples()[i], "Diffloop"), label = samples()[i], value = paste0("group", i))
-        }
-        tagList(sampleGroups)
     })
 
     loops <- reactive({
@@ -124,49 +169,56 @@ server <- function(input, output, session) {
         maskblackListAnchors[loops()@interactions[, "left"]] | maskblackListAnchors[loops()@interactions[, "right"]]
     })
 
-    # Use loopWidthRange(Low\High) as a proxy of input$loopWidthRange. updateSliderInput will not update input$loopWidthRange until the client send the updated values back to the server. loopWidthRange helps to block renderUI until input$loopWidthRange got updated.
-    loopWidthRange <- reactiveValues(low=0, high=0)
+    # Use proxy$xxxxx as a proxy of input$xxxxx. update??????Input will not update input$xxxxx until the client send the updated values back to the server. proxy$xxxxx helps to block renderUI until input$xxxxx got updated.
+    proxy <- reactiveValues()
     observe({
-        loopWidthRange$low <- input$loopWidthRange[1]
-        loopWidthRange$high <- input$loopWidthRange[2]
+        for (name in names(proxy)) {
+            proxy[[name]] <- input[[name]]
+        }
     })
-    observe({
+
+    output$sampleGroupsPca <- renderUI({
         req(input$loopFiles)
         req(length(input$loopFiles$datapath) > 1)
-        loopWidthRange$low <- 0
-        loopWidthRange$high <- 0
+        sampleGroups <- vector('list', nrow(input$loopFiles))
+        for (i in seq_len(nrow(input$loopFiles))) {
+            proxy[[paste0(samples()[i], "Pca")]] <- NULL
+            sampleGroups[[i]] <- textInput(inputId = paste0(samples()[i], "Pca"), label = samples()[i], value = paste0("group", i))
+        }
+        tagList(sampleGroups)
+    })
+
+    output$sampleGroupsDiffloop <- renderUI({
+        req(input$loopFiles)
+        req(length(input$loopFiles$datapath) > 1)
+        sampleGroups <- vector('list', nrow(input$loopFiles))
+        for (i in seq_len(nrow(input$loopFiles))) {
+            proxy[[paste0(samples()[i], "Diffloop")]] <- NULL
+            sampleGroups[[i]] <- textInput(inputId = paste0(samples()[i], "Diffloop"), label = samples()[i], value = paste0("group", i))
+        }
+        tagList(sampleGroups)
+    })
+
+    output$globalFilters <- renderUI({
+        req(input$loopFiles)
+        req(length(input$loopFiles$datapath) > 1)
+        proxy$loopWidthRange <- NULL
+        proxy$loopCountRange <- NULL
+        minLoopWidth <- min(loops()@rowData$loopWidth)
         maxLoopWidth <- max(loops()@rowData$loopWidth)
-        updateSliderInput(
-            input = "loopWidthRange",
-            max = maxLoopWidth,
-            value = c(0, maxLoopWidth)
-        )
+        widthFilter <- numericRangeInput("loopWidthRange", "loop width range", value = c(minLoopWidth, maxLoopWidth), min = minLoopWidth, max = maxLoopWidth, step = 1)
+        maxLoopCount <- max(max(loops()@counts), 2)
+        minLoopCount <- min(min(loops()@counts), maxLoopCount)
+        countFilter <- numericRangeInput("loopCountRange", "loop count range", value = c(max(minLoopCount, 2), maxLoopCount), min = minLoopCount, max = maxLoopCount, step = 1)
+        tagList(widthFilter, countFilter)
     })
 
     maskLoopsWidth <- reactive({
-        (loops()@rowData$loopWidth >= loopWidthRange$low) & (loops()@rowData$loopWidth <= loopWidthRange$high)
-    })
-
-    # Use loopCountRange as a proxy of input$loopCountRange. updateSliderInput will not update input$loopCountRange until the client send the updated values back to the server. loopCountRange helps to block renderUI until input$loopCountRange got updated.
-    loopCountRange <- reactiveValues(low=0, high=0)
-    observe({
-        loopCountRange$low <- input$loopCountRange[1]
-        loopCountRange$high <- input$loopCountRange[2]
-    })
-    observe({
-        req(input$loopFiles)
-        req(length(input$loopFiles$datapath) > 1)
-        loopCountRange$low <- 0
-        loopCountRange$high <- 0
-        maxLoopCount <- max(max(loops()@counts), 1)
-        updateSliderInput(input = "loopCountRange",
-            max = maxLoopCount,
-            value = c(1, maxLoopCount)
-        )
+        (loops()@rowData$loopWidth >= proxy$loopWidthRange[1]) & (loops()@rowData$loopWidth <= proxy$loopWidthRange[2])
     })
 
     maskLoopsCount <- reactive({
-        loopSelectedNum <- as.matrix(loops()@counts >= loopCountRange$low & loops()@counts <= loopCountRange$high) |> rowSums()
+        loopSelectedNum <- as.matrix(loops()@counts >= proxy$loopCountRange[1] & loops()@counts <= proxy$loopCountRange[2]) |> rowSums()
         loopSelectedNum > 0
     })
 
@@ -178,8 +230,8 @@ server <- function(input, output, session) {
     output$loopDistancePlot <- renderUI({
         req(input$loopFiles)
         req(length(input$loopFiles$datapath) > 1)
-        req(loopWidthRange$high > 0)
-        req(loopCountRange$high > 0)
+        req(proxy$loopWidthRange)
+        req(proxy$loopCountRange)
         ggObj <- loopDistancePlot(filterLoop())
         ggsave(loopDistanceTempFile, plot = ggObj)
         tags$iframe(src = sub("^www/", "", loopDistanceTempFile), height = "1200px", width = "100%")
@@ -189,15 +241,15 @@ server <- function(input, output, session) {
     output$pcaPlot <- renderUI({
         req(input$loopFiles)
         req(length(input$loopFiles$datapath) > 1)
-        req(loopWidthRange$high > 0)
-        req(loopCountRange$high > 0)
+        req(proxy$loopWidthRange)
+        req(proxy$loopCountRange)
         loopSamples <- filterLoop()@colData |> row.names()
         groups <- rep("", length(loopSamples))
         for (i in seq_len(length(samples()))) {
-            req(input[[paste0(samples()[i], "Pca")]])
+            req(proxy[[paste0(samples()[i], "Pca")]])
             for (j in seq_len(length(loopSamples))) {
                 if (loopSamples[j] == samples()[i]) {
-                    groups[j] <- input[[paste0(samples()[i], "Pca")]]
+                    groups[j] <- proxy[[paste0(samples()[i], "Pca")]]
                     break
                 }
             }
@@ -213,8 +265,8 @@ server <- function(input, output, session) {
     output$loopArcPlot <- renderUI({
         req(input$loopFiles)
         req(length(input$loopFiles$datapath) > 1)
-        req(loopWidthRange$high > 0)
-        req(loopCountRange$high > 0)
+        req(proxy$loopWidthRange)
+        req(proxy$loopCountRange)
         req(input$chromosome)
         req(input$start)
         req(input$end)
@@ -234,10 +286,10 @@ server <- function(input, output, session) {
             loopSamples <- filterLoop()@colData |> row.names()
             groups <- rep("", length(loopSamples))
             for (i in seq_len(length(samples()))) {
-                req(input[[paste0(samples()[i], "Diffloop")]])
+                req(proxy[[paste0(samples()[i], "Diffloop")]])
                 for (j in seq_len(length(loopSamples))) {
                     if (loopSamples[j] == samples()[i]) {
-                        groups[j] <- input[[paste0(samples()[i], "Diffloop")]]
+                        groups[j] <- proxy[[paste0(samples()[i], "Diffloop")]]
                         break
                     }
                 }

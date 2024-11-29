@@ -1,11 +1,14 @@
 FROM rocker/shiny-verse:latest
-RUN apt-get update && apt-get install -y --no-install-recommends libbz2-dev gawk ghostscript imagemagick python3-full python3-dev
-RUN python3 -m venv shinyenv
+RUN apt-get update && apt-get install -y --no-install-recommends cmake libbz2-dev gawk ghostscript imagemagick python3-full python3-dev
 RUN sed -i -r '/<policy domain="coder" rights="none" pattern="(PS|PS2|PS3|EPS|PDF|XPS)"/{s/^/<!-- /; s/$/ -->/}' /etc/ImageMagick-*/policy.xml
+COPY ["./correct_micro_homology.awk", "/usr/share/awk/"]
 COPY ["./install.sh", "./kpLogo-1.1.zip", "/app/"]
-RUN cd /app && ./install.sh kpLogo && cd / && rm -rf /app
-RUN shinyenv/bin/pip install shiny hic2cool cooltools coolpuppy matplotlib==3.7.3
+COPY ["./Rearrangement", "/app/Rearrangement"]
+RUN cd /app && ./install.sh rearrangement kpLogo && cd / && rm -rf /app
+RUN python3 -m venv shinyenv
+RUN /shinyenv/bin/pip install shiny hic2cool coolpuppy matplotlib==3.7.3
+ENV PATH "/shinyenv/bin:$PATH"
 RUN R -e 'BiocManager::install(c("rtracklayer", "HiContacts", "GenomicFeatures"), ask = FALSE)'
 RUN R -e 'library(devtools); install_github("PhanstielLab/Sushi")'
 RUN R -e 'library(devtools); install_github("aryeelab/diffloop")'
-RUN R -e 'install.packages(c("shinyjs", "shinyWidgets", "ggrepel", "spatstat", "ggseqlogo", "ggforce", "waffle"))'
+RUN R -e 'install.packages(c("shinyjs", "shinyWidgets", "ggrepel", "spatstat", "ggseqlogo", "ggforce", "waffle", "halfmoon"))'

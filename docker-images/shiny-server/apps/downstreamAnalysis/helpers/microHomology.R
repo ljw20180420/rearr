@@ -52,8 +52,8 @@ drawMicroHomologyHeatmap <- function(mhTibbleSub, refEnd1Start2TibbleMicro, maxC
         scale_fill_gradientn(limits = c(0, NA), colors = c("blue", "white", "red")) +
         scale_size_area(max_size = 2) +
         coord_equal(ratio = 1)
-    ggsave(paste0(mhMatrixTempFile, ".pdf"), plot = ggFig)
-    tags$iframe(src = paste0(sub("^www/", "", mhMatrixTempFile), ".pdf"), height = "1200px", width = "100%")
+    ggsave(mhMatrixTempFile, plot = ggFig)
+    tags$iframe(src = sub("^www/", "", mhMatrixTempFile), height = "1200px", width = "100%")
 }
 
 getRefEnd1Start2Tibble <- function(algTibble, microRefId) {
