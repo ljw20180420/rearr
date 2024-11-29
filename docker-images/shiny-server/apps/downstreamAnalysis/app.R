@@ -1,7 +1,7 @@
 library(shiny)
 library(bslib)
-library(tidyverse)
 library(shinyWidgets)
+library(tidyverse)
 library(reshape2)
 library(scales)
 library(ggseqlogo)
@@ -13,9 +13,7 @@ options(shiny.maxRequestSize = 100 * 1024^3)
 dir(path = "helpers", full.names = TRUE) |> lapply(source)
 
 # Define UI ----
-ui <- navbarPage(
-    "downstream analysis",
-    theme = bslib::bs_theme(version = 5),
+ui <- page_sidebar(
     tags$head(
         tags$style(HTML("
             .alignments {
@@ -25,80 +23,269 @@ ui <- navbarPage(
         "))
     ),
     sidebar = sidebar(
-        fileInput("algfiles", "Alignment file", multiple = TRUE),
-        fileInput("sgRNAfile", "sgRNA file"),
-        selectInput("editTarget", "edit target", choices = c("templated insertion", "random insertion", "insertion", "deletion", "templated indel", "indel", "wild type"))
+        tooltip(
+            fileInput("algfiles", "Alignment files", multiple = TRUE),
+            ".alg or .alg.gz files, mutiple files are concatenated"
+        ),
+        tooltip(
+            fileInput("sgRNAfile", "sgRNA file"),
+            "sgRNA file, only affect kpLogo and kmer analysis"
+        ),
+        tooltip(
+            selectInput("editTarget", "edit target", choices = c("templated insertion", "random insertion", "insertion", "deletion", "templated indel", "indel", "wild type")),
+            "targeted sequences mutation type, only affect kpLogo and kmer analysis"
+        )
     ),
-    tabPanel("browser",
-        uiOutput("browserReadRangeUI"),
-        htmlOutput("alignments", class = "alignments", inline = TRUE)
-    ),
-    tabPanel("one",
-        textInput("alignOneRef1", label = "reference1", value = ""),
-        textInput("alignOneRef2", label = "reference2", value = ""),
-        numericInput("alignOneCut1", "cut1", value = NA, min = 0),
-        numericInput("alignOneCut2", "cut2", value = NA, min = 0),
-        selectInput("alignOnePAM1", "PAM1", choices = c("NGG", "CCN"), selected = "NGG"),
-        selectInput("alignOnePAM2", "PAM2", choices = c("NGG", "CCN"), selected = "NGG"),
-        textInput("alignOneQuery", label = "query read", value = ""),
-        htmlOutput("alignPair", class = "alignments", inline = TRUE)
-    ),
-    tabPanel("base",
-        uiOutput("baseSubFreqPlot")
-    ),
-    tabPanel("position",
-        selectInput("positionalMode", "display mode", choices = c("histgram base", "histgram indel", "read base", "read snp", "logo probability", "logo bits", "logo custom"), selected = "histgram base"),
-        uiOutput("posBaseRef1Plot"),
-        uiOutput("posBaseRef2Plot")
-    ),
-    tabPanel("MMEJ",
-        selectInput("microRefId", "reference id", choices = NULL),
-        selectInput("microMode", "microhomology count display mode", choices = c("repeat", "separate")),
-        numericInput("microThres", "minimal micro homology length", value = 4, min = 1),
-        uiOutput("mhMatrixPlot")
-    ),
-    tabPanel("classify",
-        checkboxInput("claClaDistinctTemp", "discriminate templated insertion and random insertion"),
-        selectInput("claClaMode", "mode", choices = c("pie", "waffle")),
-        uiOutput("claClaPlot")
-    ),
-    tabPanel("distribution",
-        selectInput("distriTarget", "what", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete"), multiple = TRUE),
-        selectInput("distriMode", "mode", choices = c("continuous", "discrete")),
-        uiOutput("distriPlot")
-    ),
-    tabPanel("pairwise",
-        selectInput("pairwiseX", "x", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
-        selectInput("pairwiseY", "y", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
-        selectInput("pairwiseXscale", "x scale", choices = c("identity", "log10")),
-        selectInput("pairwiseYscale", "y scale", choices = c("identity", "log10")),
-        selectInput("pairwiseMethod", "method", choices = c("auto", "lm", "glm", "gam", "loess")),
-        numericInput("pairwiseSpan", "span", 0.75, min = 0, max = 1, step = 0.01),
-        uiOutput("pairwisePlot"),
-        textOutput("pairwiseWarning")
-    ),
-    tabPanel("polygon",
-        uiOutput("polyInsert1Plot"),
-        uiOutput("polyInsert2Plot")
-    ),
-    tabPanel("arc",
-        uiOutput("arcDelete1Plot"),
-        uiOutput("arcDelete2Plot")
-    ),
-    tabPanel("kpLogo",
-        numericInput("kpLogoKmer", "kmer", 1, min = 1, max = 10, step = 1),
-        sliderInput("kpLogoRegion", "region", 0, 0, c(0, 0)),
-        selectInput("kpLogoMethod", "method", choices = c("weight", "background")),
-        numericInput("kpLogoCountThres", "count threshold", 0, min = 0),
-        uiOutput("kpLogoIframe")
-    ),
-    tabPanel("kmer",
-        uiOutput("kmerRangeUI"),
-        uiOutput("kmerIframe")
+    navbarPage(
+        title=NULL,
+        tabPanel(
+            title=tooltip(
+                "browser",
+                "a browser for alignment results"
+            ),
+            tooltip(
+                uiOutput("browserReadRangeUI"),
+                "read index range to display"
+            ),
+            tooltip(
+                htmlOutput("alignments", class = "alignments", inline = TRUE),
+                "alignments"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "one",
+                "align single sequence"
+            ),
+            tooltip(
+                textInput("alignOneRef1", label = "reference1", value = ""),
+                "reference1 mainly holding query sequence part upstream to cleavage site"
+            ),
+            tooltip(
+                textInput("alignOneRef2", label = "reference2", value = ""),
+                "reference2 mainly holding query sequence part downstream to cleavage site"
+            ),
+            tooltip(
+                numericInput("alignOneCut1", "cut1", value = NA, min = 0),
+                "cleavage site position in reference1"
+            ),
+            tooltip(
+                numericInput("alignOneCut2", "cut2", value = NA, min = 0),
+                "cleavage site position in reference2"
+            ),
+            tooltip(
+                selectInput("alignOnePAM1", "PAM1", choices = c("NGG", "CCN"), selected = "NGG"),
+                "PAM sequence for reference1"
+            ),
+            tooltip(
+                selectInput("alignOnePAM2", "PAM2", choices = c("NGG", "CCN"), selected = "NGG"),
+                "PAM sequence for reference2"
+            ),
+            tooltip(
+                textInput("alignOneQuery", label = "query read", value = ""),
+                "query sequence"
+            ),
+            tooltip(
+                htmlOutput("alignPair", class = "alignments", inline = TRUE),
+                "alignment"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "base",
+                "summarize frequency of base substitution"
+            ),
+            tooltip(
+                uiOutput("baseSubFreqPlot"),
+                "frequency of base substitution"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "position",
+                "postional statistics for alignments"
+            ),
+            tooltip(
+                selectInput("positionalMode", "display mode", choices = c("histgram base", "histgram indel", "read base A", "read base C", "read base G", "read base T", "read match", "read snp", "logo probability", "logo bits", "logo custom"), selected = "histgram base"),
+                "display mode of positional plot"
+            ),
+            tooltip(
+                uiOutput("posBaseRef1Plot"),
+                "positional plot of reference1"
+            ),
+            tooltip(
+                uiOutput("posBaseRef2Plot"),
+                "positional plot of reference2"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "MMEJ",
+                "display micro-homology diagram"
+            ),
+            tooltip(
+                selectInput("microRefId", "reference id", choices = NULL),
+                "reference index to analyze micro-homology"
+            ),
+            tooltip(
+                selectInput("microMode", "display mode", choices = c("repeat", "separate")),
+                "!repeat count over all microhomology positions, or !separate count evenly"
+            ),
+            tooltip(
+                numericInput("microThres", "micro-homology length threshold", value = 4, min = 1),
+                "minimal micro-homology length to display"
+            ),
+            tooltip(
+                uiOutput("mhMatrixPlot"),
+                "micro-homology diagram"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "classify",
+                r"(plot pie\waffle diagram of mutation types)"
+            ),
+            tooltip(
+                checkboxInput("claClaDistinctTemp", r"(discriminate templated\random insertion)"),
+                "discriminate templated\random insertion"
+            ),
+            tooltip(
+                selectInput("claClaMode", "mode", choices = c("pie", "waffle")),
+                r"(plot in pie\waffle diagram)"
+            ),
+            tooltip(
+                uiOutput("claClaPlot"),
+                r"(pie\waffle diagram of mutation types)"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "distribution",
+                "plot histogram of alignment properties"
+            ),
+            tooltip(
+                selectInput("distriTarget", "what", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete"), multiple = TRUE),
+                "properties to hist, multiple properties are supported"
+            ),
+            tooltip(
+                selectInput("distriMode", "mode", choices = c("continuous", "discrete")),
+                r"(use continuous\discrete histogram)"
+            ),
+            tooltip(
+                uiOutput("distriPlot"),
+                "histogram of alignment properties"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "pairwise",
+                "plot pairwise relationship of selected property"
+            ),
+            tooltip(
+                selectInput("pairwiseX", "x", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
+                "x-axis property"
+            ),
+            tooltip(
+                selectInput("pairwiseY", "y", choices = c("score", "cut1", "cut2", "ref1Len", "ref2Len", "ref1End", "ref2Start", "upInsert", "downInsert", "randInsert", "templatedInsert", "insert", "upDelete", "downDelete", "delete")),
+                "y-axis property"
+            ),
+            tooltip(
+                selectInput("pairwiseXscale", "x scale", choices = c("identity", "log10")),
+                r"(choose identity\log10 scale for x-axis)"
+            ),
+            tooltip(
+                selectInput("pairwiseYscale", "y scale", choices = c("identity", "log10")),
+                r"(choose identity\log10 scale for y-axis)"
+            ),
+            tooltip(
+                selectInput("pairwiseMethod", "method", choices = c("auto", "lm", "glm", "gam", "loess")),
+                "smooth method"
+            ),
+            tooltip(
+                numericInput("pairwiseSpan", "span", 0.75, min = 0, max = 1, step = 0.01),
+                "span for smooth method"
+            ),
+            tooltip(
+                uiOutput("pairwisePlot"),
+                "pairwise relationship of selected property"
+            ),
+            tooltip(
+                textOutput("pairwiseWarning"),
+                "warning message of pairwise plot"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "polygon",
+                "plot insertion triangle diagram, height for count, width for insertion length"
+            ),
+            tooltip(
+                uiOutput("polyInsert1Plot"),
+                "insertion triangle diagram of reference1"
+            ),
+            tooltip(
+                uiOutput("polyInsert2Plot"),
+                "insertion triangle diagram of reference2"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "arc",
+                "deletion arc diagram, weight for count, width for deletion length"
+            ),
+            tooltip(
+                uiOutput("arcDelete1Plot"),
+                "deletion arc diagram of reference1"
+            ),
+            tooltip(
+                uiOutput("arcDelete2Plot"),
+                "deletion arc diagram of reference2"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "kpLogo",
+                "kpLogo motif for selected mutation type and kmer"
+            ),
+            tooltip(
+                numericInput("kpLogoKmer", "kmer", 1, min = 1, max = 10, step = 1),
+                "kmer for kpLogo"
+            ),
+            tooltip(
+                sliderInput("kpLogoRegion", "region", 0, 0, c(0, 0)),
+                "sgRNA region for kpLogo"
+            ),
+            tooltip(
+                selectInput("kpLogoMethod", "method", choices = c("weight", "background")),
+                "kpLogo method"
+            ),
+            tooltip(
+                numericInput("kpLogoCountThres", "threshold", 0, min = 0),
+                "filter sgRNA with sequencing count less than this threshold"
+            ),
+            tooltip(
+                uiOutput("kpLogoIframe"),
+                "kpLogo motif"
+            )
+        ),
+        tabPanel(
+            title=tooltip(
+                "kmer",
+                "plot kmer frequency in sgRNA"
+            ),
+            tooltip(
+                uiOutput("kmerRangeUI"),
+                "range of sgRNA to count kmer"
+            ),
+            tooltip(
+                uiOutput("kmerIframe"),
+                "kmer frequency in sgRNA"
+            )
+        )
     )
 )
 
-# Define server logic ----
+# # Define server logic ----
 server <- function(input, output, session) {
     ################################
     # session start
@@ -175,23 +362,26 @@ server <- function(input, output, session) {
         }
     })
 
+    # Use proxy$xxxxx as a proxy of input$xxxxx. update??????Input will not update input$xxxxx until the client send the updated values back to the server. proxy$xxxxx helps to block renderUI until input$xxxxx got updated.
+    proxy <- reactiveValues()
+    observe({
+        for (name in names(proxy)) {
+            proxy[[name]] <- input[[name]]
+        }
+    })
+
     ################################
     # alignment browser
     ################################
-    # use browserReadRange as a proxy of input$browserReadRange to prevent render output$alignments twice (one before input$browserReadRange is returned by client, and one after that)
-    browserReadRange <- reactiveVal(NULL)
-    observe({
-        browserReadRange(input$browserReadRange)
-    })
     output$browserReadRangeUI <- renderUI({
         req(input$algfiles)
-        browserReadRange(NULL)
+        proxy$browserReadRange <- NULL
         numericRangeInput("browserReadRange", "read range to browse", value = c(1, min(1000, nrow(algTibble()))), min = 1, max = nrow(algTibble()), step = 1)
     })
     output$alignments <- renderText({
         req(input$algfiles)
-        req(browserReadRange())
-        paste(getMarkdownFromAlign(algTibble()[browserReadRange()[1]:browserReadRange()[2],]), collapse = "")
+        req(proxy$browserReadRange)
+        paste(getMarkdownFromAlign(algTibble()[proxy$browserReadRange[1]:proxy$browserReadRange[2],]), collapse = "")
     })
 
     #########################################################
@@ -268,29 +458,45 @@ server <- function(input, output, session) {
     insert2Count <- reactive({
         algTibble()$refLine |> vapply(function(x) substr(x, gregexpr("[acgtn]", x)[[1]][2] + 1, nchar(x)), "", USE.NAMES = FALSE) |> strsplit("") |> calInsertionCount(cuts = algTibble()$cut2, maxCutDown = algMetaData()$maxCut2down)
     })
-    read1Tibble <- reactive({
-        getPositionalReads(query1Mat(), algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut1)
+    read1ATibble <- reactive({
+        getPositionalReads(query1Mat() == "A", algTibble()$count, 200, algMetaData()$maxCut1)
     })
-    read2Tibble <- reactive({
-        getPositionalReads(query2Mat(), algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut2)
+    read2ATibble <- reactive({
+        getPositionalReads(query2Mat() == "A", algTibble()$count, 200, algMetaData()$maxCut2)
+    })
+    read1CTibble <- reactive({
+        getPositionalReads(query1Mat() == "C", algTibble()$count, 200, algMetaData()$maxCut1)
+    })
+    read2CTibble <- reactive({
+        getPositionalReads(query2Mat() == "C", algTibble()$count, 200, algMetaData()$maxCut2)
+    })
+    read1GTibble <- reactive({
+        getPositionalReads(query1Mat() == "G", algTibble()$count, 200, algMetaData()$maxCut1)
+    })
+    read2GTibble <- reactive({
+        getPositionalReads(query2Mat() == "G", algTibble()$count, 200, algMetaData()$maxCut2)
+    })
+    read1TTibble <- reactive({
+        getPositionalReads(query1Mat() == "T", algTibble()$count, 200, algMetaData()$maxCut1)
+    })
+    read2TTibble <- reactive({
+        getPositionalReads(query2Mat() == "T", algTibble()$count, 200, algMetaData()$maxCut2)
+    })
+    match1Tibble <- reactive({
+        getPositionalReads(query1Mat() == toupper(ref1Mat()), algTibble()$count, 200, algMetaData()$maxCut1)
+    })
+    match2Tibble <- reactive({
+        getPositionalReads(query2Mat() == toupper(ref2Mat()), algTibble()$count, 200, algMetaData()$maxCut2)
     })
     snp1Tibble <- reactive({
-        queryMat <- query1Mat()
-        refMat <- toupper(ref1Mat())
-        queryMat[queryMat != refMat & queryMat != "-"] = "S"
-        queryMat[queryMat == refMat] = "M"
-        getPositionalReads(queryMat, algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut1)
+        getPositionalReads(query1Mat() != toupper(ref1Mat()) & query1Mat() != "-", algTibble()$count, 200, algMetaData()$maxCut1)
     })
     snp2Tibble <- reactive({
-        queryMat <- query2Mat()
-        refMat <- toupper(ref2Mat())
-        queryMat[queryMat != refMat & queryMat != "-"] = "S"
-        queryMat[queryMat == refMat] = "M"
-        getPositionalReads(queryMat, algTibble()$count, algMetaData()$totalCount * 0.001, algMetaData()$maxCut2)
+        getPositionalReads(query2Mat() != toupper(ref2Mat()) & query2Mat() != "-", algTibble()$count, 200, algMetaData()$maxCut2)
     })
 
-    posBaseRef1TempFile <- tempfile(tmpdir=file.path("www", session$token))
-    posBaseRef2TempFile <- tempfile(tmpdir=file.path("www", session$token))
+    posBaseRef1TempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
+    posBaseRef2TempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
     output$posBaseRef1Plot <- renderUI({
         req(input$algfiles)
         req(input$positionalMode)
@@ -298,10 +504,18 @@ server <- function(input, output, session) {
             drawPositionalStatic(base1Tibble(), insert1Count(), posBaseRef1TempFile)
         } else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD1Tibble(), insert1Count(), posBaseRef1TempFile)
-        } else if (input$positionalMode == "read base") {
-            drawPositionalReads(read1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
+        } else if (input$positionalMode == "read base A") {
+            drawPositionalReads(read1ATibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
+        } else if (input$positionalMode == "read base C") {
+            drawPositionalReads(read1CTibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
+        } else if (input$positionalMode == "read base G") {
+            drawPositionalReads(read1GTibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
+        } else if (input$positionalMode == "read base T") {
+            drawPositionalReads(read1TTibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
+        } else if (input$positionalMode == "read match") {
+            drawPositionalReads(match1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(snp1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
+            drawPositionalReads(snp1Tibble(), algMetaData()$maxCut1, algMetaData()$maxCut1down, posBaseRef1TempFile)
         } else if (input$positionalMode == "logo probability") {
             drawPositionalLogo(base1Freq()[2:5,], "prob", "ACGT", posBaseRef1TempFile)
         } else if (input$positionalMode == "logo bits") {
@@ -317,10 +531,18 @@ server <- function(input, output, session) {
             drawPositionalStatic(base2Tibble(), insert2Count(), posBaseRef2TempFile)
         } else if (input$positionalMode == "histgram indel") {
             drawPositionalStatic(MSD2Tibble(), insert2Count(), posBaseRef2TempFile)
-        } else if (input$positionalMode == "read base") {
-            drawPositionalReads(read2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
+        } else if (input$positionalMode == "read base A") {
+            drawPositionalReads(read2ATibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
+        } else if (input$positionalMode == "read base C") {
+            drawPositionalReads(read2CTibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
+        } else if (input$positionalMode == "read base G") {
+            drawPositionalReads(read2GTibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
+        } else if (input$positionalMode == "read base T") {
+            drawPositionalReads(read2TTibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
+        } else if (input$positionalMode == "read match") {
+            drawPositionalReads(match2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
         } else if (input$positionalMode == "read snp") {
-            drawPositionalSnps(snp2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
+            drawPositionalReads(snp2Tibble(), algMetaData()$maxCut2, algMetaData()$maxCut2down, posBaseRef2TempFile)
         } else if (input$positionalMode == "logo probability") {
             drawPositionalLogo(base2Freq()[2:5,], "prob", "ACGT", posBaseRef2TempFile)
         } else if (input$positionalMode == "logo bits") {
@@ -334,7 +556,7 @@ server <- function(input, output, session) {
     # micro homology
     #############################
     uniqTibble <- reactive({
-        algTibble() |> select(refId, cut1, cut2) |> rownames_to_column(var = "index") |> mutate(index = as.integer(index)) |> filter(refId == as.integer(microRefId())) |> summarise(index = first(index), cut1 = first(cut1), cut2 = first(cut2))
+        algTibble() |> select(refId, cut1, cut2) |> rownames_to_column(var = "index") |> mutate(index = as.integer(index)) |> filter(refId == as.integer(proxy$microRefId)) |> summarise(index = first(index), cut1 = first(cut1), cut2 = first(cut2))
     })
     mhTibble <- reactive({
         refSeq <- algTibble()$refNoGap[uniqTibble()$index]
@@ -349,26 +571,21 @@ server <- function(input, output, session) {
         mhTibble() |> filter(pos1up - pos1low >= input$microThres)
     })
     refEnd1Start2Tibble <- reactive({
-        getRefEnd1Start2Tibble(algTibble(), as.integer(microRefId()))    
+        getRefEnd1Start2Tibble(algTibble(), as.integer(proxy$microRefId))    
     })
     refEnd1Start2TibbleMicro <- reactive({
         getRefEnd1Start2TibbleMicro(refEnd1Start2Tibble(), mhTibbleSub())
     })
 
-    # Use microRefId as a proxy of input$microRefId. updateSelectInput will not update input$microRefId until the client send the updated values back to the server. microRefId helps to block renderPlot until input$microRefId got updated.
-    microRefId <- reactiveVal()
     observe({
-        microRefId(input$microRefId)
-    })
-    observe({
-        microRefId(NULL)
+        proxy$microRefId <- NULL
         updateSelectInput(inputId = "microRefId", choices = algTibble()$refId |> unique())
     }) |> bindEvent(input$algfiles)
 
-    mhMatrixTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    mhMatrixTempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
     output$mhMatrixPlot <- renderUI({
         req(input$algfiles)
-        req(microRefId())
+        req(proxy$microRefId)
         cat("render plot")
         drawMicroHomologyHeatmap(mhTibbleSub(), refEnd1Start2TibbleMicro(), algMetaData()$maxCut1, algMetaData()$maxCut2, algMetaData()$maxCut1down, algMetaData()$maxCut2down, input$microMode, mhMatrixTempFile)
     })
@@ -383,7 +600,7 @@ server <- function(input, output, session) {
         getIndelTypesEx(algTibble())
     })
 
-    classifyTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    classifyTempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
     output$claClaPlot <- renderUI({
         req(input$algfiles)
         if (input$claClaDistinctTemp) {
@@ -404,7 +621,7 @@ server <- function(input, output, session) {
     ##############################
     # distribution plot
     ##############################
-    distriTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    distriTempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
     output$distriPlot <- renderUI({
         req(input$algfiles)
         req(input$distriTarget)
@@ -449,8 +666,8 @@ server <- function(input, output, session) {
         getPolyXY(polyInsTibble2(), "up")
     })
 
-    polyInsert1TempFile <- tempfile(tmpdir=file.path("www", session$token))
-    polyInsert2TempFile <- tempfile(tmpdir=file.path("www", session$token))
+    polyInsert1TempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
+    polyInsert2TempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
     output$polyInsert1Plot <- renderUI({
         req(input$algfiles)
         plotPolyInsTibble(polyXY1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down + algMetaData()$maxRandInsert), polyInsert1TempFile)
@@ -473,8 +690,8 @@ server <- function(input, output, session) {
         arcDelTibble() |> select(count, delStart2, delEnd2) |> rename(delStart = delStart2, delEnd = delEnd2) |> unnest(c(delStart, delEnd)) |> summarise(count = sum(count), .by = c(delStart, delEnd))
     })
 
-    arcDelete1TempFile <- tempfile(tmpdir=file.path("www", session$token))
-    arcDelete2TempFile <- tempfile(tmpdir=file.path("www", session$token))
+    arcDelete1TempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
+    arcDelete2TempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
     output$arcDelete1Plot <- renderUI({
         req(input$algfiles)
         plotArcDelTibble(arcDelTibble1(), c(-algMetaData()$maxCut1, algMetaData()$maxCut1down), arcDelete1TempFile)
@@ -487,13 +704,8 @@ server <- function(input, output, session) {
     ################################
     # kpLogo
     ################################
-    # use kpLogoRegion as a proxy of input$kpLogoRegion to prevent render output$kpLogoPlot twice (one before input$kpLogoRegion is returned by client, and one after that)
-    kpLogoRegion <- reactiveVal(c(0, 0))
     observe({
-        kpLogoRegion(input$kpLogoRegion)
-    })
-    observe({
-        kpLogoRegion(c(0, 0))
+        proxy$kpLogoRegion <- NULL
         sgLen <- nchar(sgRNAs()[1])
         updateSliderInput(inputId = "kpLogoRegion", value = c(max(sgLen - 5, 1), sgLen), min = 1, max = sgLen, step = 1)
     }) |> bindEvent(input$sgRNAfile$datapath)
@@ -508,33 +720,28 @@ server <- function(input, output, session) {
     output$kpLogoIframe <- renderUI({
         req(input$algfiles)
         req(input$sgRNAfile)
-        req(kpLogoRegion()[2] > 0)
-        plotKpLogoAlgTarget(algTarget(), input$kpLogoMethod, kpLogoRegion(), input$kpLogoKmer, outputKpLogoTempFile, weightKpLogoTempFile, targetKpLogoTempFile, bgFileKpLogoTempFile)
+        req(proxy$kpLogoRegion)
+        plotKpLogoAlgTarget(algTarget(), input$kpLogoMethod, proxy$kpLogoRegion, input$kpLogoKmer, outputKpLogoTempFile, weightKpLogoTempFile, targetKpLogoTempFile, bgFileKpLogoTempFile)
     })
 
     #####################################
     # kmer frequencies
     #####################################
-    # use kmerRange as a proxy of input$kmerRange to prevent render output$kmerIframe twice (one before input$kmerRange is returned by client, and one after that)
-    kmerRange <- reactiveVal(c(0, 0))
-    observe({
-        kmerRange(input$kmerRange)
-    })
     output$kmerRangeUI <- renderUI({
         req(input$sgRNAfile)
-        kmerRange(c(0, 0))
+        proxy$kmerRange <- NULL
         sgLen <- nchar(sgRNAs()[1])
         numericRangeInput("kmerRange", "kmer range", value = rep(max(1, sgLen - 3), 2), min = 1, max = sgLen, step = 1)
     })
     kmerTibble <- reactive({
-        algTibble() |> mutate(kmer = substr(sgRNAs()[refId], kmerRange()[1], kmerRange()[2]), target = editTarget()) |> summarise(count = sum(count), .by = c(kmer, target))
+        algTibble() |> mutate(kmer = substr(sgRNAs()[refId], proxy$kmerRange[1], proxy$kmerRange[2]), target = editTarget()) |> summarise(count = sum(count), .by = c(kmer, target))
     })
 
-    kmerPdfTempFile <- tempfile(tmpdir=file.path("www", session$token))
+    kmerPdfTempFile <- tempfile(tmpdir=file.path("www", session$token), fileext = ".pdf")
     output$kmerIframe <- renderUI({
         req(input$algfiles)
         req(input$sgRNAfile)
-        req(kmerRange()[2] > 0)
+        req(proxy$kmerRange)
         plotKmerFrequencies(kmerTibble(), kmerPdfTempFile)
     })
 }

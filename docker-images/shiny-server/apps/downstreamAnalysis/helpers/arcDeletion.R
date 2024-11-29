@@ -31,6 +31,6 @@ plotArcDelTibble <- function(arcDelTibble, limits, arcDeleteTempFile) {
         scale_linewidth_continuous(range = c(0.1, 2)) +
         scale_x_continuous(limits = limits, name = "pos", expand = c(0, 0)) +
         scale_y_continuous(name = NULL, expand = c(0, 0))
-    ggsave(paste0(arcDeleteTempFile, ".pdf"), plot = ggFig, height = 1200, width = 3600, unit = "px")
-    tags$iframe(src = paste0(sub("^www/", "", arcDeleteTempFile), ".pdf"), height = "600px", width = "100%")
+    ggsave(arcDeleteTempFile, plot = ggFig, height = 1200, width = 3600, unit = "px")
+    tags$iframe(src = sub("^www/", "", arcDeleteTempFile), height = "600px", width = "100%")
 }

@@ -29,13 +29,33 @@ def load_rename_add_normVec_cov_tot(file, minDis = 0, force = False):
             cooltools.coverage(clr, ignore_diags=2, store=True)
 
 app_ui = ui.page_navbar(
-    ui.nav_panel("convert .allValidPairs to .hic",
-        ui.input_file(id = "uploadAllValidPairs", label = "upload .allValidPairs file"),
-        ui.download_button(id = "downloadHic", label = "download .hic file")
+    ui.nav_panel(
+        ui.tooltip(
+            ".allValidPairs to .hic",
+            "convert .allValidPairs to .hic"
+        ),
+        ui.tooltip(
+            ui.input_file(id = "uploadAllValidPairs", label = ".allValidPairs"),
+            "upload .allValidPairs file"
+        ),
+        ui.tooltip(
+            ui.download_button(id = "downloadHic", label = ".hic"),
+            "download .hic file"
+        )
     ),
-    ui.nav_panel("convert .hic to .mcool",
-        ui.input_file(id = "uploadHic", label = "upload .hic"),
-        ui.download_button(id = "downloadMcool", label = "download .mcool file")
+    ui.nav_panel(
+        ui.tooltip(
+            ".hic to .mcool",
+            "convert .hic to .mcool"
+        ),
+        ui.tooltip(
+            ui.input_file(id = "uploadHic", label = ".hic"),
+            "upload .hic file"
+        ),
+        ui.tooltip(
+            ui.download_button(id = "downloadMcool", label = ".mcool"),
+            "download .mcool file"
+        )
     )
 )
 

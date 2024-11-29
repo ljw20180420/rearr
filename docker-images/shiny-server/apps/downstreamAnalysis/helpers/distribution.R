@@ -5,8 +5,8 @@ discreteDistribution <- function(algTibble, distriTempFile) {
         ggplot(aes(x = value, weight = count, fill = type)) +
         geom_bar(position = position_dodge()) +
         scale_y_continuous(name = "count", expand = c(0, 0))
-    ggsave(paste0(distriTempFile, ".pdf"), plot = ggFig)
-    tags$iframe(src = paste0(sub("^www/", "", distriTempFile), ".pdf"), height = "1200px", width = "100%")
+    ggsave(distriTempFile, plot = ggFig)
+    tags$iframe(src = sub("^www/", "", distriTempFile), height = "1200px", width = "100%")
 }
 
 continuousDistribution <- function(algTibble, distriTempFile) {
@@ -17,6 +17,6 @@ continuousDistribution <- function(algTibble, distriTempFile) {
         geom_density(aes(y = after_stat(density))) +
         scale_x_continuous(expand = c(0, 0)) +
         scale_y_continuous(name = "density", expand = c(0, 0))
-    ggsave(paste0(distriTempFile, ".pdf"), plot = ggFig)
-    tags$iframe(src = paste0(sub("^www/", "", distriTempFile), ".pdf"), height = "1200px", width = "100%")
+    ggsave(distriTempFile, plot = ggFig)
+    tags$iframe(src = sub("^www/", "", distriTempFile), height = "1200px", width = "100%")
 }

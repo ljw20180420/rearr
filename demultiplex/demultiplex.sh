@@ -55,15 +55,18 @@ FilterSpilters()
 inputFile=$1
 if [ -z "$spliterTarget" ] && [ -z "$spliterPair" ]
 then
-    echo "At least one of spliterTarget or spliterPair need to be specified."
+    echo "At least one of spliterTarget or spliterPair need to be specified." >&2
+    exit 1
 fi
 if [ -n "$spliterTarget" ] && [ -z "$minScoreTarget" ]
 then
-    echo "spliterTarget is specified but minScoreTarget is not."
+    echo "spliterTarget is specified but minScoreTarget is not." >&2
+    exit 1
 fi
 if [ -n "$spliterPair" ] && [ -z "$minScorePair" ]
 then
-    echo "spliterPair is specified but minScorePair is not."
+    echo "spliterPair is specified but minScorePair is not." >&2
+    exit 1
 fi
 
 map1=""

@@ -76,8 +76,8 @@ indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
         scale_fill_manual(values = fillColors) +
         coord_polar(theta = "y") +
         theme(text = element_text(size = 30))
-    ggsave(paste0(classifyTempFile, ".pdf"), plot = ggFig)
-    tags$iframe(src = paste0(sub("^www/", "", classifyTempFile), ".pdf"), height = "1200px", width = "100%")
+    ggsave(classifyTempFile, plot = ggFig)
+    tags$iframe(src = sub("^www/", "", classifyTempFile), height = "1200px", width = "100%")
 }
 
 indelTypeWafflePlot <- function(indelTypeTibble, classifyTempFile) {
@@ -90,6 +90,6 @@ indelTypeWafflePlot <- function(indelTypeTibble, classifyTempFile) {
         scale_fill_manual(limits = indelTypeTibble$indelType |> levels(), values = fillColors) +
         coord_equal() +
         theme(text = element_text(size = 30))
-    ggsave(paste0(classifyTempFile, ".pdf"), plot = ggFig)
-    tags$iframe(src = paste0(sub("^www/", "", classifyTempFile), ".pdf"), height = "1200px", width = "100%")
+    ggsave(classifyTempFile, plot = ggFig)
+    tags$iframe(src = sub("^www/", "", classifyTempFile), height = "1200px", width = "100%")
 }

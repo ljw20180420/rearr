@@ -50,21 +50,13 @@ docker compose up -d
 
 # TODO
 ```[tasklist]
-- [ ] use fileext in tempfile
-- [ ] write all proxy value in proxy$val form
-- [ ] shiny add description
-- [ ] shiny display pdf in iframe tag
-- [ ] fix shiny second execution bug
 - [ ] get rid of pre-compose-up.sh
 - [ ] push images to atomhub
-- [ ] put each image in a folder
+- [ ] put each docker image in a folder
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
-- [ ] use iframe output for diffloopAnalysis(Pair)
 - [ ] add shiny python to nginx server
 - [ ] rewrite vueflow by reactiveVal
-- [ ] use fuzzy render for heatmap
-- [ ] add info to shiny app widget
 - [ ] Celery flower does not work properly on server. Maybe permission problem.
 - [ ] fix one alignment bug in shiny server docker (gawk: fatal: cannot open source file `correct_micro_homology.awk' for reading: No such file or directory; cannot create dir '/srv/shiny-server/downstreamAnalysis/app_cache', reason 'Permission denied')
 - [ ] asgi is more advance than wsgi
