@@ -24,7 +24,10 @@ pv-1.8.5/
 shinyApps/helpers/Sushi-master/*
 !shinyApps/helpers/Sushi-master/R
 **/__pycache__/
-**/tmp
+**/tmp/*
+!**/tmp/.gitignore
+**/www/*
+!**/www/.gitignore
 genome
 .dockerignore
 *.crt
