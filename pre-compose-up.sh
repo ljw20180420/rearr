@@ -8,4 +8,7 @@ chmod a+w docker-images/shiny/apps/diffloopAnalysisPair/www
 chmod a+w docker-images/shiny/apps/downstreamAnalysis/www
 chmod a+w docker-images/flask/flask_project/tmp
 chmod a+w docker-images/chat-ui/data/db
-wget https://hf-mirror.com/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf -O docker-images/chat-ui/llama.cpp/Phi-3-mini-4k-instruct-q4.gguf
+if ! [ -e "docker-images/chat-ui/llama.cpp/Phi-3-mini-4k-instruct-q4.gguf" ]
+then
+    wget https://hf-mirror.com/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf -O docker-images/chat-ui/llama.cpp/Phi-3-mini-4k-instruct-q4.gguf
+fi
