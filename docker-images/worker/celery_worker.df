@@ -1,0 +1,10 @@
+FROM python:latest
+LABEL maintainer="ljw2017@sjtu.edu.cn"
+WORKDIR /app
+RUN pip install celery[redis]
+COPY ["./install.sh", "./pv-1.8.5.zip", "./correct_micro_homology.awk", "./removeDuplicates.sh", "/app/"]
+COPY ["./Rearrangement", "/app/Rearrangement"]
+COPY ["./demultiplex", "/app/demultiplex"]
+COPY ["./sx", "/app/sx"]
+RUN ./install.sh core sx && rm -rf ./*
+COPY ["./rearrTest.sh", "./workFlow.mak", "/app/"]

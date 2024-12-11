@@ -1,0 +1,24 @@
+# export by: dot -Tpng -o netStruct.png netStruct.gv
+
+digraph netStruct
+{
+    graph [rankdir=TB]
+
+    node [shape = box]
+    flaskVue3 [label = "Flask + Vue3"]
+    celeryWorkers [label = "Celery Workers"]
+    celeryBeat [label = "Celery Beat"]
+    celeryFlower [label = "Celery Flower"]
+    rabbitmqRPC [label = "RabbitMQ RPC"]
+    rabbitmqAMQP [label = "RabbitMQ AMQP"]
+    shinyServer [label = "Shiny Server"]
+    shinyApp [label = "Shiny Applications"]
+    waitress [label = "Waitress"]
+    nginx [label = "Nginx"]
+
+    {rabbitmqRPC, celeryWorkers} -> rabbitmqAMQP -> flaskVue3 -> waitress -> nginx
+    rabbitmqAMQP -> celeryFlower
+    rabbitmqAMQP -> celeryBeat
+    celeryFlower -> nginx
+    shinyApp -> shinyServer -> nginx
+}

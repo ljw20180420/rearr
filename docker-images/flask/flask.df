@@ -1,0 +1,4 @@
+FROM python:latest
+LABEL maintainer="ljw2017@sjtu.edu.cn"
+WORKDIR /app
+RUN pip install flask celery[redis] waitress
