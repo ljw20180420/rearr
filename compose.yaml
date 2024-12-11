@@ -112,6 +112,7 @@ services:
       - "./docker-images/chat-ui/data:/data"
     environment:
       PUBLIC_ORIGIN: "http://qiangwulab.sjtu.edu.cn:80"
+      # PUBLIC_ORIGIN: "http://localhost:80"
 
   Phi-3-mini-4k-instruct-gguf:
     restart: always

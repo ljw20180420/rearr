@@ -11,7 +11,7 @@ Then install rootless docker: https://docs.docker.com/engine/security/rootless/#
 # Usage
 See `rearrTest.sh`.
 If you use docker, first login into docker.
-```{bash}
+```bash
 ./loginWorker.sh
 ```
 Then just use as native.
@@ -42,10 +42,9 @@ Docker buildx does not respect the daemon proxy. One has to use system proxy, sa
 ```bash
 HTTPS_PROXY=socks5://127.0.0.1:1080 docker compose build
 ```
-```{list}
+```bash
 cd sx_lcy
-./pre-compose-up.sh
-docker compose up -d
+./compose.sh
 ```
 
 # TODO
