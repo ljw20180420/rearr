@@ -21,17 +21,5 @@ test/*
 !test/A2-g1n-3.R2.fq
 !test/A2-g1n-3.fq.count
 pv-1.8.5/
-shinyApps/helpers/Sushi-master/*
-!shinyApps/helpers/Sushi-master/R
 **/__pycache__/
-**/tmp/*
-!**/tmp/.gitignore
-**/www/*
-!**/www/.gitignore
 genome
-.dockerignore
-*.crt
-*.key
-shinyApps/downstreamAnalysis/www
-docker-images/chat-ui/*
-!docker-images/chat-ui/.env.local
