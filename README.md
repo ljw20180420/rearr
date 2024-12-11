@@ -52,7 +52,6 @@ docker compose up -d
 ```[tasklist]
 - [ ] get rid of pre-compose-up.sh
 - [ ] push images to quay.io
-- [ ] put each docker image in a folder
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
 - [ ] Celery flower does not work properly on server. Maybe permission problem.

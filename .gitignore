@@ -33,5 +33,5 @@ genome
 *.crt
 *.key
 shinyApps/downstreamAnalysis/www
-chat-ui/*
-!chat-ui/.env.local
+docker-images/chat-ui/*
+!docker-images/chat-ui/.env.local

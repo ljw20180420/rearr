@@ -1,83 +1,83 @@
 services:
-  # rabbitmq:
-  #   restart: always
-  #   container_name: celery_rabbitmq
-  #   image: rabbitmq:latest
-  #   # comment port when deploy
-  #   # ports:
-  #   #   - "5672:5672"
+  rabbitmq:
+    restart: always
+    container_name: celery_rabbitmq
+    image: rabbitmq:latest
+    # comment port when deploy
+    # ports:
+    #   - "5672:5672"
   
-  # redis:
-  #   restart: always
-  #   container_name: celery_redis
-  #   image: redis:latest
-  #   # comment port when deploy
-  #   # ports:
-  #   #   - "6379:6379"
+  redis:
+    restart: always
+    container_name: celery_redis
+    image: redis:latest
+    # comment port when deploy
+    # ports:
+    #   - "6379:6379"
 
-  # beat:
-  #   depends_on:
-  #     - rabbitmq
-  #     - redis
-  #   restart: always
-  #   container_name: celery_beat
-  #   image: mher/flower:latest
-  #   volumes:
-  #     - "./docker-images/flask/flask_project/celery_project:/data/celery_project"
-  #   command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
+  beat:
+    depends_on:
+      - rabbitmq
+      - redis
+    restart: always
+    container_name: celery_beat
+    image: mher/flower:latest
+    volumes:
+      - "./docker-images/flask/flask_project/celery_project:/data/celery_project"
+    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
 
-  # worker:
-  #   depends_on:
-  #     - rabbitmq
-  #     - redis
-  #   restart: always
-  #   container_name: celery_worker
-  #   image: ljwdocker1989/celery_worker:latest
-  #   build:
-  #     context: .
-  #     dockerfile: docker-images/worker/celery_worker.df
-  #   volumes:
-  #     - "./docker-images/flask/flask_project/celery_project:/app/celery_project"
-  #     - "./docker-images/flask/flask_project/tmp:/app/tmp"
-  #     - "./genome:/app/genome:ro"
-  #   command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
+  worker:
+    depends_on:
+      - rabbitmq
+      - redis
+    restart: always
+    container_name: celery_worker
+    image: ljwdocker1989/celery_worker:latest
+    build:
+      context: .
+      dockerfile: docker-images/worker/celery_worker.df
+    volumes:
+      - "./docker-images/flask/flask_project/celery_project:/app/celery_project"
+      - "./docker-images/flask/flask_project/tmp:/app/tmp"
+      - "./genome:/app/genome:ro"
+    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
 
-  # flask:
-  #   depends_on:
-  #     - rabbitmq
-  #     - redis
-  #     - worker
-  #   restart: always
-  #   container_name: flask_app
-  #   image: ljwdocker1989/flask_app:latest
-  #   build:
-  #     context: .
-  #     dockerfile: docker-images/flask/flask.df
-  #   volumes:
-  #     - "./docker-images/flask/flask_project:/app"
-  #   environment:
-  #     CELERY_BROKER: amqp://rabbitmq:5672
-  #     CELERY_BACKEND: redis://redis:6379/0
-  #   # 10737418240 is 10GB
-  #   command: waitress-serve --url-prefix=/workflow --max-request-body-size=10737418240 app:flaskApp
+  flask:
+    depends_on:
+      - rabbitmq
+      - redis
+      - worker
+    restart: always
+    container_name: flask_app
+    image: ljwdocker1989/flask_app:latest
+    build:
+      context: .
+      dockerfile: docker-images/flask/flask.df
+    volumes:
+      - "./docker-images/flask/flask_project:/app"
+    environment:
+      CELERY_BROKER: amqp://rabbitmq:5672
+      CELERY_BACKEND: redis://redis:6379/0
+    # 10737418240 is 10GB
+    command: waitress-serve --url-prefix=/workflow --max-request-body-size=10737418240 app:flaskApp
 
-  # flower:
-  #   depends_on:
-  #     - rabbitmq
-  #     - redis
-  #     - worker
-  #   restart: always
-  #   container_name: celery_flower
-  #   image: mher/flower:latest
-  #   volumes:
-  #     - "./docker-images/flask/flask_project/celery_project:/data/celery_project"
-  #   command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
+  flower:
+    depends_on:
+      - rabbitmq
+      - redis
+      - worker
+    restart: always
+    container_name: celery_flower
+    image: mher/flower:latest
+    volumes:
+      - "./docker-images/flask/flask_project/celery_project:/data/celery_project"
+    command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
 
   nginx:
     depends_on:
-      # - flask
-      # - flower
-      # - shiny
+      - flask
+      - flower
+      - shiny
       - chat-ui-db
     restart: always
     container_name: nginx_server
@@ -85,40 +85,38 @@ services:
     ports:
       - "80:80"
     volumes:
-      - "./docker-images/nginx/conf:/etc/nginx/conf.d:ro"
-      - "./docker-images/nginx/html:/usr/share/nginx/html:ro"
-      # - "./openssl:/etc/ssl:ro"
-      # - "./certbot/letsencrypt:/etc/letsencrypt:ro"
+      - "./docker-images/nginx/conf:/etc/nginx/conf.d"
+      - "./docker-images/nginx/html:/usr/share/nginx/html"
     # command: [nginx-debug, '-g', 'daemon off;']
 
-  # shiny:
-  #   restart: always
-  #   container_name: shiny_server
-  #   image: ljwdocker1989/shiny_server:latest
-  #   build:
-  #     context: .
-  #     dockerfile: docker-images/shiny/shiny_server.df
-  #   volumes:
-  #     - "./docker-images/shiny/apps:/srv/shiny-server"
-  #     - "./docker-images/shiny/conf:/etc/shiny-server"
-  #     - "./docker-images/shiny/logs:/var/log/shiny-server"
+  shiny:
+    restart: always
+    container_name: shiny_server
+    image: ljwdocker1989/shiny_server:latest
+    build:
+      context: .
+      dockerfile: docker-images/shiny/shiny_server.df
+    volumes:
+      - "./docker-images/shiny/apps:/srv/shiny-server"
+      - "./docker-images/shiny/conf:/etc/shiny-server"
+      - "./docker-images/shiny/logs:/var/log/shiny-server"
 
-  # chat-ui-db:
-  #   depends_on:
-  #     - Phi-3-mini-4k-instruct-gguf
-  #   restart: always
-  #   container_name: chat-ui-db
-  #   image: ghcr.io/huggingface/chat-ui-db
-  #   volumes:
-  #     - "./chat-ui/.env.local:/app/.env.local"
-  #     - "./chat-ui/data:/data"
-  #   environment:
-  #     PUBLIC_ORIGIN: "http://qiangwulab.sjtu.edu.cn:80"
+  chat-ui-db:
+    depends_on:
+      - Phi-3-mini-4k-instruct-gguf
+    restart: always
+    container_name: chat-ui-db
+    image: ghcr.io/huggingface/chat-ui-db:latest
+    volumes:
+      - "./docker-images/chat-ui/.env.local:/app/.env.local"
+      - "./docker-images/chat-ui/data:/data"
+    environment:
+      PUBLIC_ORIGIN: "http://qiangwulab.sjtu.edu.cn:80"
 
-  # Phi-3-mini-4k-instruct-gguf:
-  #   restart: always
-  #   container_name: Phi-3-mini-4k-instruct-gguf
-  #   image: ghcr.io/ggerganov/llama.cpp:server
-  #   volumes:
-  #     - "./chat-ui/llama.cpp:/models"
-  #   command: -m /models/Phi-3-mini-4k-instruct-q4.gguf --host 0.0.0.0 -c 4096
+  Phi-3-mini-4k-instruct-gguf:
+    restart: always
+    container_name: Phi-3-mini-4k-instruct-gguf
+    image: ghcr.io/ggerganov/llama.cpp:server
+    volumes:
+      - "./docker-images/chat-ui/llama.cpp:/models"
+    command: -m /models/Phi-3-mini-4k-instruct-q4.gguf --host 0.0.0.0 -c 4096
