@@ -1,9 +1,11 @@
 <script setup>
 import axios from 'axios';
-import { useNode, Handle, Position, useVueFlow, useHandleConnections } from '@vue-flow/core';
-import { computed, watch } from 'vue';
+import { useNode, Handle, Position, useVueFlow } from '@vue-flow/core';
+import { computed } from 'vue';
+import { isValidConnection } from './utils.js'
 const { node, connectedEdges } = useNode();
-const { findNode, addEdges } = useVueFlow();
+const { findNode } = useVueFlow();
+
 node.active = computed(() => {
     for (let edge of connectedEdges.value) {
         if (edge.target === node.id && !edge.animated) {
@@ -12,30 +14,22 @@ node.active = computed(() => {
     }
     return true;
 });
-// useHandleConnections({
-//   type: "source",
-//   onConnect: (params) => {
-//     params['id'] = `${params.source}-${params.target}`;
-//     addEdges(params);
-//     const source = findNode(params.source)
-//     const edge = findEdge(params.id)
-//     edge.animated = source.active;
-//   },
-// });
 
-watch(() => node.active,
-    (active) => {
-        for (let edge of connectedEdges.value) {
-            if (edge.source === node.id) {
-                edge.animated = active;
+node.data = computed(() => {
+    let data = { values: {}, taskIds: {} };
+    for (let edge of connectedEdges.value) {
+        if (edge.source === node.id) {
+            continue;
+        }
+        for (let obj of edge.sourceNode.data) {
+            data.values[obj.name] = obj.value
+            if (Object.keys(obj).includes("taskId")) {
+                data.taskIds[obj.name] = obj.taskId;
             }
         }
-    },
-    {
-        deep: true,
-        immediate: true,
     }
-)
+    return data;
+})
 
 async function runJob() {
     try{
@@ -82,10 +76,10 @@ const base_url = import.meta.env.BASE_URL;
 </script>
 
 <template>
-    <div>
+    <div :title="node.title">
         <span>{{ node.id }} </span>
         <button @click="runJob" :disabled="!node.active">run</button>
-        <Handle type="source" :position="Position.Right" :is-valid-connection="(connection) => node.to.includes(connection.target)" />
-        <Handle type="target" :position="Position.Left" :is-valid-connection="(connection) => node.from.includes(connection.source)" />
+        <Handle id="s" type="source" :position="Position.Right" :is-valid-connection="isValidConnection" />
+        <Handle id="t" type="target" :position="Position.Left" :is-valid-connection="isValidConnection" />
     </div>
 </template>

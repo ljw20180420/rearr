@@ -2,19 +2,19 @@
 https://github.com/ljw20180420/sx_lcy/releases
 
 # Install
-```{bash}
-It is recommanded to use rearr in docker. If you want to install natively, cd into the project fold and execute ./install/sh core sx
-```
+It is recommanded to use rearr in docker. If you want to install natively, cd into the project fold and execute `./install.sh` core sx.
 
 # Install rootless docker
 First, install docker engine: https://docs.docker.com/engine/install
 Then install rootless docker: https://docs.docker.com/engine/security/rootless/#install
 
 # Usage
+See `rearrTest.sh`.
+If you use docker, first login into docker.
 ```{bash}
-See rearrTest.sh
-If you use docker, first login into a docker by ./loginWorker.sh dataPath. dataPath will be mounted to /app/data in docker. Then just use as native.
+./loginWorker.sh
 ```
+Then just use as native.
 
 # Parameters
 ```{list}
@@ -51,11 +51,10 @@ docker compose up -d
 # TODO
 ```[tasklist]
 - [ ] get rid of pre-compose-up.sh
-- [ ] push images to atomhub
+- [ ] push images to quay.io
 - [ ] put each docker image in a folder
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
-- [ ] rewrite vueflow by reactiveVal
 - [ ] Celery flower does not work properly on server. Maybe permission problem.
 - [ ] fix one alignment bug in shiny server docker (gawk: fatal: cannot open source file `correct_micro_homology.awk' for reading: No such file or directory; cannot create dir '/srv/shiny-server/downstreamAnalysis/app_cache', reason 'Permission denied')
 - [ ] asgi is more advance than wsgi

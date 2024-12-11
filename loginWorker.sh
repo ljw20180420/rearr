@@ -1,7 +1,7 @@
 #!/bin/bash
-# Usage: loginWorker.sh dataPath
-# dataPath is mounted to /app/data in docker
+# Usage: loginWorker.sh
 
+# select genome path
 if [ ! -e genome/genome.fa ] || [ ! -e genome/genome.1.bt2 ] || [ ! -e genome/genome.2.bt2 ] || [ ! -e genome/genome.3.bt2 ] || [ ! -e genome/genome.4.bt2 ] || [ ! -e genome/genome.rev.1.bt2 ] || [ ! -e genome/genome.rev.2.bt2 ]
 then
     mkdir -p genome
@@ -17,11 +17,11 @@ then
     chown $(id -un):$(id -gn) genome
 fi
 
-dataPath=$(realpath $1)
-if [ -z $dataPath ]
-then
-    echo "must specify dataPath"
-    exit 1
+read -ep "please input the full path of directory containing .fastq\.fq(.gz):" dataPath
+while [ -z $dataPath ]
+do
+    echo "must specify dataPath" >&2
+    read -ep "please input the full path of directory containing .fastq\.fq(.gz):" dataPath
 fi
 docker run -it --rm \
 -v "./genome:/app/genome" \
