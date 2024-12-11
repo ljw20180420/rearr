@@ -50,7 +50,6 @@ docker compose up -d
 
 # TODO
 ```[tasklist]
-- [ ] get rid of pre-compose-up.sh
 - [ ] push images to quay.io
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
