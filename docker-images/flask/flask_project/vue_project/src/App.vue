@@ -1,171 +1,206 @@
 <script setup>
-import { markRaw } from 'vue'
-import { VueFlow, useVueFlow } from '@vue-flow/core'
-import { ref } from 'vue';
+import { ref, markRaw } from 'vue';
+import { VueFlow, useVueFlow } from '@vue-flow/core';
+import { MiniMap } from '@vue-flow/minimap'
+import '@vue-flow/minimap/dist/style.css'
+import { Controls } from '@vue-flow/controls'
+import '@vue-flow/controls/dist/style.css'
+import { Background } from '@vue-flow/background'
 import dataTank from './components/dataTank.vue';
 import runJob from './components/runJob.vue';
-
-const { addEdges, findNode, findEdge } = useVueFlow()
+import dataTunnel from './components/dataTunnel.vue';
+import { validTargets, initRunJobNode, initDataTankNode } from './components/utils.js';
 
 const nodeTypes = {
   dataTankNode: markRaw(dataTank),
   runJobNode: markRaw(runJob)
-}
+};
+
+const edgeTypes = {
+  dataTunnelEdge: markRaw(dataTunnel)
+};
 
 const nodes = ref([
-  { id: 'target file', type: 'dataTankNode', position: { x: 950, y: 50 }, data: [ { type: 'file', taskId: null, name: 'target file', value: [null] } ], to: [ 'removeDuplicates' ] },
-  { id: 'pair file', type: 'dataTankNode', position: { x: 950, y: 150 }, data: [ { type: 'file', taskId: null, name: 'pair file', value: [null] } ], to: [ 'removeDuplicates' ] },
-  { id: 'removeDuplicates', type: 'runJobNode', active: null, position: { x: 1600, y: 100 }, data: { values: {}, taskIds: {} }, from: [ 'target file', 'pair file' ], to: [ 'file without duplicates' ] },
-  { id: 'file without duplicates', type: 'dataTankNode', position: { x: 1850, y: 100 }, data: [ { type: 'file', taskId: null, name: 'file without duplicates', value: [null] } ], from: [ 'removeDuplicates' ], to: [ 'demultiplex' ] },
+  initDataTankNode(
+    'target file', 650, 50,
+    [ { type: 'file', name: 'target file' } ],
+    'target reads aligned to references (.fq[.gz])'
+  ),
+  initDataTankNode(
+    'pair file', 650, 150,
+    [ { type: 'file', name: 'pair file' } ],
+    'auxiliary reads for demultiplexing target reads (.fq[.gz])'
+  ),
+  initRunJobNode(
+    'removeDuplicates', 1000, 125,
+    'remove duplicated reads in target\\pair file'
+  ),
+  initDataTankNode(
+    'file without duplicates', 1300, 100,
+    [ { type: 'file', name: 'file without duplicates' } ],
+    'file of side-by-side target and pair reads without duplicates'
+  ),
 
-  { id: 'target spliter', type: 'dataTankNode', position: { x: 950, y: 250 }, data: [ { type: 'file', taskId: null, name: 'target spliter', value: [null] } ], from: [ 'getSpliter' ], to: [ 'buildSpliter/target spliter' ] },
-  { id: 'buildSpliter/target spliter', type: 'runJobNode', active: null, position: { x: 1600, y: 250 }, data: { values: {}, taskIds: {} }, from: [ 'target spliter' ], to: [ 'target spliter index' ] },
-  { id: 'target spliter index', type: 'dataTankNode', position: { x: 1850, y: 250 }, data: [
-    { type: 'value', name: 'minimal alignment score of target spliter', value: null },
-    { type: 'files', taskId: null, name: 'target spliter index', value: new Array(6).fill(null) },
-  ], from: [ 'buildSpliter/target spliter' ], to: [ 'demultiplex' ] },
+  initDataTankNode(
+    'target spliter', 650, 250,
+    [ { type: 'file', name: 'target spliter' } ],
+    'reads for demultiplexing target reads (.fa)'
+  ),
+  initRunJobNode(
+    'buildSpliter/target spliter', 1000, 250,
+    'build bowtie2 index for target spliter'
+  ),
+  initDataTankNode(
+    'target spliter index', 1300, 200,
+    [
+      { type: 'value', name: 'minimal alignment score of target spliter', value: null },
+      { type: 'files', name: 'target spliter index', value: 6 }
+    ],
+    'bowtie2 index of target spliter'
+  ),
 
-  { id: 'pair spliter', type: 'dataTankNode', position: { x: 950, y: 450 }, data: [ { type: 'file', taskId: null, name: 'pair spliter', value: [null] } ], from: [ 'getSpliter' ], to: [ 'buildSpliter/pair spliter' ] },
-  { id: 'buildSpliter/pair spliter', type: 'runJobNode', active: null, position: { x: 1600, y: 450 }, data: { values: {}, taskIds: {} }, from: [ 'pair spliter' ], to: [ 'pair spliter index' ] },
-  { id: 'pair spliter index', type: 'dataTankNode', position: { x: 1850, y: 450 }, data: [
-    { type: 'value', name: 'minimal alignment score of pair spliter', value: null },
-    { type: 'files', taskId: null, name: 'pair spliter index', value: new Array(6).fill(null) },
-  ], from: [ 'buildSpliter/pair spliter' ], to: [ 'demultiplex' ] },
+  initDataTankNode(
+    'pair spliter', 650, 350,
+    [ { type: 'file', name: 'pair spliter' } ],
+    'reads for demultiplexing pair reads (.fa)'
+  ),
+  initRunJobNode(
+    'buildSpliter/pair spliter', 1000, 400,
+    'build bowtie2 index for pair spliter'
+  ),
+  initDataTankNode(
+    'pair spliter index', 1300, 350,
+    [
+      { type: 'value', name: 'minimal alignment score of pair spliter', value: null },
+      { type: 'files', name: 'pair spliter index', value: 6 }
+    ],
+    'bowtie2 index of pair spliter'
+  ),
 
-  { id: 'demultiplex', type: 'runJobNode', active: null, position: { x: 2500, y: 350 }, data: { values: {}, taskIds: {} }, from: [ 'file without duplicates', 'target spliter index', 'pair spliter index' ], to: [ 'demultiplex file' ] },
-  { id: 'demultiplex file', type: 'dataTankNode', position: { x: 2750, y: 350 }, data: [{ type: 'file', taskId: null, name: 'demultiplex file', value: [null] }], from: [ 'demultiplex file' ], to: [ 'sxPostProcess' ] },
+  initRunJobNode(
+    'demultiplex', 1700, 250,
+    'demultiplex reads by spliter'
+  ),
+  initDataTankNode(
+    'demultiplex file', 1900, 200,
+    [
+      { type: 'value', name: "minimal base number", value: 30 },
+      { type: 'file', name: 'demultiplex file' }
+    ],
+    "Demultiplexed target reads with spliter\\adapter. Target reads shorter than minimal base number after remove 5' spliter and 3' adapter are filtered"
+  ),
 
-  { id: "minimal base number after remove 5' spliter and 3' adapter from target", type: 'dataTankNode', position: { x:2750, y: 550 }, data: [{ type: 'value', name: "minimal base number after remove 5' spliter and 3' adapter from target", value: 30 }], to: [ 'sxPostProcess' ] },
-  { id: 'sxPostProcess', type: 'runJobNode', active: null, position: { x: 3400, y: 450 }, data: { values: {}, taskIds: {} }, from: [ 'demultiplex file', "minimal base number after remove 5' spliter and 3' adapter from target" ], to: [ 'file of reads to align' ] },
-  { id: 'file of reads to align', type: 'dataTankNode', position: { x: 4550, y: 650 }, data: [
-    { type: 'value', name: 'gap-extending penalty for unaligned query part', value: 0 },
-    { type: 'value', name: 'gap-opening penalty for unaligned query part', value: -5 },
-    { type: 'file', taskId: null, name: 'file of reads to align', value: [null] },
-  ], from: [ 'sxPostProcess' ], to: [ 'rearrange' ] },
+  initRunJobNode(
+    'sxPostProcess', 2250, 250,
+    "remove 5' spliter and 3' adapter, and filter reads which are too short for alignment, only support data in the same format as Xing Shi"
+  ),
+  initDataTankNode(
+    'file of reads to align', 2500, 50,
+    [
+      { type: 'value', name: 'mismatching score', value: -6 },
+      { type: 'value', name: 'matching score for non-extension reference part', value: 4 },
+      { type: 'value', name: 'matching score for extension reference part', value: 2 },
+      { type: 'value', name: 'gap-extending penalty', value: -3 },
+      { type: 'value', name: 'gap-opening penalty', value: -9 },
+      { type: 'value', name: 'gap-extending penalty for unaligned query part', value: 0 },
+      { type: 'value', name: 'gap-opening penalty for unaligned query part', value: -5 },
+      { type: 'file', name: 'file of reads to align' }
+    ],
+    'Clean target reads ready for alignment. Alignment score settings based on affine gap penalty.s'
+  ),
 
-  { id: 'file of reference', type: 'dataTankNode', position: { x: 4550, y: 950 }, data: [
-    { type: 'value', name: 'gap-extending penalty for unaligned reference end', value: 0 },
-    { type: 'value', name: 'gap-opening penalty for unaligned reference end', value: 0 },
-    { type: 'select', name: 'PAM1', value: 'NGG', options: ['NGG', 'CCN'] },
-    { type: 'select', name: 'PAM2', value: 'NGG', options: ['NGG', 'CCN'] },
-    { type: 'file', taskId: null, name: 'file of reference', value: [null] },
-  ], from: [ 'getReference' ], to: [ 'rearrange' ] },
-  { id: 'align score settings', type: 'dataTankNode', position: {x: 4550, y: 350 }, data: [
-    { type: 'value', name: 'mismatching score', value: -6 },
-    { type: 'value', name: 'matching score for non-extension reference part', value: 4 },
-    { type: 'value', name: 'matching score for extension reference part', value: 2 },
-    { type: 'value', name: 'gap-extending penalty', value: -3 },
-    { type: 'value', name: 'gap-opening penalty', value: -9 },
-  ], to: [ 'rearrange' ] },
-  { id: 'rearrange', type: 'runJobNode', active: null, position: { x: 5200, y: 650 }, data: { values: {}, taskIds: {} }, from: [ 'file of reads to align', 'file of reference', 'align score settings' ], to: [ 'alignments' ] },
-  { id: 'alignments', type: 'dataTankNode', position: { x: 5450, y: 650 }, data: [{ type: 'file', taskId: null, name: 'alignments', value: [null] }], from: [ 'rearrange' ] },
+  initDataTankNode(
+    'file of reference', 2500, 650, 
+    [
+      { type: 'value', name: 'gap-extending penalty for unaligned reference end', value: 0 },
+      { type: 'value', name: 'gap-opening penalty for unaligned reference end', value: 0 },
+      { type: 'select', name: 'PAM1', value: 'NGG', options: ['NGG', 'CCN'] },
+      { type: 'select', name: 'PAM2', value: 'NGG', options: ['NGG', 'CCN'] },
+      { type: 'file', name: 'file of reference' }
+    ],
+    'target reads are aligned to these reference reads'
+  ),
+  initRunJobNode(
+    'rearrange', 3000, 650,
+    'apply chimeric alignments of target reads to references'
+  ),
+  initDataTankNode(
+    'alignments', 3250, 650,
+    [ { type: 'file', name: 'alignments' } ],
+    'chimeric alignment results'
+  ),
 
-  { id: 'genome', type: 'dataTankNode', position: { x: 2750, y: 1050 }, data: [{ type: 'file', taskId: null, name: 'genome', value: ["../genome/genome.fa"] }], to: [ 'indexGenome', 'getReference' ] },
-  { id: 'indexGenome', type: 'runJobNode', active: null, position: { x: 3400, y: 1150 }, data: { values: {}, taskIds: {} }, from: [ 'genome' ], to: [ 'genome index' ] },
-  { id: 'genome index', type: 'dataTankNode', position: { x: 3650, y: 1150 }, data: [{ type: 'files', taskId: null, name: 'genome index', value: [
-    '../genome/genome.1.bt2',
-    '../genome/genome.2.bt2',
-    '../genome/genome.3.bt2',
-    '../genome/genome.4.bt2',
-    '../genome/genome.rev.1.bt2',
-    '../genome/genome.rev.2.bt2',
-  ] }], from: [ 'indexGenome' ], to: [ 'getReference' ] },
+  initDataTankNode(
+    'genome', 1300, 850,
+    [ { type: 'file', name: 'genome' } ],
+    'genome file to extract references from (.fa)'
+  ),
+  initRunJobNode(
+    'indexGenome', 1700, 950,
+    'build bowtie2 index for genome'
+  ),
+  initDataTankNode(
+    'genome index', 1900, 850,
+    [
+      { type: 'value', name: 'cleavage 1 extend upstream', value: 50 },
+      { type: 'value', name: 'cleavage 1 extend downstream', value: 0 },
+      { type: 'value', name: 'cleavage 2 extend upstream', value: 10 },
+      { type: 'value', name: 'cleavage 2 extend downstream', value: 100 },
+      { type: 'files', name: 'genome index', value: 6 }
+    ],
+    'Bowtie2 index of genome. Rearr need extended reference to catch templated insertion.'
+  ),
 
-  { id: 'csvfile', type: 'dataTankNode', position: { x: 50, y: 650 }, data: [{ type: 'file', taskId: null, name: 'csvfile', value: [null] }], to: [ 'getSpliter', 'getReference' ] },
-  { id: 'extension length', type: 'dataTankNode', position: { x: 3650, y: 750 }, data: [
-    { type: 'value', name: 'cleavage 1 extend upstream', value: 50 },
-    { type: 'value', name: 'cleavage 1 extend downstream', value: 0 },
-    { type: 'value', name: 'cleavage 2 extend upstream', value: 10 },
-    { type: 'value', name: 'cleavage 2 extend downstream', value: 100 },
-  ], to: [ 'getReference' ] },
-  { id: 'getReference', type: 'runJobNode', active: null, position: { x: 4300, y: 1050 }, data: { values: {}, taskIds: {} }, from: [ 'genome', 'genome index', 'csvfile', 'extension length' ], to: [ 'file of reference' ] },
+  initDataTankNode(
+    'csvfile', 50, 450,
+    [ { type: 'file', name: 'csvfile' } ],
+    'csv file containing hints to extract reference from genome, this format is generated by Xing Shi'
+  ),
+  initRunJobNode(
+    'getReference', 2250, 750,
+    "Extract reference from genome based on csv file of Xing Shi. To use this node, you need a csv file in the same format as that of Xing Shi."
+  ),
 
-  { id: 'getSpliters', type: 'runJobNode', active: null, position: { x: 700, y: 350 }, data: { values: {}, taskIds: {} }, from: [ 'csvfile' ], to: [ 'target spliter', 'pair spliter' ] }
-])
+  initRunJobNode(
+    'getSpliters', 400, 350,
+    "Extract spliter from csv file of Xing Shi. To use this node, you need a csv file in the same format as that of Xing Shi."
+  )
+]);
 
-const edges = ref([
-  { id: 'e0', source: 'target file', target: 'removeDuplicates' },
-  { id: 'e1', source: 'pair file', target: 'removeDuplicates' },
-  { id: 'e2', source: 'removeDuplicates', target: 'file without duplicates' },
-
-  { id: 'e3', source: 'target spliter', target: 'buildSpliter/target spliter' },
-  { id: 'e4', source: 'buildSpliter/target spliter', target: 'target spliter index' },
-
-  { id: 'e5', source: 'pair spliter', target: 'buildSpliter/pair spliter' },
-  { id: 'e6', source: 'buildSpliter/pair spliter', target: 'pair spliter index' },
-
-  { id: 'e7', source: 'file without duplicates', target: 'demultiplex' },
-  { id: 'e8', source: 'target spliter index', target: 'demultiplex' },
-  { id: 'e9', source: 'pair spliter index', target: 'demultiplex' },
-  { id: 'e10', source: 'demultiplex', target: 'demultiplex file' },
-
-  { id: 'e11', source: 'demultiplex file', target: 'sxPostProcess' },
-  { id: 'e12', source: "minimal base number after remove 5' spliter and 3' adapter from target", target: 'sxPostProcess' },
-  { id: 'e13', source: 'sxPostProcess', target: 'file of reads to align' },
-
-  { id: 'e14', source: 'file of reads to align', target: 'rearrange' },
-  { id: 'e15', source: 'file of reference', target: 'rearrange' },
-  { id: 'e16', source: 'align score settings', target: 'rearrange' },
-  { id: 'e17', source: 'rearrange', target: 'alignments' },
-
-  { id: 'e18', source: 'genome', target: 'indexGenome' },
-  { id: 'e19', source: 'indexGenome', target: 'genome index' },
-
-  { id: 'e20', source: 'csvfile', target: 'getReference' },
-  { id: 'e21', source: 'genome', target: 'getReference' },
-  { id: 'e22', source: 'genome index', target: 'getReference' },
-  { id: 'e23', source: 'extension length', target: 'getReference' },
-  { id: 'e24', source: 'getReference', target: 'file of reference' },
-
-  { id: 'e25', source: 'csvfile', target: 'getSpliters' },
-  { id: 'e26', source: 'getSpliters', target: 'target spliter' },
-  { id: 'e27', source: 'getSpliters', target: 'pair spliter' },
-])
-
-function onConnect(params) {
-  params['id'] = `${params.source}-${params.target}`;
-  addEdges(params);
-  const source = findNode(params.source)
-  const edge = findEdge(params.id)
-  if (source.type == 'dataTankNode') {
-    const target = findNode(params.target)
-    let activate = true;
-    for (let obj of source.data) {
-      target.data.values[obj.name] = obj.value
-      if (Object.keys(obj).includes("taskId")) {
-          target.data.taskIds[obj.name] = obj.taskId
-      }
-      if (obj.value == null || obj.value === "" ) {
-          activate = false;
-      } else if (Array.isArray(obj.value)) {
-          for (let val of obj.value) {
-              if (val == null) {
-                  activate = false;
-              }
-          }
-      }
-    }
-    edge.animated = activate;
-  } else {
-    edge.animated = source.active;
+let source_target_pairs = [];
+for (const node of nodes.value) {
+  const source = node.id;
+  for (const target of validTargets(source)) {
+    source_target_pairs.push({id: `${source}-${target}`, source: source, target: target, type: 'dataTunnelEdge'})
   }
-}
+};
+const edges = ref(source_target_pairs);
+
+const { onConnect, addEdges } = useVueFlow();
+onConnect(param => {
+  param.id = `${param.source}-${param.target}`;
+  param.type = 'dataTunnelEdge';
+  addEdges(param);
+})
 
 </script>
 
 <template>
-  <div class="outer" style="overflow:scroll;">
-    <img src="./assets/images/projectLogic.png">
-  </div>
-
-  <div style="height: 900px; background: black">
+  <div style="height: 900px">
     <VueFlow
       v-model:nodes="nodes"
       v-model:edges="edges"
       :node-types="nodeTypes"
-      @connect="onConnect"
+      :edge-types="edgeTypes"
     >
+      <MiniMap pannable zoomable nodeColor="black" maskColor="rgb(0, 0, 0, 0.7)" />
+      <Controls />
+      <Background variant="dots" gap=100 size=4 patternColor="black" />
     </VueFlow>
+  </div>
+
+  <div class="outer" style="overflow:scroll;">
+    <img src="./assets/images/projectLogic.png">
   </div>
 </template>
 
@@ -177,11 +212,11 @@ function onConnect(params) {
 @import '@vue-flow/core/dist/theme-default.css';
 
 .vue-flow__node {
-    background: green;
+    background: black;
     color: white;
-    border: 0px solid black;
-    border-radius: 4px;
-    box-shadow: 0 0 0 4px blue;
+    border: 2px solid rgb(64, 64, 64);
+    border-radius: 2px;
+    box-shadow: 0 0 0 2px rgb(128, 128, 128);
     padding: 0px;
 }
 </style>
