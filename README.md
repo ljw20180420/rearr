@@ -51,7 +51,7 @@ cd sx_lcy
 ```[tasklist]
 - [ ] kvm
 - [ ] javascript -> html -> css -> tamper monkey -> selenium
-- [ ] add CDCI support by github action (git -> github docs -> github skills -> docker registery)
+- [ ] add CDCI support by github (git -> github docs|skills|support|community -> docker registery)
 - [ ] vue -> uniapp -> tauri2
 - [ ] push images to quay.io
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
