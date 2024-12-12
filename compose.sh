@@ -7,10 +7,18 @@ chmod a+w docker-images/shiny/apps/diffloopAnalysis/www
 chmod a+w docker-images/shiny/apps/diffloopAnalysisPair/www
 chmod a+w docker-images/shiny/apps/downstreamAnalysis/www
 chmod a+w docker-images/flask/flask_project/tmp
-chmod a+w docker-images/chat-ui/data/db
-if ! [ -e "docker-images/chat-ui/llama.cpp/Phi-3-mini-4k-instruct-q4.gguf" ]
-then
-    wget https://hf-mirror.com/microsoft/Phi-3-mini-4k-instruct-gguf/resolve/main/Phi-3-mini-4k-instruct-q4.gguf -O docker-images/chat-ui/llama.cpp/Phi-3-mini-4k-instruct-q4.gguf
-fi
+chmod a+w docker-images/chat-ui/chat
+chmod a+w docker-images/chat-ui/TEI
+chmod a+w docker-images/chat-ui/TGI
+
 docker compose down
+
+# docker compose build
+
+# docker compose push
+
+# docker compose pull
+
+# for file in $(ls docker-images/chat-ui/data/db); do rm -rf "docker-images/chat-ui/data/db/$file"; done
+
 docker compose up -d
