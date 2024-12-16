@@ -50,10 +50,9 @@ cd sx_lcy
 # TODO
 ```[tasklist]
 - [ ] kvm
-- [ ] javascript -> html -> css -> tamper monkey -> selenium
+- [ ] javascript -> html -> css -> typescript -> tamper monkey -> selenium
 - [ ] add CDCI support by github (git -> github docs|skills|support|community -> docker registery)
 - [ ] vue -> uniapp -> tauri2
-- [ ] push images to quay.io
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
 - [ ] Celery flower does not work properly on server. Maybe permission problem.
