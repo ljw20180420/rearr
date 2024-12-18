@@ -22,14 +22,7 @@ do
             make
             make install
             cd -
-            ;;&
-        kpLogo)
-            unzip -o kpLogo-1.1.zip
-            sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile
-            cd kpLogo-1.1/src
-            make
-            cp ../bin/kpLogo /usr/local/bin/
-            cd -
+            rm -rf pv-1.8.5 
             ;;&
         correct|core)
             cp correct_micro_homology.awk /usr/share/awk/
@@ -38,8 +31,8 @@ do
             cp removeDuplicates.sh /usr/local/bin/
             ;;&
         demultiplex|core)
-            cp demultiplex/demultiplex.sh /usr/local/bin/
-            cp demultiplex/endOfSpliterPos.awk /usr/share/awk/
+            cp pre-post-process/demultiplex/demultiplex.sh /usr/local/bin/
+            cp pre-post-process/demultiplex/endOfSpliterPos.awk /usr/share/awk/
             ;;&
         sx)
             # install getSxCsvFileRef
