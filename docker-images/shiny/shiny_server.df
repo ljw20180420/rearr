@@ -5,9 +5,17 @@ LABEL org.opencontainers.image.description="shiny app containing post-process to
 LABEL org.opencontainers.image.licenses=MIT
 RUN apt-get update && apt-get install -y --no-install-recommends cmake libbz2-dev gawk ghostscript imagemagick python3-full python3-dev
 RUN sed -i -r '/<policy domain="coder" rights="none" pattern="(PS|PS2|PS3|EPS|PDF|XPS)"/{s/^/<!-- /; s/$/ -->/}' /etc/ImageMagick-*/policy.xml
-COPY ["./install.sh", "./kpLogo-1.1.zip", "./correct_micro_homology.awk", "/app/"]
+COPY ["./install.sh", "./docker-images/shiny/kpLogo-1.1.zip", "./correct_micro_homology.awk", "/app/"]
 COPY ["./Rearrangement", "/app/Rearrangement"]
-RUN cd /app && ./install.sh rearrangement kpLogo correct && rm -rf ./*
+RUN cd /app && \
+    ./install.sh rearrangement correct && \
+    unzip -o kpLogo-1.1.zip && \
+    sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && \
+    cd kpLogo-1.1/src && \
+    make && \
+    cp ../bin/kpLogo /usr/local/bin/ && \
+    cd - && \
+    rm -rf ./*
 RUN python3 -m venv shinyenv
 RUN /shinyenv/bin/pip install shiny hic2cool coolpuppy matplotlib==3.7.3
 ENV PATH "/shinyenv/bin:$PATH"

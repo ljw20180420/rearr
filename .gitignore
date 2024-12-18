@@ -15,7 +15,6 @@ paper/function_table/*
 !paper/paper_figures.py
 !paper/workflow.gv
 Rearrangement/build/
-kpLogo-1.1/
 test/*
 !test/A2-g1n-3.fq
 !test/A2-g1n-3.R2.fq
