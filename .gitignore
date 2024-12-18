@@ -16,9 +16,7 @@ paper/function_table/*
 !paper/workflow.gv
 Rearrangement/build/
 test/*
-!test/A2-g1n-3.fq
-!test/A2-g1n-3.R2.fq
-!test/A2-g1n-3.fq.count
-pv-1.8.5/
+!test/A2-g1n-3.fq.gz
+!test/A2-g1n-3.R2.fq.gz
 **/__pycache__/
 genome
