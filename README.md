@@ -49,28 +49,29 @@ cd sx_lcy
 
 # TODO
 ```[tasklist]
-- [ ] kvm
-- [ ] javascript -> html -> css -> typescript -> tamper monkey -> selenium
-- [ ] add CDCI support by github (git -> github docs|skills|support|community -> docker registery)
-- [ ] vue -> uniapp -> tauri2
+- [ ] move demultiplex related contents into a subdirectory
+- [ ] document all codes
+- [ ] use github pages (classic) to host documents
+- [ ] use Doxygen to generate documents from code (Automatic document)
+- [ ] use github action to host github pages by run Doxygen
+- [ ] add github wiki
+- [ ] github action for build containers
+- [ ] other CDCI support by github (git -> github cli -> github docs|skills|support|community)
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
-- [ ] Celery flower does not work properly on server. Maybe permission problem.
-- [ ] asgi is more advance than wsgi
 - [ ] unittest
+- [ ] kvm
+- [ ] javascript -> html -> css -> npm -> typescript -> tamper monkey -> selenium
+- [ ] vue -> uniapp -> tauri2
+- [ ] Deploy to JCloud. Celery flower does not work properly on JCloud. Maybe permission problem.
+- [ ] asgi is more advance than wsgi
 - [ ] resemble indelphi
 - [ ] implement tidymodels (need to install tidymodels in shiny rocker, which must not be installed through CRAN)
-- [ ] explore base
-- [ ] feature choose
-- [ ] AI review
-- [ ] PCR
 - [ ] CDN
 - [ ] Add 3D structure prediction shiny App
 - [ ] Add large language model for DNA
 - [ ] Use explicit base in shiny app microHomology
-- [ ] Deploy to JCloud
 - [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
-- [ ] Automatic document
 ```
 
 # TODO (Long term)
