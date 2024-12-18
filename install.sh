@@ -15,15 +15,6 @@ do
             make install
             cd -
             ;;&
-        pv|core)
-            unzip -o pv-1.8.5
-            cd pv-1.8.5 
-            ./configure LDFLAGS="-static"
-            make
-            make install
-            cd -
-            rm -rf pv-1.8.5 
-            ;;&
         correct|core)
             cp correct_micro_homology.awk /usr/share/awk/
             ;;&

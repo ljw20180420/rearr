@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.description="celery worker handling asynchronous 
 LABEL org.opencontainers.image.licenses=MIT
 WORKDIR /app
 RUN pip install celery[redis]
-COPY ["./install.sh", "./pv-1.8.5.zip", "./correct_micro_homology.awk", "./removeDuplicates.sh", "/app/"]
+COPY ["./install.sh", "./correct_micro_homology.awk", "./removeDuplicates.sh", "/app/"]
 COPY ["./Rearrangement", "/app/Rearrangement"]
 COPY ["./pre-post-process/demultiplex", "/app/pre-post-process/demultiplex"]
 COPY ["./sx", "/app/sx"]
