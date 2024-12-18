@@ -16,10 +16,10 @@ do
             cd -
             ;;&
         correct|core)
-            cp correct_micro_homology.awk /usr/share/awk/
+            cp pre-post-process/correct_micro_homology.awk /usr/share/awk/
             ;;&
         removeDup|core)
-            cp removeDuplicates.sh /usr/local/bin/
+            cp pre-post-process/removeDuplicates.sh /usr/local/bin/
             ;;&
         demultiplex|core)
             cp pre-post-process/demultiplex/demultiplex.sh /usr/local/bin/
