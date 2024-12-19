@@ -13,8 +13,9 @@ cutadaptPlain()
 
 rmDupFile=$1
 minToMapShear=$2
-cut -f1 $rmDupFile | cutadaptPlain GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC | paste - <(cut -f3-5 $rmDupFile) | gawk -F "\t" -v OFS="\t" -v minToMapShear=$minToMapShear '
+cut -f1 $rmDupFile | cutadaptPlain GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCTTATTTTAACTTGCTATTTCTAGCTCTAAAAC | paste - <(cut -f3-4,8 $rmDupFile) | gawk -F "\t" -v OFS="\t" -v minToMapShear=$minToMapShear '
 {
-    if ($4 + minToMapShear <= length($1))
+    if ($4 + minToMapShear <= length($1)) {
         print substr($1, $4 + 1), $2, $3
+    }
 }' | gawk -f sxCumulateToMapCutAdaptSpliter.awk

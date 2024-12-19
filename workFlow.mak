@@ -1,4 +1,8 @@
-# Input: pairFile, targetSpliterFile, pairSpliterFile, genome, bowtie2index, refFile, ext1up, ext1down, ext2up, ext2down, minScoreTarget, minScorePair, s0, s1, s2, u, v, ru, rv, qu, qv, minToMapShear
+# Input: fastqFiles, spliterIndices, minScores, genome, bowtie2index, refFile, ext1up, ext1down, ext2up, ext2down, s0, s1, s2, u, v, ru, rv, qu, qv, minToMapShear
+
+comma = ,
+
+spliterIndexBts = $(foreach dir,$(subst $(comma), ,$(spliterIndices)),$(addprefix $(dir)., 1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2))
 
 ifneq ($(targetSpliterFile),)
 targetSpliterIndex = $(addprefix $(targetSpliterFile).,1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2)
@@ -7,14 +11,17 @@ ifneq ($(pairSpliterFile),)
 pairSpliterIndex = $(addprefix $(pairSpliterFile).,1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2)
 endif
 
-%.count: % $(pairFile)
-	removeDuplicates.sh $< $(pairFile) >$@
+# outputDir includes the tail /
+outputDir = $(dir $(word 1, $(subst $(comma), ,$(fastqFiles))))
+
+$(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
+	removeDuplicates.sh $^ >$@
 
 %.1.bt2 %.2.bt2 %.3.bt2 %.4.bt2 %.rev.1.bt2 %.rev.2.bt2: %
 	bowtie2-build $< $<
 
-%.demultiplex: %.count $(targetSpliterIndex) $(pairSpliterIndex)
-	spliterTarget=$(targetSpliterFile) spliterPair=$(pairSpliterFile) minScoreTarget=$(minScoreTarget) minScorePair=$(minScorePair) demultiplex.sh $< >$@
+%.demultiplex: %.noDup $(spliterIndexBts)
+	spliterIndices=$(spliterIndices) minScores=$(minScores) demultiplex.sh $< >$@
 
 %.alg: %.post $(refFile)
 	rearrangement <$< 3<$(refFile) -s0 $(s0) -s1 $(s1) -s2 $(s2) -u $(u) -v $(v) -ru $(ru) -rv $(rv) -qu $(qu) -qv $(qv) | gawk -f correct_micro_homology.awk -- $(refFile) NGG NGG >$@
@@ -29,4 +36,4 @@ endif
 %.target.fa %.pair.fa: %
 	sxExtractSpliter.sh $< >$<.target.fa 3>$<.pair.fa
 
-.PRECIOUS: %.count %.1.bt2 %.demultiplex %.alg %.ref %.post %.csv.target.fa
+.PRECIOUS: $(outputDir)rearr.noDup %.1.bt2 %.demultiplex %.alg %.ref %.post %.csv.target.fa

@@ -23,7 +23,7 @@ do
             ;;&
         demultiplex|core)
             cp pre-post-process/demultiplex/demultiplex.sh /usr/local/bin/
-            cp pre-post-process/demultiplex/endOfSpliterPos.awk /usr/share/awk/
+            cp pre-post-process/demultiplex/getAlignPos.awk /usr/share/awk/
             ;;&
         sx)
             # install getSxCsvFileRef

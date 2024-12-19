@@ -49,7 +49,9 @@ cd sx_lcy
 
 # TODO
 ```[tasklist]
-- [ ] move demultiplex related contents into a subdirectory
+- [ ] extend correct_micro_homology.awk to multiple reference
+- [ ] modify flask
+- [ ] modify shiny
 - [ ] document all codes
 - [ ] use github pages (classic) to host documents
 - [ ] use Doxygen to generate documents from code (Automatic document)
