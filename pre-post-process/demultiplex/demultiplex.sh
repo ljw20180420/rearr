@@ -1,83 +1,56 @@
 #!/bin/bash
-# Usage: spliterTarget=spliterTarget spliterPair=spliterPair minScoreTarget=minScoreTarget minScorePair=minScorePair demultiplex.sh inputFile >demultiplexFile
-# spliter(Target|Pair) is a bowtie2 index used to split (Target|pair)
-# minScore(Target|Pair) thres the match between (Target|pair) and spliter(Target|Pair)
-
-# inputFile format
-# Target|pair|count
-# Target is the read to map (either R1 or R2)
-# pair is the read paired with Target
-# count is the duplicate number of (Target, pair)
+# Usage: spliterIndices=index1,index2,... minScores=score1,score2,... demultiplex.sh inputFile >demultiplexFile
+# spliterIndices are bowtie2 index aligned by sequences in inputFile (i.e. the stdout of removeDuplicates.sh). minScores are feed to bowtie2 to filter alignments with low scores. Note that the order of spliterIndices and minScores matters. The alignments are in local mode instead of end-to-end mode, and there is no reverse complement. The full alignment setting is --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,scoreN.
 
 mapSpliter()
 {
-    # Usage: mapSpliter minScore spliterBowtie2Index <reads
+    # Usage: mapSpliter minScore spliterIndex <reads
     # Map reads to spliter by bowtie2
     # Input: plain reads
     # Output: sam file without header
     minScore=$1
-    spliter=$2
-    bowtie2 --quiet --norc --mm --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,${minScore} -r -x "${spliter}" -U - 2>/dev/null | samtools view
+    spliterIndex=$2
+    bowtie2 --quiet --mm --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,${minScore} -r -x "${spliterIndex}" -U - 2>/dev/null | samtools view
 }
 
-FilterSpilters()
+filterSpilters()
 {
-    if [ -n "$spliterTarget" ] && [ -n "$spliterPair" ]
-    then
-        # both spliterTarget and spliterPair are specified
-        # Input: Target|Pair|count|flagTarget|spliterTarget|endOfSpliterPosTarget|flagPair|spliterPair|endOfSpliterPosPair
-        # Output: Target|Pair|count|spliter|endOfSpliterPosTarget|endOfSpliterPosPair
-        # filter row if one of the following happens:
-        # 1. Target does not match any record in spliterTarget
-        # 2. pair does not match any record in spliterPair
-        # 3. spliterTarget and spliterPair do not match
-        gawk -F "\t" -v OFS="\t" '
+    # Input: seq1|seq2|...|count|flag1|spliter1|spliterStart1|spliterEnd1|seqStart1|seqEnd1|flag2|spliter2|spliterStart2|spliterEnd2|seqStart2|seqEnd2|...
+    # Output: seq1|seq2|...|count|spliter|spliterStart1|spliterEnd1|seqStart1|seqEnd1|spliterStart2|spliterEnd2|seqStart2|seqEnd2
+    # filter out rows with one of the following happens:
+    # 1. seqN failed to align spliterIndexN
+    # 2. spilterM != spliterN for some M and N
+    gawk -F "\t" -v OFS="\t" -v firstFlagPos=$((${#spliterIndexArray[@]}+2)) '
         {
-            if (($4/4)%2 == 0 && ($7/4)%2 == 0 && $5 == $8)
-                print $1, $2, $3, $5, $6, $9
+            spliter = $(firstFlagPos+1)
+            for (i = firstFlagPos; i <= NF; i += 6) {
+                if ($i != 0 || $(i+1) != spliter) {
+                    next
+                }
+            }
+            for (i = 1; i < firstFlagPos; ++i) {
+                printf("%s\t", $i)
+            }
+            printf("%s\t", $(firstFlagPos+1))
+            for (i = firstFlagPos; i < NF; ++i) {
+                if ((i - firstFlagPos) % 6 <= 1) {
+                    continue
+                }
+                printf("%s\t", $i)
+            }
+            printf("%s\n", $NF)
         }
-        '
-    else
-        # only spliter(Target|Pair) is specified
-        # Input: Target|Pair|count|flag(Target|Pair)|spliter(Target|Pair)|endOfSpliterPos(Target|Pair)
-        # Output: Target|Pair|count|spliter|endOfSpliterPos(Target|Pair)
-        # filter row if one of the following happens:
-        # 1. (Target|Pair) does not match any record in spliter(Target|Pair)
-        gawk -F "\t" -v OFS="\t" '
-        {
-            if (($4/4)%2 == 0)
-                print $1, $2, $3, $5, $6
-        }
-        '
-    fi
+    '
 }
 
 inputFile=$1
-if [ -z "$spliterTarget" ] && [ -z "$spliterPair" ]
-then
-    echo "At least one of spliterTarget or spliterPair need to be specified." >&2
-    exit 1
-fi
-if [ -n "$spliterTarget" ] && [ -z "$minScoreTarget" ]
-then
-    echo "spliterTarget is specified but minScoreTarget is not." >&2
-    exit 1
-fi
-if [ -n "$spliterPair" ] && [ -z "$minScorePair" ]
-then
-    echo "spliterPair is specified but minScorePair is not." >&2
-    exit 1
-fi
 
-map1=""
-if [ -n "$spliterTarget" ] 
-then
-    map1="<(cut -f1 ${inputFile} | mapSpliter ${minScoreTarget} ${spliterTarget} | gawk -f endOfSpliterPos.awk)"
-fi
-map2=""
-if [ -n "$spliterPair" ] 
-then
-    map2="<(cut -f2 "${inputFile}" | mapSpliter ${minScorePair} ${spliterPair} | gawk -f endOfSpliterPos.awk)"
-fi
+IFS=',' read -r -a spliterIndexArray <<< "$spliterIndices"
+IFS=',' read -r -a minScoreArray <<< "$minScores"
+maps=""
+for ii in ${!spliterIndexArray[@]}
+do
+    maps="${maps} <(cut -f$((ii+1)) ${inputFile} | mapSpliter ${minScoreArray[$ii]} ${spliterIndexArray[$ii]} | gawk -f getAlignPos.awk)"
+done
 
-eval paste "${inputFile}" $map1 $map2 | FilterSpilters
+eval paste "${inputFile}" $maps | filterSpilters
