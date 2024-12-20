@@ -16,16 +16,6 @@ If you use docker, first login into docker.
 ```
 Then just use as native.
 
-# Parameters
-```{list}
-ref1: reference string of locus 1
-ref2: reference string of locus 2 (for single cut, ref2 = ref1)
-cut1: cut point for ref1
-cut2: cut point for ref2
-NGGCCNtype1: ref1 is on the NGG strand or the CCN strand
-NGGCCNtype2: ref2 is on the NGG strand or the CCN strand
-```
-
 # Output
 ```{list}
 target.count: file of target and pair without duplicates
