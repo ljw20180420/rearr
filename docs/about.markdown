@@ -4,15 +4,6 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+This is the github page for repository [sx_lcy][sx_lcy] includes a core chimeric alignment engine `rearr`. Although `rearr` can be used for any chimeric alignment job in theory, [sx_lcy][sx_lcy] is mainly used to analyze CRISPR editing data. Besides `rearr`, [sx_lcy][sx_lcy] also includes a demultiplex tool for sequencing results of sgRNA libraries, and an out of box web site deployed by docker. The website contains a UI visualizing the whole workflow of demultiplexing and aligning. It also contains some apps for visualization and post process.
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
-
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
-
-
-[jekyll-organization]: https://github.com/jekyll
+[sx_lcy]: https://github.com/ljw20180420/sx_lcy
