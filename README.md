@@ -39,7 +39,6 @@ cd sx_lcy
 
 # TODO
 ```[tasklist]
-- [ ] extend correct_micro_homology.awk to multiple reference
 - [ ] modify flask
 - [ ] modify shiny
 - [ ] document all codes
