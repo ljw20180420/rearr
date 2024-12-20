@@ -8,17 +8,13 @@ typedef int32_t SCORETYPE;
 void print_help(int argc, char **argv)
 {
     bool print_help = false;
-    if (argc <= 1)
-        print_help = true;
-    else
-        for(int i=1; i<argc; ++i)
-            if(!strcmp(argv[i],"--help") || !strcmp(argv[i],"-help") || !strcmp(argv[i],"-h"))
-            {
-                print_help = true;
-                break;
-            }
-    if (print_help)
-    {
+    for(int i=1; i<argc; ++i) {
+        if(!strcmp(argv[i],"--help") || !strcmp(argv[i],"-help") || !strcmp(argv[i],"-h")) {
+            print_help = true;
+            break;
+        }
+    }
+    if (print_help) {
         std::cout << "###Basic Usage\n"
         << "rearrangement <input_file 3<reference_file\n"
 
@@ -39,8 +35,7 @@ void print_help(int argc, char **argv)
     return;
 }
 
-struct Command_content
-{
+struct Command_content {
     // Aligning Parameters
     SCORETYPE s0=-3; // mismatch score
     SCORETYPE s1=1; // match score for non-extension part of reference
@@ -53,12 +48,10 @@ struct Command_content
     SCORETYPE qv=0; // query unaligned gap open
 };
 
-Command_content command(int argc, char **argv)
-{
+Command_content command(int argc, char **argv) {
     Command_content cc;
 
-    for(size_t i=1; i<argc-1; ++i)
-    {
+    for(size_t i=1; i<argc-1; ++i) {
         // Aligning Parameters
         if(!strcmp(argv[i],"-s0"))
             cc.s0=atoi(argv[i+1]);
