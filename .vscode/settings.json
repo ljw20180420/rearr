@@ -1,4 +1,20 @@
 {
+    // The order to use for the file comment. Values can be used multiple times. Valid values are shown in default setting.
+    "doxdocgen.file.fileOrder": [
+        "file",
+        "author",
+        "brief",
+        "date",
+        "empty",
+        "copyright",
+        "empty",
+        "custom"
+    ],
+    // Set the e-mail address of the author.  Replaces {email}.
+    "doxdocgen.generic.authorEmail": "ljw2017@sjtu.edu.cn",
+    // Set the name of the author.  Replaces {author}.
+    "doxdocgen.generic.authorName": "Jingwei Li",
+
     "r.rpath.linux": "${workspaceFolder}/.conda/bin/R",
     "r.rterm.linux": "${workspaceFolder}/.conda/bin/R",
     "r.libPaths": ["${workspaceFolder}/.conda/lib/R/library"],
