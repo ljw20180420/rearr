@@ -1,13 +1,13 @@
 main:
+  - title: "Home"
+    url: /
+  - title: "Docs"
+    url: /about/
+
+docs:
   - title: "About"
     url: /about/
   - title: "Remove duplicates"
-    url: /docs/remove-duplicates/
-
-docs:
-  - title: "preprocess"
-    children:
-      - title: "Remove duplicates"
-        url: /docs/remove-duplicates/
-      - title: "Demultiplex"
-        url: /docs/demultiplex/
+    url: /remove-duplicates/
+  - title: "Demultiplex"
+    url: /demultiplex/

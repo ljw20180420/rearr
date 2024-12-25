@@ -1,6 +1,6 @@
 ---
 title: "Remove duplicates"
-permalink: /docs/remove-duplicates/
+permalink: /remove-duplicates/
 toc: true
 ---
 
@@ -21,5 +21,5 @@ The `stdout` of `removeDuplicates.sh` are aligned to the so-call `spliters` in [
 removeDuplicates.sh fastq1(.gz|.zip) fastq2(.gz|.zip) fastq3(.gz|.zip) ... >rmDupFile
 ```
 
-[`demultiplex.sh`]: /sx_lcy/docs/demultiplex/
+[`demultiplex.sh`]: /sx_lcy/demultiplex/
 

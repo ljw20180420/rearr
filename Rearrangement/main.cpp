@@ -1,11 +1,42 @@
+/**
+ * @file main.cpp
+ * @author Jingwei Li (ljw2017@sjtu.edu.cn)
+ * @brief Main file defining the main function.
+ * @date 2024-12-25
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 #include "headers/parser.h"
 #include "headers/align.h"
 
-int main(int argc, char **argv) {
+/**
+ * @brief Main function.
+ * 
+ * @details Main function includes all steps for chimeric alignment. Parse command-line arguments. Read reference from fd3. Read query from stdin. Pre-calculate necessary values. Run cross_align for DP. Run EdgeTrack and NodeTrack to backtrack alignments. Output results to stdout.
+ * @param argc 
+ * @param argv 
+ * @return int 
+ * 
+ * @see print_help
+ * @see Command_content
+ * @see command
+ * @see cross_align
+ * @see EdgeTrack
+ * @see NodeTrack
+ */
+int main(
+    int argc,
+    char **argv
+) {
+    /// @brief Search --help, -help, -h in command-line arguments. If found, print help.
     print_help(argc, argv);
     
+    /// @brief Parse all command-line arguments. Save them in cc.
     Command_content cc=command(argc, argv);
     
+    /// @brief Read reference from fd 3, line by line.
     std::deque<std::deque<std::string>> refss;
     std::deque<std::deque<size_t>> upper_boundariess, down_boundariess;
     size_t max_ref_sz = 0;
@@ -32,12 +63,15 @@ int main(int argc, char **argv) {
             max_ref_sz = refss.back().back().size() > max_ref_sz ? refss.back().back().size() : max_ref_sz;
         }
     }
+    /// @brief Handle exception that no reference is provided.
     if(!max_ref_sz) {
         std::cerr << "empty reference loaded\n";
         return EXIT_FAILURE;
     }
     fclose(ref_fd);
     size_t max_seg_sz = max_ref_sz / simd_sz + 1;
+
+    /// @brief Pre-calculate gap penalty at reference ends. Allocate declare simd vectors. Initialize score matrix.
     std::vector<SCORETYPE> gr = {0, cc.rv};
     for (size_t s = 2; s < max_seg_sz * simd_sz; ++s) {
         gr.push_back(gr.back() + cc.ru);
@@ -87,6 +121,7 @@ int main(int argc, char **argv) {
         }
     }
 
+    /// @brief Read in query sequence. Apply DP process. Backtrack alignment. Output to stdout.
     size_t Omax = 0;
     std::string O;
     size_t count, ref_id;
@@ -99,6 +134,7 @@ int main(int argc, char **argv) {
             Omax = O.size();
             new_max = true;
         }
+        /// @brief If new query is longer than current Omax. Increase Omax by factor of 2 until Omax can hold current query.
         while (Omax < O.size()) {
             Omax *= 2;
             new_max = true;
@@ -116,7 +152,7 @@ int main(int argc, char **argv) {
         }
     
         for (size_t i = 0; i < refss[ref_id].size(); ++i) {
-            cross_align(As.data() + i * (Omax + 1), As.data() + (i + 1) * (Omax + 1), Bs.data() + i * (Omax + 1), Cs.data() + i * (Omax + 1), Ds.data() + i * (Omax + 1), Es, Gs, Gps, refss[ref_id][i].data(), refss[ref_id][i].size(), O.data(), O.size(), cc.u, cc.v, grpss[ref_id][i], grmss[ref_id][i], gammass[ref_id][i], cc.qu, cc.qv, cc.s0, cc.s1, cc.s2, upper_boundariess[ref_id][i], down_boundariess[ref_id][i]);
+            cross_align(As.data() + i * (Omax + 1), As.data() + (i + 1) * (Omax + 1), Bs.data() + i * (Omax + 1), Cs.data() + i * (Omax + 1), Ds.data() + i * (Omax + 1), Es, Gs, Gps, refss[ref_id][i].size(), O.data(), O.size(), cc.u, cc.v, grpss[ref_id][i], grmss[ref_id][i], gammass[ref_id][i], cc.qu, cc.qv, cc.s0, cc.s1, cc.s2);
         }
 
         std::deque<std::string> reflines, querylines, random_parts;
@@ -127,7 +163,7 @@ int main(int argc, char **argv) {
             random_parts.push_front(O.substr(swp.second, w - swp.second));
             reflines.emplace_front();
             querylines.emplace_front();
-            w = EdgeTrack(reflines.front(), querylines.front(), swp.first, swp.second, As.data() + (j - 1) * (Omax + 1), As.data() + j * (Omax + 1), refss[ref_id][j - 1].data(), refss[ref_id][j - 1].size(), O.data(), O.size(), cc.u, cc.v, gr.data(), cc.qv, cc.s0, cc.s1, cc.s2, upper_boundariess[ref_id][j - 1], down_boundariess[ref_id][j - 1]);
+            w = EdgeTrack(reflines.front(), querylines.front(), swp.first, swp.second, As.data() + (j - 1) * (Omax + 1), As.data() + j * (Omax + 1), refss[ref_id][j - 1].data(), refss[ref_id][j - 1].size(), O.data(), cc.u, cc.v, gr.data(), cc.qv, cc.s0, cc.s1, cc.s2, upper_boundariess[ref_id][j - 1], down_boundariess[ref_id][j - 1]);
         }
         random_parts.push_front(O.substr(0, w));
 

@@ -1,6 +1,6 @@
 ---
 title: "Demultiplex"
-permalink: /docs/demultiplex/
+permalink: /demultiplex/
 toc: true
 ---
 
