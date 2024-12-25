@@ -11,3 +11,5 @@ docs:
     url: /remove-duplicates/
   - title: "Demultiplex"
     url: /demultiplex/
+  - title: "Chimeric alignment"
+    url: /rearr/

@@ -20,3 +20,5 @@ test/*
 !test/A2-g1n-3.R2.fq.gz
 **/__pycache__/
 genome
+docs/rearr
+docs/_docs
