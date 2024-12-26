@@ -39,4 +39,4 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 %.target.fa %.pair.fa: %
 	sxExtractSpliter.md $< >$<.target.fa 3>$<.pair.fa
 
-.PRECIOUS: $(outputDir)rearr.noDup %.1.bt2 %.demultiplex %.alg %.ref %.correct %.post %.csv.target.fa
+.PRECIOUS: $(outputDir)rearr.noDup %.1.bt2 %.demultiplex %.alg %.ref %.correct %.post %.target.fa %.pair.fa

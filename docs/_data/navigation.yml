@@ -11,5 +11,13 @@ docs:
     url: /remove-duplicates/
   - title: "Demultiplex"
     url: /demultiplex/
+    children:
+      - title: "Get alignment position"
+        url: /demultiplex/get-alignment-position/
   - title: "Chimeric alignment"
     url: /rearr/
+    children:
+      - title: "Rearr detailed documentation"
+        url: /rearr/html/
+      - title: "Correct micro-homology"
+        url: /rearr/correct-micro-homology/

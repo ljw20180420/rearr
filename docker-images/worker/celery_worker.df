@@ -6,8 +6,7 @@ LABEL org.opencontainers.image.licenses=MIT
 WORKDIR /app
 RUN pip install celery[redis]
 COPY ["./install.md", "/app/"]
-COPY ["./pre-post-process", "/app/pre-post-process"]
-COPY ["./Rearrangement", "/app/Rearrangement"]
+COPY ["./core", "/app/core"]
 COPY ["./sx", "/app/sx"]
 RUN ./install.md core sx && rm -rf ./*
 COPY ["./rearrTest.md", "./workFlow.mak", "/app/"]

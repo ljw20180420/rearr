@@ -14,10 +14,11 @@ paper/function_table/*
 !paper/paper_animation.py
 !paper/paper_figures.py
 !paper/workflow.gv
-Rearrangement/build/
+core/Rearrangement/build/
 test/*
 !test/A2-g1n-3.fq.gz
 !test/A2-g1n-3.R2.fq.gz
+!test/sgRNAs.G1
 **/__pycache__/
 genome
 docs/rearr
