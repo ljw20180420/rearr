@@ -29,5 +29,10 @@ add_header "Shi Xing extract spliter" "/sx/sx-extract-spliter/" < sx/sxExtractSp
 add_header "Shi Xing post-process from demultiplex to rearr" "/sx/sx-cut-r2-adapter-filter-cumulate/" < sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.md > docs/_docs/sxCutR2AdapterFilterCumulate.md
 wrap_script awk < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk | add_header "Accumulate adjacent duplicated queries" "/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/" > docs/_docs/sxCumulateToMapCutAdaptSpliter.md
 
+add_header "get Shi Xing csvfile reference" "/sx/get-sx-csvfile-ref/" < sx/getSxCsvFileRef/getSxCsvFileRef.md > docs/_docs/getSxCsvFileRef.md
+wrap_script perl < sx/getSxCsvFileRef/getSxCsvFileTarget.pl | add_header "get Shi Xing csvfile target" "/sx/get-sx-csvfile-ref/get-sx-csvfile-target/" > docs/_docs/getSxCsvFileTarget.md
+wrap_script awk < sx/getSxCsvFileRef/sxTargetSam2Bed.awk | add_header "Shi Xing target sam to bed" "/sx/get-sx-csvfile-ref/sx-target-sam-2-bed/" > docs/_docs/sxTargetSam2Bed.md
+wrap_script perl < sx/getSxCsvFileRef/getSxRefFile.pl | add_header "get Shi Xing reference file" "/sx/get-sx-csvfile-ref/get-sx-ref-file/" > docs/_docs/getSxRefFile.md
+
 cd docs
 bundle exec jekyll serve

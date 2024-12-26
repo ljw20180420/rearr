@@ -1,7 +1,7 @@
 #!/usr/bin/env -S perl -n
 
 # Usage: getSxRefFile.pl <ref12.fa
-# ref1 and ref2 appears alternatively in fasta form. This script transforms it a format ready to feed to rearrangement
+# ref1 and ref2 appears alternatively in fasta form. This script transforms it a format ready to feed to rearrangement.
 
 BEGIN {
     $ext1up = $ARGV[0];
