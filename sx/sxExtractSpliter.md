@@ -1,8 +1,25 @@
 #!/bin/bash
 
-# Usage: sxExtractSpliter.md csvfile >spliter1 3>spliter2
-# csvfile = adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + target(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
+shopt -s expand_aliases
 
+alias ~~~=":<<'~~~bash'"
+
+:<<'~~~bash'
+
+# Usage
+```bash
+sxExtractSpliter.md csvfile >spliter1 3>spliter2
+```
+
+# Introduction
+This is an in-house script to extract `spliter`s from the `csvfile` of sx and lcy. The composition of the input csvfile is 
+```
+adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + target(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
+```
+Two `spliter`s are output. `spliter1` is output from `fd 1` (`stdout`). `spliter1` consists of `primer` and `barcode`. `R2` is aligned to `spliter1`. Then 44bp `target` is 3bp downstream to the end of `barcode` in `R2`. `spliter2` is output from `fd 3`. `spliter2` consists of `adapter`, `sgRNA` and `scaffold`. `R1` is aligned to `spliter2`.
+
+# Source
+~~~bash
 getSxCsvFilePrimer()
 {
     # Usage: getSxCsvFilePrimer <csvfile
@@ -43,3 +60,8 @@ csvfile=$1
 paste -d "" <(getSxCsvFilePrimer <"${csvfile}") <(getSxCsvFileBarcode <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >&1
 
 paste -d "" <(getSxCsvFileAdapter <"${csvfile}") <(getSxCsvFilesgRNA <"${csvfile}") <(getSxCsvFileScaffold <"${csvfile}") | paste -d "\n" <(getSxFaHead <"${csvfile}") - >&3
+~~~
+
+~~~bash
+alias ~~~=":" # This suppresses a warning and is not part of source.
+~~~

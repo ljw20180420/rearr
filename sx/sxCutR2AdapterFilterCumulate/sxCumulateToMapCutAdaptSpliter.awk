@@ -1,9 +1,9 @@
 #!/usr/bin/env -S gawk -f
 
-# Usage: cumulateToMapCutAdaptSplite.awk <toMapCutAdaptSpliter|count|spliter
-# Cumulate the adjacent duplicate toMapCutAdaptSpliter count
-# Input: toMapCutAdaptSpliter|count|spliter
-# Output: toMapCutAdaptSpliter|count|spliter
+# Usage: sxCumulateToMapCutAdaptSplite.awk <query|count|refId
+# Accumulate the counts of adjacent duplicated queries
+# Input: query|count|refId
+# Output: query|count|refId
 
 BEGIN{
     FS = "\t"
@@ -13,14 +13,14 @@ BEGIN{
     if ($1 != toMapCutAdaptSpliter)
     {
         if (NR > 1)
-            print toMapCutAdaptSpliter, count, spliter
+            print toMapCutAdaptSpliter, count, refId
         toMapCutAdaptSpliter = $1
         count = $2
-        spliter = $3
+        refId = $3
     }
     else
         count += $2
 }
 END{
-    print toMapCutAdaptSpliter, count, spliter
+    print toMapCutAdaptSpliter, count, refId
 }

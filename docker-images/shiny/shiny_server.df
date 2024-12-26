@@ -6,10 +6,9 @@ LABEL org.opencontainers.image.licenses=MIT
 RUN apt-get update && apt-get install -y --no-install-recommends cmake libbz2-dev gawk ghostscript imagemagick python3-full python3-dev
 RUN sed -i -r '/<policy domain="coder" rights="none" pattern="(PS|PS2|PS3|EPS|PDF|XPS)"/{s/^/<!-- /; s/$/ -->/}' /etc/ImageMagick-*/policy.xml
 COPY ["./install.md", "./docker-images/shiny/kpLogo-1.1.zip", "/app/"]
-COPY ["./pre-post-process/correct_micro_homology.awk", "/app/pre-post-process/"]
 COPY ["./Rearrangement", "/app/Rearrangement"]
 RUN cd /app && \
-    ./install.md rearrangement correct && \
+    ./install.md rearrangement && \
     unzip -o kpLogo-1.1.zip && \
     sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && \
     cd kpLogo-1.1/src && \

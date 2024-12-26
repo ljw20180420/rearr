@@ -1,23 +1,30 @@
 main:
-  - title: "Home"
-    url: /
   - title: "Docs"
     url: /about/
 
-docs:
+core:
   - title: "About"
     url: /about/
   - title: "Remove duplicates"
-    url: /remove-duplicates/
+    url: /core/remove-duplicates/
   - title: "Demultiplex"
-    url: /demultiplex/
+    url: /core/demultiplex/
     children:
       - title: "Get alignment position"
-        url: /demultiplex/get-alignment-position/
+        url: /core/demultiplex/get-alignment-position/
   - title: "Chimeric alignment"
-    url: /rearr/
+    url: /core/rearr/
     children:
       - title: "Rearr detailed documentation"
-        url: /rearr/html/
+        url: /core/rearr/html/
       - title: "Correct micro-homology"
-        url: /rearr/correct-micro-homology/
+        url: /core/rearr/correct-micro-homology/
+
+sx:
+  - title: "Shi Xing extract spliter"
+    url: /sx/sx-extract-spliter/
+  - title: "Shi Xing post-process from demultiplex to rearr"
+    url: /sx/sx-cut-r2-adapter-filter-cumulate/
+    children:
+    - title: "Accumulate adjacent duplicated queries"
+      url: /sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/

@@ -1,9 +1,3 @@
----
-title: "Chimeric alignment"
-permalink: /rearr/
-toc: true
----
-
 # Basic Usage
 ```{bash}
 rearrangement (--help|-help|-h)
