@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: getSxCsvFileRef.sh csvfile genome bowtie2index [ext1up ext1down ext2up ext2down]
+# Usage: getSxCsvFileRef.md csvfile genome bowtie2index [ext1up ext1down ext2up ext2down]
 csvfile=$1
 genome=$2
 bowtie2index=$3

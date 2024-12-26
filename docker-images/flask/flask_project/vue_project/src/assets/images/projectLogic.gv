@@ -7,7 +7,7 @@ digraph projectLogic
     node [style=filled, shape=box, color=aqua]
     targetFile [label="target file"]
     pairedFile [label="pair file"]
-    removeDup [label="removeDuplicates.sh", shape=ellipse, color=aquamarine]
+    removeDup [label="removeDuplicates.md", shape=ellipse, color=aquamarine]
     nonDupFile [label="file without duplicates"]
 
     csvFile [label="csvfile"]
@@ -18,7 +18,7 @@ digraph projectLogic
     targetSpliterIndex [label="target spliter index"]
     pairSpliterIndex [label="pair spliter index"]
 
-    demultiplex [label="demultiplex.sh", shape=ellipse, color=aquamarine]
+    demultiplex [label="demultiplex.md", shape=ellipse, color=aquamarine]
     demultiplexFile [label="demultiplex file"]
     specificPostprocess [label="specific postprocess", shape=diamond, color=bisque]
     postFile [label="file of reads to align"]

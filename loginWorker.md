@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: loginWorker.sh
+# Usage: loginWorker.md
 
 # select genome path
 if [ ! -e genome/genome.fa ] || [ ! -e genome/genome.1.bt2 ] || [ ! -e genome/genome.2.bt2 ] || [ ! -e genome/genome.3.bt2 ] || [ ! -e genome/genome.4.bt2 ] || [ ! -e genome/genome.rev.1.bt2 ] || [ ! -e genome/genome.rev.2.bt2 ]

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: sxExtractSpliter.sh csvfile >spliter1 3>spliter2
+# Usage: sxExtractSpliter.md csvfile >spliter1 3>spliter2
 # csvfile = adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + target(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
 
 getSxCsvFilePrimer()
