@@ -215,7 +215,9 @@ defaults:
       comments: false
       toc_sticky: true
       sidebar:
-        nav: "docs"
+        nav:
+          - "core"
+          - "sx"
 
 
 # Sass/SCSS
