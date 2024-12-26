@@ -28,3 +28,12 @@ sx:
     children:
     - title: "Accumulate adjacent duplicated queries"
       url: /sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/
+  - title: "get Shi Xing csvfile reference"
+    url: /sx/get-sx-csvfile-ref/
+    children:
+    - title: "get Shi Xing csvfile target"
+      url: /sx/get-sx-csvfile-ref/get-sx-csvfile-target/
+    - title: "Shi Xing target sam to bed"
+      url: /sx/get-sx-csvfile-ref/sx-target-sam-2-bed/
+    - title: "get Shi Xing reference file"
+      url: /sx/get-sx-csvfile-ref/get-sx-ref-file/

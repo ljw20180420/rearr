@@ -1,7 +1,7 @@
 #!/usr/bin/env -S perl -anF,
 
 # Usage: getSxCsvFileTarget.pl csvfile
-# Extract target from sx csvfile
+# Extract target from csvfile.
 
 use feature 'say';
 
