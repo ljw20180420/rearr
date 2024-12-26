@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Usage: ./rearrTest.sh
-# To replace args (say makeTarget): makeTarget=test/rearr.noDup ./rearrTest.sh [test]
+# Usage: ./rearrTest.md
+# To replace args (say makeTarget): makeTarget=test/rearr.noDup ./rearrTest.md [test]
 
 if [[ $1 == "test" ]]
 then

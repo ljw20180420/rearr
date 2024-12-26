@@ -68,7 +68,7 @@ void cross_align(
     const SCORETYPE v,
     const vsimd *grp,
     const vsimd *grm,
-    const vsimd **gamma,
+    vsimd **gamma,
     const SCORETYPE qu,
     const SCORETYPE qv,
     const SCORETYPE s0,

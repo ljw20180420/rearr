@@ -2,17 +2,17 @@
 https://github.com/ljw20180420/sx_lcy/releases
 
 # Install
-It is recommanded to use rearr in docker. If you want to install natively, cd into the project fold and execute `./install.sh` core sx.
+It is recommanded to use rearr in docker. If you want to install natively, cd into the project fold and execute `./install.md` core sx.
 
 # Install rootless docker
 First, install docker engine: https://docs.docker.com/engine/install
 Then install rootless docker: https://docs.docker.com/engine/security/rootless/#install
 
 # Usage
-See `rearrTest.sh`.
+See `rearrTest.md`.
 If you use docker, first login into docker.
 ```bash
-./loginWorker.sh
+./loginWorker.md
 ```
 Then just use as native.
 
@@ -34,7 +34,7 @@ HTTPS_PROXY=socks5://127.0.0.1:1080 docker compose build
 ```
 ```bash
 cd sx_lcy
-./compose.sh
+./compose.md
 ```
 
 # TODO

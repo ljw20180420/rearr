@@ -24,7 +24,7 @@ def celeryUpload(uploadFiles):
 
 @celeryApp.task
 def celeryRemoveDuplicates(inputFiles, rmDupFile):
-    subprocess.run(f'''removeDuplicates.sh {" ".join(inputFiles)} >{rmDupFile} ''', shell=True, executable="/bin/bash")
+    subprocess.run(f'''removeDuplicates.md {" ".join(inputFiles)} >{rmDupFile} ''', shell=True, executable="/bin/bash")
     return [rmDupFile]
 
 @celeryApp.task
@@ -34,12 +34,12 @@ def celeryBuildSpliter(spliter, spliterIndex):
 
 @celeryApp.task
 def celeryDemultiplex(rmDupFile, targetSpliterIndex, pairSpliterIndex, minScoreTarget, minScorePair, demultiplexFile):
-    subprocess.run(f'''spliterTarget={targetSpliterIndex} spliterPair={pairSpliterIndex} minScoreTarget={minScoreTarget} minScorePair={minScorePair} demultiplex.sh {rmDupFile} >{demultiplexFile}''', shell=True, executable="/bin/bash")
+    subprocess.run(f'''spliterTarget={targetSpliterIndex} spliterPair={pairSpliterIndex} minScoreTarget={minScoreTarget} minScorePair={minScorePair} demultiplex.md {rmDupFile} >{demultiplexFile}''', shell=True, executable="/bin/bash")
     return [demultiplexFile]
 
 @celeryApp.task
 def celerySxPostProcess(demultiplexFile, minToMapShear, toAlignFile):
-    subprocess.run(f'''sxCutR2AdapterFilterCumulate.sh {demultiplexFile} {minToMapShear} >{toAlignFile}''', shell=True, executable="/bin/bash")
+    subprocess.run(f'''sxCutR2AdapterFilterCumulate.md {demultiplexFile} {minToMapShear} >{toAlignFile}''', shell=True, executable="/bin/bash")
     return [toAlignFile]
 
 @celeryApp.task
@@ -49,10 +49,10 @@ def celeryRearrange(toAlignFile, refFile, s0, s1, s2, u, v, ru, rv, qu, qv, PAM1
 
 @celeryApp.task
 def celeryGetReference(csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile):
-    subprocess.run(f'''getSxCsvFileRef.sh {csvFile} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}''', shell=True, executable="/bin/bash")
+    subprocess.run(f'''getSxCsvFileRef.md {csvFile} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}''', shell=True, executable="/bin/bash")
     return [refFile]
 
 @celeryApp.task
 def celeryGetSpliters(csvFile, targetSpliter, pairSpliter):
-    subprocess.run(f'''sxExtractSpliter.sh {csvFile} >{targetSpliter} 3>{pairSpliter}''', shell=True, executable="/bin/bash")
+    subprocess.run(f'''sxExtractSpliter.md {csvFile} >{targetSpliter} 3>{pairSpliter}''', shell=True, executable="/bin/bash")
     return [targetSpliter, pairSpliter]
