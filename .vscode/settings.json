@@ -18,8 +18,12 @@
     "r.rpath.linux": "${workspaceFolder}/.conda/bin/R",
     "r.rterm.linux": "${workspaceFolder}/.conda/bin/R",
     "r.libPaths": ["${workspaceFolder}/.conda/lib/R/library"],
-    "cmake.sourceDirectory": "${workspaceFolder}/Rearrangement",
-    "cmake.buildDirectory": "${workspaceFolder}/Rearrangement/build",
+    "r.lsp.promptToInstall": false,
+
+    "python.REPL.enableREPLSmartSend": false,
+
+    "cmake.sourceDirectory": "${workspaceFolder}/core/Rearrangement",
+    "cmake.buildDirectory": "${workspaceFolder}/core/Rearrangement/build",
     "files.associations": {
         "functional": "cpp",
         "cctype": "cpp",
@@ -112,6 +116,4 @@
         "slist": "cpp",
         "*.ipp": "cpp"
     },
-    "python.REPL.enableREPLSmartSend": false,
-    "r.lsp.promptToInstall": false,
 }

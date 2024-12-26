@@ -32,8 +32,3 @@ refLine<newline>
 queryLine<newline>
 ```
 `index` is the 1-based alignment index as 1, 2, 3 and so on. `count` is copied from `inputFile`. `score` is the alignment score. `refId` is copied from `inputFile`. `refLine` and `queryLine` form the actual alignment.
-
-# Documentation
-[Docs][rearr_doxygen].
-
-[rearr_doxygen]: /sx_lcy/rearr/html/index.html

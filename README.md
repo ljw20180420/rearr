@@ -39,7 +39,7 @@ cd sx_lcy
 
 # TODO
 ```[tasklist]
-- [ ] modify flask
+- [ ] modify flask (also test loginWorker.md)
 - [ ] modify shiny
 - [ ] document all codes
 - [ ] use github pages (classic) to host documents

@@ -22,10 +22,10 @@ while [ -z $dataPath ]
 do
     echo "must specify dataPath" >&2
     read -ep "please input the full path of directory containing .fastq\.fq(.gz):" dataPath
-fi
+done
 docker run -it --rm \
 -v "./genome:/app/genome" \
 -v "./sx/csvfiles:/app/sx/csvfiles" \
 -v "./test:/app/test" \
 -v "$dataPath:/app/data" \
-ljwdocker1989/celery_worker /bin/bash
+ghcr.io/ljw20180420/celery_worker /bin/bash
