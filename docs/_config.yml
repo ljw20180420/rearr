@@ -216,9 +216,9 @@ defaults:
       toc_sticky: true
       sidebar:
         nav:
+          - "others"
           - "core"
           - "sx"
-
 
 # Sass/SCSS
 sass:

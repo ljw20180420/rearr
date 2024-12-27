@@ -78,7 +78,6 @@ services:
       - flask
       - flower
       - shiny
-      # - chat-ui-db
     restart: always
     container_name: nginx_server
     image: nginx:latest

@@ -4,13 +4,6 @@ comma = ,
 
 spliterIndexBts = $(foreach dir,$(subst $(comma), ,$(spliterIndices)),$(addprefix $(dir)., 1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2))
 
-ifneq ($(targetSpliterFile),)
-targetSpliterIndex = $(addprefix $(targetSpliterFile).,1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2)
-endif
-ifneq ($(pairSpliterFile),)
-pairSpliterIndex = $(addprefix $(pairSpliterFile).,1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2)
-endif
-
 # outputDir includes the tail /
 outputDir = $(dir $(word 1, $(subst $(comma), ,$(fastqFiles))))
 
