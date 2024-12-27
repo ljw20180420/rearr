@@ -2,9 +2,29 @@ main:
   - title: "Docs"
     url: /about/
 
-core:
+others:
   - title: "About"
     url: /about/
+  - title: "Quick start"
+    url: /quick-start/
+  - title: "Build documentation"
+    url: /others/build-doc/
+  - title: "Compose script"
+    url: /others/compose/
+    children:
+      - title: "Compose yaml"
+        url: /others/compose/yaml
+  - title: "Install"
+    url: /others/install/
+  - title: "Login worker"
+    url: /other/login-worker/
+  - title: "Rearr test"
+    url: /other/rearr-test/
+    children:
+    - title: "Work flow"
+      url: /other/rearr-test/work-flow/
+
+core:
   - title: "Remove duplicates"
     url: /core/remove-duplicates/
   - title: "Demultiplex"
@@ -28,12 +48,12 @@ sx:
     children:
     - title: "Accumulate adjacent duplicated queries"
       url: /sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/
-  - title: "get Shi Xing csvfile reference"
+  - title: "Get Shi Xing csvfile reference"
     url: /sx/get-sx-csvfile-ref/
     children:
-    - title: "get Shi Xing csvfile target"
+    - title: "Get Shi Xing csvfile target"
       url: /sx/get-sx-csvfile-ref/get-sx-csvfile-target/
     - title: "Shi Xing target sam to bed"
       url: /sx/get-sx-csvfile-ref/sx-target-sam-2-bed/
-    - title: "get Shi Xing reference file"
+    - title: "Get Shi Xing reference file"
       url: /sx/get-sx-csvfile-ref/get-sx-ref-file/

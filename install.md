@@ -1,6 +1,21 @@
 #!/bin/bash
-# Usage: sudo ./install.md core sx
 
+shopt -s expand_aliases
+
+alias ~~~=":<<'~~~bash'"
+
+:<<'~~~bash'
+
+# Usage
+```bash
+sudo ./install.md core sx
+```
+
+# Introduction
+Install the project. Two modules can be installed. The `core` module install necessary environments, the chimeric aligner engine `rearr`, the demultiplex scripts, and other general auxiliary scripts. The `sx` module are in-house scripts specific to the data of sx and lcy.
+
+# Source
+~~~bash
 for target in $@
 do
     case $target in
@@ -37,3 +52,8 @@ do
             ;;&
     esac
 done
+~~~
+
+~~~bash
+alias ~~~=":" # This suppresses a warning and is not part of source.
+~~~

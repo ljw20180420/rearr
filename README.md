@@ -2,48 +2,39 @@
 https://github.com/ljw20180420/sx_lcy/releases
 
 # Install
-It is recommanded to use rearr in docker. If you want to install natively, cd into the project fold and execute `./install.md` core sx.
+## Native
+It is recommanded to use `rearr` in docker. If you want to install natively, then in the project folder, execute
+```bash
+sudo ./install.md core sx
+```
 
-# Install rootless docker
-First, install docker engine: https://docs.docker.com/engine/install
-Then install rootless docker: https://docs.docker.com/engine/security/rootless/#install
-
-# Usage
-See `rearrTest.md`.
-If you use docker, first login into docker.
+## Docker
+1. Install docker engine [here](https://docs.docker.com/engine/install).
+2. Install rootless docker [here](https://docs.docker.com/engine/security/rootless/#install).
+3. Configure the proxy of docker daemon if necessary [here](https://docs.docker.com/engine/daemon/proxy).
+4. Allow rootless docker to access loopback (e.g. local proxy listening at `localhost`) if necessary [here](https://forums.docker.com/t/no-longer-able-to-access-local-ips-in-rootless-docker-after-update/141890).
+5. Login into a tempary container.
 ```bash
 ./loginWorker.md
 ```
-Then just use as native.
+6. Just use as natively.
 
-# Output
-```{list}
-target.count: file of target and pair without duplicates
-target.demultiplex: file after demultiplex
-target.post: file ready to align
-target.alg: alignments
-```
-
-# Setup the docker based server
-First, you need docker: https://docs.docker.com/engine/install.
-Maybe you need to configure the proxy of docker daemon: https://docs.docker.com/engine/daemon/proxy.
-To access host loopback in rootless docker: https://forums.docker.com/t/no-longer-able-to-access-local-ips-in-rootless-docker-after-update/141890.
-Docker buildx does not respect the daemon proxy. One has to use system proxy, say
+## Setup web server
+The web server is containerized by docker. In the project folder, execute
 ```bash
-HTTPS_PROXY=socks5://127.0.0.1:1080 docker compose build
-```
-```bash
-cd sx_lcy
 ./compose.md
 ```
+
+# Usage
+See [`rearrTest.md`][`rearrTest.md`].
+
+[`rearrTest.md`]: /sx_lcy/other/rearr-test/
 
 # TODO
 ```[tasklist]
 - [ ] modify flask (also test loginWorker.md)
 - [ ] modify shiny
-- [ ] document all codes
 - [ ] use github pages (classic) to host documents
-- [ ] use Doxygen to generate documents from code (Automatic document)
 - [ ] use github action to host github pages by run Doxygen
 - [ ] add github wiki
 - [ ] github action for build containers
