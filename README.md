@@ -32,6 +32,7 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
+- [ ] comment out ports for rabbitmq and redis after test
 - [ ] modify flask (also test loginWorker.md)
 - [ ] modify shiny
 - [ ] use github pages (classic) to host documents

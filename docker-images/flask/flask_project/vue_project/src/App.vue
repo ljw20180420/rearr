@@ -2,14 +2,41 @@
 import { ref, markRaw } from 'vue';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
 import { MiniMap } from '@vue-flow/minimap'
-import '@vue-flow/minimap/dist/style.css'
 import { Controls } from '@vue-flow/controls'
-import '@vue-flow/controls/dist/style.css'
 import { Background } from '@vue-flow/background'
 import dataTank from './components/dataTank.vue';
 import runJob from './components/runJob.vue';
 import dataTunnel from './components/dataTunnel.vue';
-import { validTargets, initRunJobNode, initDataTankNode } from './components/utils.js';
+import { validTargets } from './components/utils.js';
+
+function initRunJobNode(id, x, y, title) {
+    return {
+        id: id,
+        type: 'runJobNode',
+        active: false,
+        position: {
+            x: x,
+            y: y
+        },
+        title: title
+    }
+}
+
+function initDataTankNode(id, x, y, title, data) {
+    return {
+        id: id,
+        data: data,
+        type: 'dataTankNode',
+        active: false,
+        position: {
+            x: x,
+            y: y
+        },
+        title: title
+    }
+}
+
+const base_url = import.meta.env.BASE_URL;
 
 const nodeTypes = {
   dataTankNode: markRaw(dataTank),
@@ -22,167 +49,314 @@ const edgeTypes = {
 
 const nodes = ref([
   initDataTankNode(
-    'target file', 650, 50,
-    [ { type: 'file', name: 'target file' } ],
-    'target reads aligned to references (.fq[.gz])'
-  ),
-  initDataTankNode(
-    'pair file', 650, 150,
-    [ { type: 'file', name: 'pair file' } ],
-    'auxiliary reads for demultiplexing target reads (.fq[.gz])'
-  ),
-  initRunJobNode(
-    'removeDuplicates', 1000, 125,
-    'remove duplicated reads in target\\pair file'
-  ),
-  initDataTankNode(
-    'file without duplicates', 1300, 100,
-    [ { type: 'file', name: 'file without duplicates' } ],
-    'file of side-by-side target and pair reads without duplicates'
-  ),
-
-  initDataTankNode(
-    'target spliter', 650, 250,
-    [ { type: 'file', name: 'target spliter' } ],
-    'reads for demultiplexing target reads (.fa)'
+    'csvfile', 0, 0,
+    "Shi Xing's .csv file contains hints to extract reference from genome. See sx/sxExtractSpliter.md.",
+    {
+      '.csv file': {
+        type: 'file'
+      }
+    }
   ),
   initRunJobNode(
-    'buildSpliter/target spliter', 1000, 250,
-    'build bowtie2 index for target spliter'
+    'sxGetReference', 2100, 0,
+    "Extract reference from genome based on .csv file in the same format as Shi Xing. See sx/getSxCsvFileRef."
   ),
   initDataTankNode(
-    'target spliter index', 1300, 200,
-    [
-      { type: 'value', name: 'minimal alignment score of target spliter', value: null },
-      { type: 'files', name: 'target spliter index', value: 6 }
-    ],
-    'bowtie2 index of target spliter'
-  ),
-
-  initDataTankNode(
-    'pair spliter', 650, 350,
-    [ { type: 'file', name: 'pair spliter' } ],
-    'reads for demultiplexing pair reads (.fa)'
+    'reference', 2400, 0,
+    'Reads in .post file are aligned to these references. See core/Rearrangement/rearr.md.',
+    {
+      '.ref file': {
+        type: 'file'
+      }
+    }
   ),
   initRunJobNode(
-    'buildSpliter/pair spliter', 1000, 400,
-    'build bowtie2 index for pair spliter'
+    'rearrange', 3300, 500,
+    'Align reads in .post file to references.'
   ),
   initDataTankNode(
-    'pair spliter index', 1300, 350,
-    [
-      { type: 'value', name: 'minimal alignment score of pair spliter', value: null },
-      { type: 'files', name: 'pair spliter index', value: 6 }
-    ],
-    'bowtie2 index of pair spliter'
-  ),
-
-  initRunJobNode(
-    'demultiplex', 1700, 250,
-    'demultiplex reads by spliter'
-  ),
-  initDataTankNode(
-    'demultiplex file', 1900, 200,
-    [
-      { type: 'value', name: "minimal base number", value: 30 },
-      { type: 'file', name: 'demultiplex file' }
-    ],
-    "Demultiplexed target reads with spliter\\adapter. Target reads shorter than minimal base number after remove 5' spliter and 3' adapter are filtered"
-  ),
-
-  initRunJobNode(
-    'sxPostProcess', 2250, 250,
-    "remove 5' spliter and 3' adapter, and filter reads which are too short for alignment, only support data in the same format as Xing Shi"
-  ),
-  initDataTankNode(
-    'file of reads to align', 2500, 50,
-    [
-      { type: 'value', name: 'mismatching score', value: -6 },
-      { type: 'value', name: 'matching score for non-extension reference part', value: 4 },
-      { type: 'value', name: 'matching score for extension reference part', value: 2 },
-      { type: 'value', name: 'gap-extending penalty', value: -3 },
-      { type: 'value', name: 'gap-opening penalty', value: -9 },
-      { type: 'value', name: 'gap-extending penalty for unaligned query part', value: 0 },
-      { type: 'value', name: 'gap-opening penalty for unaligned query part', value: -5 },
-      { type: 'file', name: 'file of reads to align' }
-    ],
-    'Clean target reads ready for alignment. Alignment score settings based on affine gap penalty.s'
-  ),
-
-  initDataTankNode(
-    'file of reference', 2500, 650, 
-    [
-      { type: 'value', name: 'gap-extending penalty for unaligned reference end', value: 0 },
-      { type: 'value', name: 'gap-opening penalty for unaligned reference end', value: 0 },
-      { type: 'select', name: 'PAM1', value: 'NGG', options: ['NGG', 'CCN'] },
-      { type: 'select', name: 'PAM2', value: 'NGG', options: ['NGG', 'CCN'] },
-      { type: 'file', name: 'file of reference' }
-    ],
-    'target reads are aligned to these reference reads'
+    'alignments', 3600, 500,
+    'Chimeric alignment results.',
+    {
+      '.alg file': {
+        type: 'file'
+      }
+    }
   ),
   initRunJobNode(
-    'rearrange', 3000, 650,
-    'apply chimeric alignments of target reads to references'
+    'defaultCorrect', 2700, 0,
+    'Generate default .correct file with all up.'
   ),
   initDataTankNode(
-    'alignments', 3250, 650,
-    [ { type: 'file', name: 'alignments' } ],
-    'chimeric alignment results'
+    'correct', 3000, 0,
+    'Correct chimeric alignments. For each junction between two adjacent references, the alignment try to generate blunt end for either upstream or downstream. A default .correct file with all up can be generated from .ref file for convenience. See core/Rearrangement/correct_micro_homology.awk.',
+    {
+      '.correct file': {
+        type: 'file'
+      }
+    }
   ),
-
   initDataTankNode(
-    'genome', 1300, 850,
-    [ { type: 'file', name: 'genome' } ],
-    'genome file to extract references from (.fa)'
+    'genome', 1200, 50,
+    'Genome file to extract references from.',
+    {
+      'genome file': {
+        type: 'file'
+      }
+    }
   ),
   initRunJobNode(
-    'indexGenome', 1700, 950,
-    'build bowtie2 index for genome'
+    'indexGenome', 1500, 50,
+    'Build bowtie2 index for genome.'
   ),
   initDataTankNode(
-    'genome index', 1900, 850,
-    [
-      { type: 'value', name: 'cleavage 1 extend upstream', value: 50 },
-      { type: 'value', name: 'cleavage 1 extend downstream', value: 0 },
-      { type: 'value', name: 'cleavage 2 extend upstream', value: 10 },
-      { type: 'value', name: 'cleavage 2 extend downstream', value: 100 },
-      { type: 'files', name: 'genome index', value: 6 }
-    ],
-    'Bowtie2 index of genome. Rearr need extended reference to catch templated insertion.'
+    'genomeIndex', 1800, 50,
+    'Bowtie2 index of genome. Extension base numbers are feed to sxGetReference together with genome index to extract references. Rearr need extended reference to catch templated insertion.',
+    {
+      'extensions': {
+        'cut1 upstream': {
+          type: 'value',
+          value: 50
+        },
+        'cut1 downstream': {
+          type: 'value',
+          value: 0
+        },
+        'cut2 upstream': {
+          type: 'value',
+          value: 10
+        },
+        'cut1 downstream': {
+          type: 'value',
+          value: 100
+        }
+      },
+      'genome index': {
+        '1.bt2': {
+          type: 'file'
+        },
+        '2.bt2': {
+          type: 'file'
+        },
+        '3.bt2': {
+          type: 'file'
+        },
+        '4.bt2': {
+          type: 'file'
+        },
+        'rev.1.bt2': {
+          type: 'file'
+        },
+        'rev.2.bt2': {
+          type: 'file'
+        }
+      }
+    }
   ),
-
   initDataTankNode(
-    'csvfile', 50, 450,
-    [ { type: 'file', name: 'csvfile' } ],
-    'csv file containing hints to extract reference from genome, this format is generated by Xing Shi'
+    'rawData', 600, 1000,
+    'Files containing rawdata. See core/removeDuplicates.md.',
+    {
+      '.fastq files': [
+        {
+          type: 'file'
+        },
+        {
+          type: 'file'
+        }
+      ]
+    }
   ),
   initRunJobNode(
-    'getReference', 2250, 750,
-    "Extract reference from genome based on csv file of Xing Shi. To use this node, you need a csv file in the same format as that of Xing Shi."
+    'removeDuplicates', 900, 1000,
+    'Remove duplicated reads in rawData fastq files. See core/removeDuplicates.md.'
   ),
-
+  initDataTankNode(
+    'noDuplicates', 1200, 1000,
+    'File of side-by-side reads in rawData fastq files without duplicates. See core/removeDuplicates.md.',
+    {
+      '.noDup file': {
+        type: 'file'
+      }
+    }
+  ),
   initRunJobNode(
-    'getSpliters', 400, 350,
-    "Extract spliter from csv file of Xing Shi. To use this node, you need a csv file in the same format as that of Xing Shi."
-  )
+    'sxGetSpliters', 300, 1500,
+    "Extract spliter from .csv file in the same format as Xing Shi. See sx/sxExtractSpliter.md."
+  ),
+  initDataTankNode(
+    'spliters', 600, 1500,
+    'Reads for demultiplexing .noDup file. Spliters maps to rawData fastq files bijectively. See core/demultiplex.md.',
+    {
+      '.fasta files': [
+        {
+          type: 'file'
+        },
+        {
+          type: 'file'
+        }
+      ]
+    }
+  ),
+  initRunJobNode(
+    'buildSpliter', 900, 1500,
+    'Build bowtie2 index for spliters.'
+  ),
+  initDataTankNode(
+    'demultiplexAuxiliary', 1200, 1500,
+    'Bowtie2 index of spliters. minScores are used to filter low-quality maps in demultiplex step. See core/demultiplex.md.',
+    {
+      'auxiliaries': [
+        {
+          'minScore': {
+            type: "value",
+            value: 30
+          },
+          'spliterIndex': {
+            '1.bt2': {
+              type: 'file'
+            },
+            '2.bt2': {
+              type: 'file'
+            },
+            '3.bt2': {
+              type: 'file'
+            },
+            '4.bt2': {
+              type: 'file'
+            },
+            'rev.1.bt2': {
+              type: 'file'
+            },
+            'rev.2.bt2': {
+              type: 'file'
+            }
+          }
+        },
+        {
+          'minScore': {
+            type: "value",
+            value: 100
+          },
+          'spliterIndex': {
+            '1.bt2': {
+              type: 'file'
+            },
+            '2.bt2': {
+              type: 'file'
+            },
+            '3.bt2': {
+              type: 'file'
+            },
+            '4.bt2': {
+              type: 'file'
+            },
+            'rev.1.bt2': {
+              type: 'file'
+            },
+            'rev.2.bt2': {
+              type: 'file'
+            }
+          }
+        }
+      ]
+    }
+  ),
+  initRunJobNode(
+    'demultiplex', 1500, 1500,
+    'Demultiplex .noDup reads by spliters. See core/demultiplex.md.'
+  ),
+  initDataTankNode(
+    'noMix', 1800, 1500,
+    "Demultiplexed .noDup reads. Minimal base number is feed to sxPostProcess together with .demultiplex file to filter too short reads after remove 5' spliter and 3' adapter. See core/demultiplex.md.",
+    {
+      'minimal base number': {
+        type: 'value',
+        value: 30
+      },
+      '.demultiplex file': {
+        type: 'file'
+      }
+    }
+  ),
+  initRunJobNode(
+    'sxPostProcess', 2100, 1500,
+    "Remove 5' spliter and 3' adapter, and filter reads which are too short for alignment. sxPostProcess only supports data in the same format as Xing Shi. See sx/sxCutR2AdapterFilterCumulate."
+  ),
+  initDataTankNode(
+    'toAlign', 2400, 1500,
+    'Clean target reads ready for alignment. Alignment score settings are based on affine gap penalty. See rearrangment --help for details about s0, s1, s2, u, v, ru, rv, qu, qv. See core/Rearrangement/rearr.md.',
+    {
+      'align scores': {
+        's0': {
+          type: 'value',
+          value: -6
+        },
+        's1': {
+          type: 'value',
+          value: 4
+        },
+        's2': {
+          type: 'value',
+          value: 2
+        },
+        'u': {
+          type: 'value',
+          value: -3
+        },
+        'v': {
+          type: 'value',
+          value: -9
+        },
+        'ru': {
+          type: 'value',
+          value: 0
+        },
+        'rv': {
+          type: 'value',
+          value: 0
+        },
+        'qu': {
+          type: 'value',
+          value: 0
+        },
+        'qv': {
+          type: 'value',
+          value: -5
+        }
+      },
+      '.post file': {
+        type: 'file'
+      }
+    }
+  ),
 ]);
 
 let source_target_pairs = [];
 for (const node of nodes.value) {
   const source = node.id;
-  for (const target of validTargets(source)) {
-    source_target_pairs.push({id: `${source}-${target}`, source: source, target: target, type: 'dataTunnelEdge'})
+  for (const target of validTargets[source]) {
+    source_target_pairs.push(
+      {
+        id: `${source}-${target}`,
+        source: source,
+        target: target,
+        type: 'dataTunnelEdge'
+      }
+    )
   }
 };
 const edges = ref(source_target_pairs);
 
 const { onConnect, addEdges } = useVueFlow();
 onConnect(param => {
+  debugger;
   param.id = `${param.source}-${param.target}`;
   param.type = 'dataTunnelEdge';
   addEdges(param);
 })
 
+window.onbeforeunload = () => fetch(`${base_url}/stop`);
 </script>
 
 <template>
@@ -198,18 +372,17 @@ onConnect(param => {
       <Background variant="dots" gap=100 size=4 patternColor="black" />
     </VueFlow>
   </div>
-
-  <div class="outer" style="overflow:scroll;">
-    <img src="./assets/images/projectLogic.png">
-  </div>
 </template>
 
 <style>
 /* import the necessary styles for Vue Flow to work */
 @import '@vue-flow/core/dist/style.css';
-
 /* import the default theme, this is optional but generally recommended */
 @import '@vue-flow/core/dist/theme-default.css';
+/* import minimap style */
+@import '@vue-flow/minimap/dist/style.css';
+/* import controls style */
+@import '@vue-flow/controls/dist/style.css';
 
 .vue-flow__node {
     background: black;
@@ -218,5 +391,18 @@ onConnect(param => {
     border-radius: 2px;
     box-shadow: 0 0 0 2px rgb(128, 128, 128);
     padding: 0px;
+    white-space: nowrap;
+}
+
+a:link {
+  color: red;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: orange;
+  background-color: transparent;
+  text-decoration: none;
 }
 </style>
