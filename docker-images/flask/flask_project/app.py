@@ -1,109 +1,184 @@
 #!/usr/bin/env python
 
-import os, tempfile, io, zipfile, re
-from flask import Flask, render_template, request, send_file, send_from_directory
-from celery_project.tasks import celeryUpload, celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryGetReference, celeryGetSpliters
+import os, tempfile, io, zipfile, re, uuid, shutil, pathlib
+from flask import Flask, render_template, send_file, send_from_directory, request, session
+from celery_project.tasks import celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryDefaultCorrect, celeryGetReference, celeryGetSpliters
 from celery.result import AsyncResult
 # from werkzeug.middleware.proxy_fix import ProxyFix
 
 flaskApp = Flask(__name__, static_folder="vue_project/dist/assets", template_folder="vue_project/dist", static_url_path="/assets")
 # flaskApp.wsgi_app = ProxyFix(flaskApp.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 flaskApp.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024
+flaskApp.secret_key = b'913d1c26d46f82f119662371bc71efa4de6902a8ee2a378a6f342b8eb39b2d52'
 
 @flaskApp.route('/favicon.ico')
 def favicon():
     return send_from_directory(
         os.path.join(flaskApp.root_path, 'vue_project/dist'),
-        'favicon.ico', mimetype='favicon.ico'
-    )
+        'favicon.ico',
+        mimetype='favicon.ico'
+    ), 200
 
 @flaskApp.get("/")
 def homePage():
+    if 'dir' not in session:
+        session['dir'] = os.path.join(flaskApp.root_path, 'tmp', str(uuid.uuid4()))
+    os.makedirs(session['dir'], exist_ok=True)
     return render_template("index.html")
 
-tmpFold = os.path.join(flaskApp.root_path, "tmp")
+@flaskApp.route('/stop')
+def stop():
+    if os.path.exists(session['dir']):
+        shutil.rmtree(session['dir'])
+    return "Stop", 200
 
 @flaskApp.put('/upload')
 def upload():
-    files = request.files.getlist('files[]')
-    mat = re.search('\.(rev\.)?[1-4]\.bt2', files[0].filename)
-    if not mat:
-        uploadFiles = [os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path) for file in files]
-    else:
-        pathBase = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-        os.remove(os.path.join(flaskApp.root_path, pathBase))
-        uploadFiles = [pathBase + re.search('\.(rev\.)?[1-4]\.bt2', file.filename).group() for file in files]
-    for file, uploadFile in zip(files, uploadFiles):
-        file.save(os.path.join(flaskApp.root_path, uploadFile))
-    result = celeryUpload.delay(uploadFiles)
-    return {'taskId': result.id, 'value': [os.path.basename(uploadFile) for uploadFile in uploadFiles]}
+    file = request.files['file[]']
+    file.save(os.path.join(session['dir'], file.filename))
+    return file.filename, 200
+
+# This api is accessed by href. Firefox will add trailing slash for cached pages. To avoid using strict_slashes=False, add a slash to this api.
+@flaskApp.get("/download/<string:filename>/")
+def download(filename):
+    try:
+        return send_file(
+            os.path.join(session['dir'], filename),
+            as_attachment=True
+        ), 200
+    except FileNotFoundError:
+        return "Accepted", 202
+
+# This api is accessed by href. Firefox will add trailing slash for cached pages. To avoid using strict_slashes=False, add a slash to this api.
+@flaskApp.get("/inspect/<string:taskId>/")
+def inspect(taskId):
+    result = AsyncResult(taskId)
+    return result.status, 200
 
 @flaskApp.put('/runJob/removeDuplicates')
 def removeDuplicates():
-    inputFiles = [os.path.join("tmp", file) for file in [request.form["target file[]"], request.form["pair file[]"]]]
-    rmDupFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryRemoveDuplicates.delay(inputFiles, rmDupFile)
-    return [{'taskId': result.id, 'name': 'file without duplicates', 'value': [os.path.basename(rmDupFile)]}]
+    fastqFiles = [
+        os.path.join(session['dir'], file['value'])
+        for file in request.get_json()['.fastq files']
+    ]
+    rmDupFile = os.path.join(session['dir'], 'rearr.noDup')
+    result = celeryRemoveDuplicates.delay(
+        fastqFiles,
+        rmDupFile
+    )
+    return {
+      '.noDup file': {
+        'taskId': result.id,
+        'value': 'rearr.noDup'
+      }
+    }
 
-@flaskApp.put('/runJob/buildSpliter/<string:spliterFile>')
-def buildSpliter(spliterFile):
-    spliter = os.path.join("tmp", request.form[f"{spliterFile}[]"])
-    spliterIndex = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    os.remove(os.path.join(flaskApp.root_path, spliterIndex))
-    result = celeryBuildSpliter.delay(spliter, spliterIndex)
-    return [{'taskId': result.id, 'name': f'{spliterFile} index', 'value': [f'{os.path.basename(spliterIndex)}.{ext}' for ext in ['1.bt2', '2.bt2', '3.bt2', '4.bt2', 'rev.1.bt2', 'rev.2.bt2']]}]
+@flaskApp.put('/runJob/buildSpliter')
+def buildSpliter():
+    spliters = [
+        os.path.join(session['dir'], file['value'])
+        for file in request.get_json()['.fasta files']
+    ]
+    result = celeryBuildSpliter.delay(spliters)
+    return {
+        'auxiliaries': [
+            {
+                'spliterIndex': {
+                    ext: {
+                        'taskId': result.id,
+                        'value': f'{os.path.basename(spliter)}.{ext}'
+                    }
+                    for ext in ['1.bt2', '2.bt2', '3.bt2', '4.bt2', 'rev.1.bt2', 'rev.2.bt2']
+                }
+            }
+            for spliter in spliters
+        ]
+    }
 
 @flaskApp.put('/runJob/demultiplex')
 def demultiplex():
-    rmDupFile = os.path.join("tmp", request.form["file without duplicates[]"])
-    try:
-        targetSpliterIndex = os.path.join("tmp", request.form["target spliter index[]"])
-        mat = re.search('\.(rev\.)?[1-4]\.bt2', targetSpliterIndex)
-        targetSpliterIndex = targetSpliterIndex[:mat.span()[0]]
-        minScoreTarget = request.form["minimal alignment score of target spliter"]
-    except:
-        targetSpliterIndex = ""
-        minScoreTarget = ""
-    try:
-        pairSpliterIndex = os.path.join("tmp", request.form["pair spliter index[]"])
-        mat = re.search('\.(rev\.)?[1-4]\.bt2', pairSpliterIndex)
-        pairSpliterIndex = pairSpliterIndex[:mat.span()[0]]
-        minScorePair = request.form["minimal alignment score of pair spliter"]
-    except:
-        pairSpliterIndex = ""
-        minScorePair = ""
-    if not targetSpliterIndex and not pairSpliterIndex:
-        raise Exception("At least one of targetSpliter and pairSpliter should be specified")
-    demultiplexFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryDemultiplex.delay(rmDupFile, targetSpliterIndex, pairSpliterIndex, minScoreTarget, minScorePair, demultiplexFile)
-    return [{'taskId': result.id, 'name': 'demultiplex file', 'value': [os.path.basename(demultiplexFile)]}]
+    json = request.get_json()
+    rmDupFile = os.path.join(session['dir'], json['.noDup file']['value'])
+    spliterIndices = [
+        os.path.join(session['dir'], auxiliary['spliterIndex']['1.bt2']['value'][:-6])
+        for auxiliary in json['auxiliaries']
+    ]
+    minScores = [
+        str(auxiliary['minScore']['value'])
+        for auxiliary in json['auxiliaries']
+    ]
+    demultiplexFile = os.path.splitext(rmDupFile)[0] + '.demultiplex'
+    result = celeryDemultiplex.delay(
+        rmDupFile,
+        spliterIndices,
+        minScores,
+        demultiplexFile
+    )
+    return {
+        '.demultiplex file': {
+            'taskId': result.id,
+            'value': 'rearr.demultiplex'
+        }
+    }
 
 @flaskApp.put('/runJob/sxPostProcess')
 def sxPostProcess():
-    demultiplexFile = os.path.join("tmp", request.form["demultiplex file[]"])
-    minToMapShear = request.form["minimal base number"]
-    toAlignFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celerySxPostProcess.delay(demultiplexFile, minToMapShear, toAlignFile)
-    return [{'taskId': result.id, 'name': 'file of reads to align', 'value': [os.path.basename(toAlignFile)]}]
+    json = request.get_json()
+    demultiplexFile = os.path.join(session['dir'], json['.demultiplex file']['value'])
+    toMapFile = os.path.splitext(demultiplexFile)[0] + '.post'
+    result = celerySxPostProcess.delay(
+        demultiplexFile,
+        json['minimal base number']['value'],
+        toMapFile
+    )
+    return {
+        '.post file': {
+            'taskId': result.id,
+            'value': os.path.basename(toMapFile)
+        }
+    }
 
 @flaskApp.put('/runJob/rearrange')
 def rearrange():
-    toAlignFile = os.path.join("tmp", request.form["file of reads to align[]"])
-    refFile = os.path.join("tmp", request.form["file of reference[]"])
-    s0 = request.form["mismatching score"]
-    s1 = request.form["matching score for non-extension reference part"]
-    s2 = request.form["matching score for extension reference part"]
-    u = request.form["gap-extending penalty"]
-    v = request.form["gap-opening penalty"]
-    ru = request.form["gap-extending penalty for unaligned reference end"]
-    rv = request.form["gap-opening penalty for unaligned reference end"]
-    qu = request.form["gap-extending penalty for unaligned query part"]
-    qv = request.form["gap-opening penalty for unaligned query part"]
-    PAM1 = request.form["PAM1"]
-    PAM2 = request.form["PAM2"]
-    alignFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryRearrange.delay(toAlignFile, refFile, s0, s1, s2, u, v, ru, rv, qu, qv, PAM1, PAM2, alignFile)
-    return [{'taskId': result.id, 'name': 'alignments', 'value': [os.path.basename(alignFile)]}]
+    json = request.get_json()
+    toMapFile = os.path.join(session['dir'], json['.post file']['value'])
+    refFile = os.path.join(session['dir'], json['.ref file']['value'])
+    correctFile = os.path.join(session['dir'], json['.correct file']['value'])
+    alignFile = os.path.splitext(toMapFile)[0] + '.alg'
+    result = celeryRearrange.delay(
+        toMapFile,
+        refFile,
+        correctFile,
+        json['align scores']['s0']['value'],
+        json['align scores']['s1']['value'],
+        json['align scores']['s2']['value'],
+        json['align scores']['u']['value'],
+        json['align scores']['v']['value'],
+        json['align scores']['ru']['value'],
+        json['align scores']['rv']['value'],
+        json['align scores']['qu']['value'],
+        json['align scores']['qv']['value'],
+        alignFile
+    )
+    return {
+        '.alg file': {
+            'taskId': result.id,
+            'value': os.path.basename(alignFile)
+        }
+    }
+
+@flaskApp.put('/runJob/defaultCorrect')
+def defaultCorrect():
+    refFile = os.path.join(session['dir'], request.get_json()['.ref file']['value'])
+    correctFile = os.path.splitext(refFile)[0] + '.correct'
+    result = celeryDefaultCorrect.delay(refFile, correctFile)
+    return {
+        '.correct file': {
+            'taskId': result.id,
+            'value': os.path.basename(correctFile)
+        }
+    }
+    
 
 @flaskApp.put('/runJob/indexGenome')
 def indexGenome():
@@ -140,28 +215,6 @@ def getSpliters():
         {'taskId': result.id, 'name': 'target spliter', 'value': [os.path.basename(targetSpliter)]},
         {'taskId': result.id, 'name': 'pair spliter', 'value': [os.path.basename(pairSpliter)]}
     ]
-
-@flaskApp.get("/download/<string:taskId>")
-def download(taskId):
-    result = AsyncResult(taskId)
-    if result.status == 'SUCCESS':
-        stream = io.BytesIO()
-        with zipfile.ZipFile(stream, 'w') as zf:
-            for file in result.get():
-                zf.write(os.path.join(flaskApp.root_path, file), os.path.basename(file))
-        stream.seek(0)
-        download_name = os.path.basename(result.get()[0]).split(".")[0]
-        return send_file(
-            stream,
-            as_attachment=True,
-            download_name=f'{download_name}.zip'
-        )
-    return 'Accepted', 202
-
-@flaskApp.get("/inspect/<string:taskId>")
-def inspect(taskId):
-    result = AsyncResult(taskId)
-    return result.status
 
 if __name__ == "__main__":
     flaskApp.run()

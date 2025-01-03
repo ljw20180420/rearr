@@ -24,7 +24,7 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 	getSxCsvFileRef.md $< $(genome) $(bowtie2index) $(ext1up) $(ext1down) $(ext2up) $(ext2down) >$@
 
 %.correct: %.ref
-	yes up | head -n$(shell wc -l <$<) >$@
+	gawk '{for (i = 1; i < NF / 3 - 1; ++i) printf("up\t"); printf("up\n");}' $< >$@
 
 %.post: %.demultiplex
 	sxCutR2AdapterFilterCumulate.md $< $(minToMapShear) >$@

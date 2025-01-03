@@ -1,10 +1,11 @@
 <script setup>
-import axios from 'axios';
-import { useNode, Handle, Position, useVueFlow } from '@vue-flow/core';
 import { computed } from 'vue';
-import { isValidConnection } from './utils.js'
+import axios from 'axios';
+import { useNode, Handle, Position } from '@vue-flow/core';
+import { validTargets } from './utils.js';
+
+const base_url = import.meta.env.BASE_URL;
 const { node, connectedEdges } = useNode();
-const { findNode } = useVueFlow();
 
 node.active = computed(() => {
     for (let edge of connectedEdges.value) {
@@ -16,70 +17,78 @@ node.active = computed(() => {
 });
 
 node.data = computed(() => {
-    let data = { values: {}, taskIds: {} };
-    for (let edge of connectedEdges.value) {
+    let data = {};
+    for (const edge of connectedEdges.value) {
         if (edge.source === node.id) {
             continue;
         }
-        for (let obj of edge.sourceNode.data) {
-            data.values[obj.name] = obj.value
-            if (Object.keys(obj).includes("taskId")) {
-                data.taskIds[obj.name] = obj.taskId;
-            }
+        for (const name in edge.sourceNode.data) {
+            data[name] = edge.sourceNode.data[name];
         }
     }
     return data;
 })
 
-async function runJob() {
-    try{
-        for (let key in node.data.taskIds) {
-            const taskId = node.data.taskIds[key];
-            if (taskId == null) {
-                continue;
+function recursiveAssign(target, source) {
+    for (const name in source) {
+        if (typeof source[name] != 'object') {
+            target[name] = source[name];
+        } else if (name in target) {
+            recursiveAssign(target[name], source[name]);
+        }
+    }
+}
+
+async function recursiveInspect(data) {
+    if ('type' in data && typeof data.type == 'string') {
+        if (data.taskId) {
+            const response = await axios.get(base_url + "/inspect/" + data.taskId);
+            if (response.status != 200) {
+                alert(response.data);
+                return false;
             }
-            const response = await axios.get(base_url + "/inspect/" + taskId);
             if (response.data != "SUCCESS") {
-                alert("job: " + taskId + " is " + response.data);
-                return;
+                alert(`job: ${param.taskId} is ${response.data}`);
+                return false;
             }
         }
-        const response = await axios.putForm(base_url + "/runJob/" + node.id, node.data.values);
-        for (let rdt of response.data) {
-            let found = false;
-            for (let edge of connectedEdges.value) {
-                if (edge.target === node.id) {
-                    continue;
-                }
-                const targetNode = findNode(edge.target);
-                for (let obj of targetNode.data) {
-                    if (rdt.name == obj.name) {
-                        obj.value = rdt.value;
-                        obj.taskId = rdt.taskId;
-                        found = true;
-                    }
-                    if (found) {
-                        break;
-                    }
-                }
-                if (found) {
-                    break;
-                }
+        return true;
+    }
+    for (const name in data) {
+        if (!await recursiveInspect(data[name])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+async function runJob() {
+    try{
+        if (!await recursiveInspect(node.data)) {
+            return;
+        }
+        const response = await axios.put(`${base_url}/runJob/${node.id}`, node.data);
+        if (response.status != 200) {
+            alert(response.data);
+            return;
+        }
+        for (let edge of connectedEdges.value) {
+            if (edge.target === node.id) {
+                continue;
             }
+            recursiveAssign(edge.targetNode.data, response.data);
         }
     } catch(error) {
         alert(error);
     }
 }
-
-const base_url = import.meta.env.BASE_URL;
 </script>
 
 <template>
-    <div :title="node.title">
+    <div :title="node.title" style="width: 200px; overflow: hidden;">
         <span>{{ node.id }} </span>
         <button @click="runJob" :disabled="!node.active">run</button>
-        <Handle id="s" type="source" :position="Position.Right" :is-valid-connection="isValidConnection" />
-        <Handle id="t" type="target" :position="Position.Left" :is-valid-connection="isValidConnection" />
+        <Handle id="s" type="source" :position="Position.Right" :is-valid-connection="c => validTargets[c.source].includes(c.target)" />
+        <Handle id="t" type="target" :position="Position.Left" :is-valid-connection="c => validTargets[c.source].includes(c.target)" />
     </div>
 </template>
