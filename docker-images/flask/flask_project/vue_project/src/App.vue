@@ -106,7 +106,7 @@ const nodes = ref([
     }
   ),
   initRunJobNode(
-    'indexGenome', 1500, 50,
+    'indexGenome', 1500, 300,
     'Build bowtie2 index for genome.'
   ),
   initDataTankNode(
@@ -126,7 +126,7 @@ const nodes = ref([
           type: 'value',
           value: 10
         },
-        'cut1 downstream': {
+        'cut2 downstream': {
           type: 'value',
           value: 100
         }

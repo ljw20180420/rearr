@@ -2,7 +2,7 @@
 
 import os, tempfile, io, zipfile, re, uuid, shutil, pathlib
 from flask import Flask, render_template, send_file, send_from_directory, request, session
-from celery_project.tasks import celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryDefaultCorrect, celeryGetReference, celeryGetSpliters
+from celery_project.tasks import celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryDefaultCorrect, celerySxGetReference, celerySxGetSpliters
 from celery.result import AsyncResult
 # from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -30,7 +30,7 @@ def homePage():
 def stop():
     if os.path.exists(session['dir']):
         shutil.rmtree(session['dir'])
-    return "Stop", 200
+    return "STOP", 200
 
 @flaskApp.put('/upload')
 def upload():
@@ -47,7 +47,7 @@ def download(filename):
             as_attachment=True
         ), 200
     except FileNotFoundError:
-        return "Accepted", 202
+        return "ACCEPTED", 202
 
 # This api is accessed by href. Firefox will add trailing slash for cached pages. To avoid using strict_slashes=False, add a slash to this api.
 @flaskApp.get("/inspect/<string:taskId>/")
@@ -117,7 +117,7 @@ def demultiplex():
     return {
         '.demultiplex file': {
             'taskId': result.id,
-            'value': 'rearr.demultiplex'
+            'value': os.path.basename(demultiplexFile)
         }
     }
 
@@ -182,39 +182,56 @@ def defaultCorrect():
 
 @flaskApp.put('/runJob/indexGenome')
 def indexGenome():
-    genome = os.path.join("tmp", request.form["genome[]"])
-    bowtie2index = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    os.remove(os.path.join(flaskApp.root_path, bowtie2index))
-    result = celeryBuildSpliter.delay(genome, bowtie2index)
-    return [{'taskId': result.id, 'name': 'genome index', 'value': [f'{os.path.basename(bowtie2index)}.{ext}' for ext in ['1.bt2', '2.bt2', '3.bt2', '4.bt2', 'rev.1.bt2', 'rev.2.bt2']]}]
+    genomeFile = os.path.join(session['dir'], request.get_json()['genome file']['value'])
+    result = celeryBuildSpliter.delay([genomeFile])
+    return {
+        'genome index': {
+            ext: {
+                'taskId': result.id,
+                'value': f'{os.path.basename(genomeFile)}.{ext}'
+            }
+            for ext in ['1.bt2', '2.bt2', '3.bt2', '4.bt2', 'rev.1.bt2', 'rev.2.bt2']
+        }
+    }
 
-@flaskApp.put('/runJob/getReference')
-def getReference():
-    csvFile = os.path.join("tmp", request.form["csvfile[]"])
-    genome = os.path.join("tmp", request.form["genome[]"])
-    bowtie2index = os.path.join("tmp", request.form["genome index[]"])
-    mat = re.search('\.(rev\.)?[1-4]\.bt2', bowtie2index)
-    bowtie2index = bowtie2index[:mat.span()[0]]
-    ext1up = request.form["cleavage 1 extend upstream"]
-    ext1down = request.form["cleavage 1 extend downstream"]
-    ext2up = request.form["cleavage 2 extend upstream"]
-    ext2down = request.form["cleavage 2 extend downstream"]
-    refFile = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    result = celeryGetReference.delay(csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile)
-    return [{'taskId': result.id, 'name': 'file of reference', 'value': [os.path.basename(refFile)]}]
+@flaskApp.put('/runJob/sxGetReference')
+def sxGetReference():
+    json = request.get_json()
+    csvFile = os.path.join(session['dir'], json['.csv file']['value'])
+    bowtie2index = os.path.join(session['dir'], json['genome index']['1.bt2']['value'][:-6])
+    genome = os.path.join(session['dir'], json['genome file']['value'])
+    ext1up = json['extensions']['cut1 upstream']['value']
+    ext1down = json['extensions']['cut1 downstream']['value']
+    ext2up = json['extensions']['cut2 upstream']['value']
+    ext2down = json['extensions']['cut2 downstream']['value']
+    refFile = f'{csvFile}.ref'
+    result = celerySxGetReference.delay(csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile)
+    return {
+        '.ref file': {
+            'taskId': result.id,
+            'value': os.path.basename(refFile)
+        }
+    }
 
-@flaskApp.put('/runJob/getSpliters')
-def getSpliters():
-    csvFile = os.path.join("tmp", request.form["csvfile[]"])
-    targetSpliter = os.path.relpath(tempfile.mkstemp(dir=tmpFold)[1], start=flaskApp.root_path)
-    os.remove(os.path.join(flaskApp.root_path, targetSpliter))
-    pairSpliter = targetSpliter + ".pair"
-    targetSpliter = targetSpliter + ".target"
-    result = celeryGetSpliters.delay(csvFile, targetSpliter, pairSpliter)
-    return [
-        {'taskId': result.id, 'name': 'target spliter', 'value': [os.path.basename(targetSpliter)]},
-        {'taskId': result.id, 'name': 'pair spliter', 'value': [os.path.basename(pairSpliter)]}
-    ]
+@flaskApp.put('/runJob/sxGetSpliters')
+def getSxSpliters():
+    json = request.get_json()
+    csvFile = os.path.join(session['dir'], json['.csv file']['value'])
+    targetSpliter = f'{csvFile}.target.fa'
+    pairSpliter = f'{csvFile}.pair.fa'
+    result = celerySxGetSpliters.delay(csvFile, targetSpliter, pairSpliter)
+    return {
+        '.fasta files': [
+            {
+                'taskId': result.id,
+                'value': os.path.basename(targetSpliter)
+            },
+            {
+                'taskId': result.id,
+                'value': os.path.basename(pairSpliter)
+            }
+        ]
+    }
 
 if __name__ == "__main__":
     flaskApp.run()
