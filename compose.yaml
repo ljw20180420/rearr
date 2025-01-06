@@ -39,7 +39,6 @@ services:
     volumes:
       - "./docker-images/flask/flask_project/celery_project:/app/celery_project"
       - "./docker-images/flask/flask_project/tmp:/app/tmp"
-      - "./genome:/app/genome:ro"
     command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
 
   flask:

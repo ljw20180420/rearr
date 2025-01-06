@@ -29,7 +29,10 @@ def celeryRemoveDuplicates(inputFiles, rmDupFile):
 def celeryBuildSpliter(spliters):
     for spliter in spliters:
         subprocess.run(f'''bowtie2-build {spliter} {spliter}''', shell=True, executable="/bin/bash")
-    return [f'{os.path.basename(spliter)}.{ext}' for spliter in spliters for ext in ['1.bt2', '2.bt2', '3.bt2', '4.bt2', 'rev.1.bt2', 'rev.2.bt2']]
+    return [
+        f'{os.path.basename(spliter)}.{ext}'
+        for spliter in spliters for ext in ['1.bt2', '2.bt2', '3.bt2', '4.bt2', 'rev.1.bt2', 'rev.2.bt2']
+    ]
 
 @celeryApp.task
 def celeryDemultiplex(rmDupFile, spliterIndices, minScores, demultiplexFile):
@@ -54,11 +57,14 @@ def celeryDefaultCorrect(refFile, correctFile):
     return os.path.basename(correctFile)
 
 @celeryApp.task
-def celeryGetReference(csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile):
+def celerySxGetReference(csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile):
     subprocess.run(f'''getSxCsvFileRef.md {csvFile} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}''', shell=True, executable="/bin/bash")
-    return [refFile]
+    return os.path.basename(refFile)
 
 @celeryApp.task
-def celeryGetSpliters(csvFile, targetSpliter, pairSpliter):
+def celerySxGetSpliters(csvFile, targetSpliter, pairSpliter):
     subprocess.run(f'''sxExtractSpliter.md {csvFile} >{targetSpliter} 3>{pairSpliter}''', shell=True, executable="/bin/bash")
-    return [targetSpliter, pairSpliter]
+    return [
+        os.path.basename(targetSpliter),
+        os.path.basename(pairSpliter)
+    ]
