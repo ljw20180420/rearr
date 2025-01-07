@@ -33,7 +33,7 @@ jobs:
       - name: Install doxygen
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen
       - name: Prepare docs
-        run: ./buildDoc.md
+        run: mkdir -p docs/core/rearr && ./buildDoc.md
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
