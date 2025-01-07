@@ -30,16 +30,19 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 [`rearrTest.md`]: /sx_lcy/other/rearr-test/
 
+# Documentation
+[Here](https://ljw20180420.github.io/sx_lcy/).
+
 # TODO
 ```[tasklist]
-- [ ] use github pages (classic) to host documents
-- [ ] use github action to host github pages by run Doxygen
+- [ ] add buildDoc.md back, so that local test is possible.
+- [ ] unit tests
+- [ ] add genome.fa.gz and index to lfs so that github action test is possible
 - [ ] add github wiki
 - [ ] github action for build containers
 - [ ] other CDCI support by github (git -> github cli -> github docs|skills|support|community)
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
-- [ ] unittest
 - [ ] kvm
 - [ ] npm
 - [ ] vue -> uniapp -> tauri2
