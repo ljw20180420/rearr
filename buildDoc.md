@@ -63,9 +63,6 @@ add_header "Login worker" "/other/login-worker/" < loginWorker.md > docs/_docs/l
 
 add_header "Rearr test" "/other/rearr-test/" < rearrTest.md > docs/_docs/rearrTest.md
 wrap_script makefile < workFlow.mak | add_header "Work flow" "/other/rearr-test/work-flow/" > docs/_docs/workFlow.mak.md
-
-cd docs
-bundle exec jekyll serve
 ~~~
 
 ~~~bash
