@@ -32,7 +32,6 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
-- [ ] modify shiny
 - [ ] use github pages (classic) to host documents
 - [ ] use github action to host github pages by run Doxygen
 - [ ] add github wiki
@@ -42,12 +41,12 @@ See [`rearrTest.md`][`rearrTest.md`].
 - [ ] convert alg to sam
 - [ ] unittest
 - [ ] kvm
-- [ ] javascript -> html -> css -> npm -> typescript -> tamper monkey -> selenium
+- [ ] npm
 - [ ] vue -> uniapp -> tauri2
 - [ ] Deploy to JCloud. Celery flower does not work properly on JCloud. Maybe permission problem.
 - [ ] asgi is more advance than wsgi
 - [ ] resemble indelphi
-- [ ] implement tidymodels (need to install tidymodels in shiny rocker, which must not be installed through CRAN)
+- [ ] implement tidymodels (need to install tidymodels in shiny rocker, not install by apt)
 - [ ] CDN
 - [ ] Add 3D structure prediction shiny App
 - [ ] Add large language model for DNA

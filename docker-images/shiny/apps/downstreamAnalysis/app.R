@@ -74,12 +74,8 @@ ui <- page_sidebar(
                 "cleavage site position in reference2"
             ),
             tooltip(
-                selectInput("alignOnePAM1", "PAM1", choices = c("NGG", "CCN"), selected = "NGG"),
-                "PAM sequence for reference1"
-            ),
-            tooltip(
-                selectInput("alignOnePAM2", "PAM2", choices = c("NGG", "CCN"), selected = "NGG"),
-                "PAM sequence for reference2"
+                selectInput("alignOneCorrect", "correct", choices = c("up", "down"), selected = "up"),
+                "Remove deletion or templated insertion of the specified end through micro-homology."
             ),
             tooltip(
                 textInput("alignOneQuery", label = "query read", value = ""),
@@ -388,6 +384,7 @@ server <- function(input, output, session) {
     # single alignment
     #########################################################
     algOneRefFile <- tempfile(tmpdir=file.path("www", session$token))
+    algOneCorrectFile <- tempfile(tmpdir=file.path("www", session$token))
     algOneAlgFile <- tempfile(tmpdir=file.path("www", session$token))
     output$alignPair <- renderText({
         req(input$alignOneRef1)
@@ -395,7 +392,7 @@ server <- function(input, output, session) {
         req(input$alignOneCut1)
         req(input$alignOneCut2)
         req(input$alignOneQuery)
-        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOnePAM1, input$alignOnePAM2, input$alignOneQuery, algOneRefFile, algOneAlgFile)
+        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOneCorrect, input$alignOneQuery, algOneRefFile, algOneCorrectFile, algOneAlgFile)
     })
 
     #########################################################

@@ -2,7 +2,7 @@
 
 # Usage: correct_micro_homology.AWK -- refFile correctFile <algFile
 
-# refFile is the same as the input of rearrangement. For each row of refFile, correctFile has a row of fields being either up or down. Each field corresponds a junction of two adjacent references in the row of refFile. For up\down, correct_micro_homology.AWK try to remove the upstream deletion or templated insertion of the up\down-stream. This is achieved by modifying the alignment up to the equivalence of micro-homology.
+# refFile is the same as the input of rearrangement. For each row of refFile, correctFile has a row of fields being either up or down. Each field corresponds a junction of two adjacent references in the row of refFile. For up\down, correct_micro_homology.AWK try to remove the deletion or templated insertion of the up\down-stream. This is achieved by modifying the alignment up to the equivalence of micro-homology.
 
 # The header line of each alignment output by rearrangement only contains index, count, score, refId. correct_micro_homology.AWK enriches the header by adding unaligned part of query and aligned ranges of both reference and query. The cut sites at junctions of adjacent references are also appended to the header line.
 
