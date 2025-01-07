@@ -29,6 +29,9 @@ wrap_script()
     sed -e "1i ~~~$script_type" -e '$a~~~'
 }
 
+# Failure stop the execution.
+set -e
+
 add_header "Quick start" "/quick-start/" < README.md > docs/_docs/README.md
 
 add_header "Remove duplicates" "/core/remove-duplicates/" < core/removeDuplicates.md > docs/_docs/removeDuplicates.md
