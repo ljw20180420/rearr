@@ -7,6 +7,8 @@ others:
     url: /about/
   - title: "Quick start"
     url: /quick-start/
+  - title: "Build documentation"
+    url: /others/build-doc/
   - title: "Compose script"
     url: /others/compose/
     children:

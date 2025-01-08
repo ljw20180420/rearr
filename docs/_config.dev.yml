@@ -1,0 +1,15 @@
+# Develop override settings
+
+theme: minimal-mistakes-jekyll
+# remote_theme: null does not override the setting in _config.yml
+remote_theme: "1"
+
+analytics:
+  provider: false
+
+comments:
+  disqus:
+    shortname            : "mmistakes-dev"
+
+sass:
+  style: expanded
