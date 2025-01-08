@@ -35,11 +35,10 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
-- [ ] add buildDoc.md back, so that local test is possible.
 - [ ] unit tests
 - [ ] add genome.fa.gz and index to lfs so that github action test is possible
+- [ ] github action to deploy to qiangwulab.sjtu.edu.cn
 - [ ] add github wiki
-- [ ] github action for build containers
 - [ ] other CDCI support by github (git -> github cli -> github docs|skills|support|community)
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
