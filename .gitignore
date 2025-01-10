@@ -1,11 +1,4 @@
 bench/
-sx/csvfiles/*
-!sx/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A1.csv
-!sx/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A2.csv
-!sx/csvfiles/final_hgsgrna_libb_all_0811_NAA_scaffold_nbt_A3.csv
-!sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv
-!sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G2.csv
-!sx/csvfiles/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G3.csv
 paper/*
 !paper/function_table/
 paper/function_table/*
@@ -15,11 +8,8 @@ paper/function_table/*
 !paper/paper_figures.py
 !paper/workflow.gv
 core/Rearrangement/build/
-test/*
-!test/A2-g1n-3.fq.gz
-!test/A2-g1n-3.R2.fq.gz
-!test/sgRNAs.G1
 **/__pycache__/
-genome
 docs/core
-docs/_docs
+docs/_docs/*
+!docs/_docs/about.md
+test/genome/genome.fa

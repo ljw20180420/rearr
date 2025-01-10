@@ -11,7 +11,7 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 	removeDuplicates.md $^ >$@
 
 %.1.bt2 %.2.bt2 %.3.bt2 %.4.bt2 %.rev.1.bt2 %.rev.2.bt2: %
-	bowtie2-build $< $<
+	bowtie2-build -q $< $<
 
 %.demultiplex: %.noDup $(spliterIndexBts)
 	spliterIndices=$(spliterIndices) minScores=$(minScores) demultiplex.md $< >$@

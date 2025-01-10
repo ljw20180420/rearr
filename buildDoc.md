@@ -65,8 +65,8 @@ add_header "Install" "/others/install/" < install.md > docs/_docs/install.md
 
 add_header "Login worker" "/other/login-worker/" < loginWorker.md > docs/_docs/loginWorker.md
 
-add_header "Rearr test" "/other/rearr-test/" < rearrTest.md > docs/_docs/rearrTest.md
-wrap_script makefile < workFlow.mak | add_header "Work flow" "/other/rearr-test/work-flow/" > docs/_docs/workFlow.mak.md
+add_header "Run work flow" "/other/run-work-flow/" < runWorkFlow.md > docs/_docs/runWorkFlow.md
+wrap_script makefile < workFlow.mak | add_header "Work flow" "/other/run-work-flow/work-flow/" > docs/_docs/workFlow.mak.md
 ~~~
 
 ~~~bash

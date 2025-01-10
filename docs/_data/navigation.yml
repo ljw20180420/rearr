@@ -18,11 +18,11 @@ others:
     url: /others/install/
   - title: "Login worker"
     url: /other/login-worker/
-  - title: "Rearr test"
-    url: /other/rearr-test/
+  - title: "Run work flow"
+    url: /other/run-work-flow/
     children:
     - title: "Work flow"
-      url: /other/rearr-test/work-flow/
+      url: /other/run-work-flow/work-flow/
 
 core:
   - title: "Remove duplicates"
