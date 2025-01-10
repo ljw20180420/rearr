@@ -35,6 +35,8 @@ jobs:
         run: docker compose push
 
   docker-unit-test:
+    needs: build-and-push-image
+
     runs-on: ubuntu-latest
 
     permissions:
