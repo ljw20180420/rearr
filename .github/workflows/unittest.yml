@@ -25,10 +25,13 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
-          channels: conda-forge,bioconda
+          channels: conda-forge,bioconda,defaults
       
       - name: Install numpy and bowtie2
+        # bash -el {0} is necessary to properly activate conda. See https://github.com/marketplace/actions/setup-miniconda#important.
+        shell: bash -el {0}
         run:  conda install bioconda::bowtie2==2.5.4 numpy -c conda-forge
 
       - name: Unit test
+        shell: bash -el {0}
         run: python -m unittest test.test_suite_no_genome
