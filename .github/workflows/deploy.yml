@@ -5,6 +5,9 @@ on:
   release:
     types: [created]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
   build-and-push-image:
