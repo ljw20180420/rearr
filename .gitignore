@@ -13,4 +13,3 @@ docs/core
 docs/_docs/*
 !docs/_docs/about.md
 test/genome/genome.fa
-dependencies/bowtie2-2.5.4-linux-x86_64
