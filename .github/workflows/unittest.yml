@@ -20,17 +20,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo ./install.md apt rearrangement removeDup demultiplex sx
+        run: sudo ./install.md core sx
       
       - uses: conda-incubator/setup-miniconda@v3
         with:
           auto-update-conda: true
           channels: conda-forge,bioconda,defaults
       
-      - name: Install numpy and bowtie2
+      - name: Install numpy
         # bash -el {0} is necessary to properly activate conda. See https://github.com/marketplace/actions/setup-miniconda#important.
         shell: bash -el {0}
-        run:  conda install bioconda::bowtie2==2.5.4 numpy -c conda-forge
+        run:  conda install numpy -c conda-forge
 
       - name: Unit test
         shell: bash -el {0}
