@@ -27,8 +27,11 @@ jobs:
         with:
           python-version: '3.13'
       
+      - name: Add conda-forge channel.
+        run: conda config --add channels conda-forge
+      
       - name: Install bowtie2
-        run: conda install bioconda::bowtie2==2.5.4
+        run:  conda install bioconda::bowtie2==2.5.4 -c conda-forge
 
       - name: Install python dependencies
         run: pip install numpy
