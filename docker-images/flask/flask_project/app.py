@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, tempfile, io, zipfile, re, uuid, shutil, pathlib
+import os, uuid, shutil
 from flask import Flask, render_template, send_file, send_from_directory, request, session
 from celery_project.tasks import celeryRemoveDuplicates, celeryBuildSpliter, celeryDemultiplex, celerySxPostProcess, celeryRearrange, celeryDefaultCorrect, celerySxGetReference, celerySxGetSpliters
 from celery.result import AsyncResult
