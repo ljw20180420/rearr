@@ -2,14 +2,11 @@
 
 import unittest
 import subprocess
-from tempfile import mkstemp
 import filecmp
 import os
-import numpy as np
 import gzip
 import shutil
 import pathlib
-from ..utils.random_seq_methods import generate_random_DNA
 
 class TestWorkFlow(unittest.TestCase):
     def setUp(self):
@@ -42,6 +39,8 @@ class TestWorkFlow(unittest.TestCase):
             shell=True,
             executable='/bin/bash'
         )
+
+        self.errorFiles = []
         for toTestFile in self.toTestFiles:
             self.assertTrue(
                 filecmp.cmp(
