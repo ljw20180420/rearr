@@ -30,28 +30,9 @@ jobs:
       
       - name: Build images
         run: docker compose build
+      
+      - name: Run unit test in docker
+        run: docker run --rm -v "./test:/app/test" -v "./data:/app/data" ghcr.io/ljw20180420/celery_worker python -m unittest test.test_suite_no_genome
 
       - name: Push images
         run: docker compose push
-
-  docker-unit-test:
-    needs: build-and-push-image
-
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run unit test in docker
-        run: docker run --rm -v "./test:/app/test" -v "./data:/app/data" ghcr.io/ljw20180420/celery_worker python -m unittest test.test_suite_no_genome
