@@ -22,14 +22,13 @@ jobs:
       - name: Install dependencies
         run: sudo ./install.md apt rearrangement removeDup demultiplex sx
       
-      - name: Add conda-forge channel.
-        run: conda config --add channels conda-forge
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          channels: conda-forge,bioconda
       
       - name: Install numpy and bowtie2
         run:  conda install bioconda::bowtie2==2.5.4 numpy -c conda-forge
-
-      - name: Activate conda
-        run: conda init && source ~/.bashrc && conda activate
 
       - name: Unit test
         run: python -m unittest test.test_suite_no_genome
