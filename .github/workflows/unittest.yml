@@ -29,7 +29,7 @@ jobs:
         run:  conda install bioconda::bowtie2==2.5.4 numpy -c conda-forge
 
       - name: Activate conda
-        run: conda activate
+        run: conda init && conda activate
 
       - name: Unit test
         run: python -m unittest test.test_suite_no_genome
