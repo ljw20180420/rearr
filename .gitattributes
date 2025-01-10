@@ -1,0 +1,8 @@
+test/genome/genome.rev.1.bt2 filter=lfs diff=lfs merge=lfs -text
+test/genome/genome.3.bt2 filter=lfs diff=lfs merge=lfs -text
+test/genome/genome.4.bt2 filter=lfs diff=lfs merge=lfs -text
+test/genome/genome.fa.fai filter=lfs diff=lfs merge=lfs -text
+test/genome/genome.fa.gz filter=lfs diff=lfs merge=lfs -text
+test/genome/genome.rev.2.bt2 filter=lfs diff=lfs merge=lfs -text
+test/genome/genome.1.bt2 filter=lfs diff=lfs merge=lfs -text
+test/genome/genome.2.bt2 filter=lfs diff=lfs merge=lfs -text
