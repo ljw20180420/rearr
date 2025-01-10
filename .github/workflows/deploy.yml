@@ -43,8 +43,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Run unit test in docker
-        run: docker run -it --rm -v "./test:/app/test" -v "$dataPath:/app/data" ghcr.io/ljw20180420/celery_worker python -m unittest
+        run: docker run --rm -v "./test:/app/test" -v "./data:/app/data" ghcr.io/ljw20180420/celery_worker python -m unittest test.test_suite_no_genome

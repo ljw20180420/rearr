@@ -20,7 +20,14 @@ for target in $@
 do
     case $target in
         apt|core)
-            apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev gawk bowtie2 cutadapt samtools cmake bedtools
+            apt-get update && apt-get install -y --no-install-recommends unzip build-essential libncurses5-dev gawk cutadapt samtools cmake bedtools
+            ;;&
+        bowtie2|core)
+            cd dependencies
+            unzip -u bowtie2-2.5.4-linux-x86_64.zip
+            cd bowtie2-2.5.4-linux-x86_64
+            for file in bowtie2 bowtie2-align-l bowtie2-align-s bowtie2-build bowtie2-build-l bowtie2-build-s bowtie2-inspect bowtie2-inspect-l bowtie2-inspect-s; do cp $file /usr/local/bin/; done
+            cd ../..
             ;;&
         rearrangement|Rearrangement|core)
             mkdir -p core/Rearrangement/build

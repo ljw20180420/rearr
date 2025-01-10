@@ -4,9 +4,10 @@ LABEL org.opencontainers.image.source=https://github.com/ljw20180420/sx_lcy
 LABEL org.opencontainers.image.description="celery worker handling asynchronous jobs of flask app"
 LABEL org.opencontainers.image.licenses=MIT
 WORKDIR /app
-RUN pip install celery[redis]
+RUN pip install celery[redis] numpy
 COPY ["./install.md", "/app/"]
 COPY ["./core", "/app/core"]
 COPY ["./sx", "/app/sx"]
+COPY ["./dependencies", "/app/dependencies"]
 RUN ./install.md core sx && rm -rf ./*
-COPY ["./rearrTest.md", "./workFlow.mak", "/app/"]
+COPY ["./runWorkFlow.md", "./workFlow.mak", "/app/"]
