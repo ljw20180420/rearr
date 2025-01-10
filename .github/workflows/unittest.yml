@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Install dependencies
         run: sudo ./install.md core sx
@@ -27,5 +29,8 @@ jobs:
         with:
           python-version: '3.11'
       
+      - name: Install python dependencies
+        run: pip install numpy
+
       - name: Unit test
         run: python -m unittest

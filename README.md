@@ -35,15 +35,13 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
-- [ ] unit tests
-- [ ] add genome.fa.gz and index to lfs so that github action test is possible
+- [ ] docker unit tests
 - [ ] github action to deploy to qiangwulab.sjtu.edu.cn
 - [ ] add github wiki
 - [ ] other CDCI support by github (git -> github cli -> github docs|skills|support|community)
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] convert alg to sam
 - [ ] kvm
-- [ ] npm
 - [ ] vue -> uniapp -> tauri2
 - [ ] Deploy to JCloud. Celery flower does not work properly on JCloud. Maybe permission problem.
 - [ ] asgi is more advance than wsgi
