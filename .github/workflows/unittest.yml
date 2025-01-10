@@ -10,7 +10,7 @@ on:
 
 jobs:
   unittest:
-    run-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
