@@ -21,20 +21,12 @@ jobs:
 
       - name: Install dependencies
         run: sudo ./install.md apt rearrangement removeDup demultiplex sx
-
-      - name: Setup python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
       
       - name: Add conda-forge channel.
         run: conda config --add channels conda-forge
       
-      - name: Install bowtie2
-        run:  conda install bioconda::bowtie2==2.5.4 -c conda-forge
-
-      - name: Install python dependencies
-        run: pip install numpy
+      - name: Install numpy and bowtie2
+        run:  conda install bioconda::bowtie2==2.5.4 numpy -c conda-forge
 
       - name: Unit test
         run: python -m unittest test.test_suite_no_genome
