@@ -5,6 +5,9 @@ import subprocess
 from tempfile import mkstemp
 import filecmp
 import os
+import shutil
+import gzip
+import pathlib
 
 class TestGetSxCsvfileRef(unittest.TestCase):
     def setUp(self):
@@ -22,13 +25,17 @@ class TestGetSxCsvfileRef(unittest.TestCase):
             for _ in self.csvfiles
         ]
 
-        self.genome = 'test/genome/genome.fa'
-        self.bowtie2index = 'test/genome/genome'
+        # Uncompress genome.fa.gz if it is not uncompressed yet.
+        if not os.path.exists('test/genome/genome.fa'):
+            with gzip.open('test/genome/genome.fa.gz', 'rb') as f_in, open('test/genome/genome.fa', 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+            # Touch genome.fa.fai so that getfasta will not regenerate it.
+            pathlib.Path.touch('test/genome/genome.fa.fai')
 
     def test_get_sx_csvfile_ref(self):
         for csvfile, ref_file in zip(self.csvfiles, self.ref_files):
             subprocess.run(
-                f'''getSxCsvFileRef.md {csvfile} {self.genome} {self.bowtie2index} 50 0 10 100 > {ref_file}''',
+                f'''getSxCsvFileRef.md {csvfile} test/genome/genome.fa test/genome/genome 50 0 10 100 > {ref_file}''',
                 shell=True,
                 executable='/bin/bash'
             )

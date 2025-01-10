@@ -6,6 +6,9 @@ from tempfile import mkstemp
 import filecmp
 import os
 import numpy as np
+import gzip
+import shutil
+import pathlib
 from ..utils.random_seq_methods import generate_random_DNA
 
 class TestWorkFlow(unittest.TestCase):
@@ -25,6 +28,13 @@ class TestWorkFlow(unittest.TestCase):
             'test/test_work_flow/rearr.post',
             'test/test_work_flow/rearr.alg'
         ]
+
+        # Uncompress genome.fa.gz if it is not uncompressed yet.
+        if not os.path.exists('test/genome/genome.fa'):
+            with gzip.open(f'test/genome/genome.fa.gz', 'rb') as f_in, open('test/genome/genome.fa', 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+            # Touch genome.fa.fai so that getfasta will not regenerate it.
+            pathlib.Path.touch('test/genome/genome.fa.fai')
 
     def test_work_flow(self):
         subprocess.run(
