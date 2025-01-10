@@ -16,6 +16,9 @@ Install the project. Two modules can be installed. The `core` module install nec
 
 # Source
 ~~~bash
+# Exit when fail.
+set -e
+
 for target in $@
 do
     case $target in

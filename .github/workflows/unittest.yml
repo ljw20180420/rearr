@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo ./install.md core sx
+        run: sudo ./install.md apt rearrangement removeDup demultiplex sx
 
       - name: Setup python
         uses: actions/setup-python@v5
