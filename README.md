@@ -35,11 +35,21 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
-- [ ] docker unit tests
+- [ ] do benchmark based on DWGSIM, Rabema, Seal
+- [ ] compare with divide-and-conquer
+- [ ] modulerize demultiplex
+- [ ] install jekyll workspace conda
+- [ ] add manim to show the core algorithm of rearr
+- [ ] add the ability to search off-target sequences
+- [ ] add benchmark to demultiplex
+- [ ] distribute to conda
 - [ ] github action to deploy to qiangwulab.sjtu.edu.cn
 - [ ] add github wiki
 - [ ] other CDCI support by github (git -> github cli -> github docs|skills|support|community)
+- [ ] use functools LRU-cache to speed up python code
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
+- [ ] add benchmark for PEM-Q: https://github.com/liumz93/PEM-Q
+- [ ] add method to search genome-wide off-target for sequences not found in sgRNA libraries
 - [ ] convert alg to sam
 - [ ] kvm
 - [ ] vue -> uniapp -> tauri2

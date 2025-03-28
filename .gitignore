@@ -13,3 +13,4 @@ docs/core
 docs/_docs/*
 !docs/_docs/about.md
 test/genome/genome.fa
+manim/media
