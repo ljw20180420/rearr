@@ -23,7 +23,7 @@ services:
     container_name: celery_beat
     image: mher/flower:latest
     volumes:
-      - "./docker-images/flask/flask_project/celery_project:/data/celery_project"
+      - "./docker-images/flask/celery_project:/data/celery_project"
     command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
 
   worker:
@@ -32,13 +32,13 @@ services:
       - redis
     restart: always
     container_name: celery_worker
-    image: ghcr.io/ljw20180420/celery_worker:latest
+    image: ghcr.io/ljw20180420/rearr:latest
     build:
       context: .
-      dockerfile: docker-images/worker/celery_worker.df
+      dockerfile: docker-images/rearr.df
     volumes:
-      - "./docker-images/flask/flask_project/celery_project:/app/celery_project"
-      - "./docker-images/flask/flask_project/tmp:/app/tmp"
+      - "./docker-images/flask/celery_project:/app/celery_project"
+      - "./docker-images/flask/tmp:/app/tmp"
     command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
 
   flask:
@@ -48,12 +48,12 @@ services:
       - worker
     restart: always
     container_name: flask_app
-    image: ghcr.io/ljw20180420/flask_app:latest
+    image: ghcr.io/ljw20180420/rearr:latest
     build:
       context: .
-      dockerfile: docker-images/flask/flask.df
+      dockerfile: docker-images/rearr.df
     volumes:
-      - "./docker-images/flask/flask_project:/app"
+      - "./docker-images/flask:/app"
     environment:
       CELERY_BROKER: amqp://rabbitmq:5672
       CELERY_BACKEND: redis://redis:6379/0
@@ -69,7 +69,7 @@ services:
     container_name: celery_flower
     image: mher/flower:latest
     volumes:
-      - "./docker-images/flask/flask_project/celery_project:/data/celery_project"
+      - "./docker-images/flask/celery_project:/data/celery_project"
     command: celery -A celery_project.app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
 
   nginx:
@@ -90,11 +90,12 @@ services:
   shiny:
     restart: always
     container_name: shiny_server
-    image: ghcr.io/ljw20180420/shiny_server:latest
+    image: ghcr.io/ljw20180420/rearr:latest
     build:
       context: .
-      dockerfile: docker-images/shiny/shiny_server.df
+      dockerfile: docker-images/rearr.df
     volumes:
       - "./docker-images/shiny/apps:/srv/shiny-server"
       - "./docker-images/shiny/conf:/etc/shiny-server"
       - "./docker-images/shiny/logs:/var/log/shiny-server"
+    command: systemctl start shiny-server

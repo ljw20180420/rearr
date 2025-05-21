@@ -1,0 +1,90 @@
+FROM continuumio/miniconda3
+LABEL maintainer="ljw2017@sjtu.edu.cn"
+LABEL org.opencontainers.image.source=https://github.com/ljw20180420/sx_lcy
+LABEL org.opencontainers.image.description="container with all dependencies installed"
+LABEL org.opencontainers.image.licenses=MIT
+RUN conda update -n base -c defaults conda
+RUN conda install -y \
+        # basic dependencies
+        conda-forge::unzip \
+        conda-forge::gawk \
+        conda-forge::cutadapt \
+        conda-forge::samtools \
+        conda-forge::cmake \
+        conda-forge::bedtools \
+        conda-forge::bowtie2 \
+        # web dependencies
+        conda-forge::flask \
+        conda-forge::waitress \
+        conda-forge::celery \
+        conda-forge::redis \
+        # shiny server
+        conda-forge::imagemagick \
+        conda-forge::shiny \
+        conda-forge::matplotlib \
+        bioconda::hic2cool \
+        bioconda::coolpuppy \
+        conda-forge::r-base \
+        conda-forge::r-essentials \
+        conda-forge::r-shinyjs \
+        conda-forge::r-shinywidgets \
+        conda-forge::r-ggrepel \
+        conda-forge::r-spatstat \
+        conda-forge::r-ggseqlogo \
+        conda-forge::r-ggforce \
+        conda-forge::r-waffle \
+        bioconda::bioconductor-rtracklayer \
+        bioconda::bioconductor-hicontacts \
+        bioconda::bioconductor-genomicfeatures
+RUN R -e 'install.packages(c("halfmoon")); library(devtools); install_github("PhanstielLab/Sushi"); install_github("aryeelab/diffloop");'
+RUN apt update && \
+    apt install -y --no-install-recommends \
+        gdebi-core \
+        systemd
+RUN cd /app && \
+    SHINY_SERVER_VERSION=$(wget -qO- https://download3.rstudio.org/ubuntu-20.04/x86_64/VERSION) && \
+    wget --no-verbose "https://download3.rstudio.org/ubuntu-20.04/x86_64/shiny-server-${SHINY_SERVER_VERSION}-amd64.deb" -O ss-latest.deb && \
+    gdebi -n ss-latest.deb && \
+    rm ss-latest.deb && \
+    systemctl --now disable shiny-server
+WORKDIR /app
+COPY ["./docker-images/kpLogo-1.1.zip", "/app/"]
+RUN cd /app && \
+    unzip -o kpLogo-1.1.zip && \
+    sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && \
+    cd kpLogo-1.1/src && \
+    make && \
+    cp ../bin/kpLogo /usr/local/bin/ && \
+    cd /app && \
+    rm -rf kpLogo-1.1
+COPY ["./core", "/app/core"]
+RUN cd /app && \
+    # install rearrangement
+    mkdir -p core/Rearrangement/build && \
+    cd core/Rearrangement/build && \
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    make && \
+    make install && \
+    cd /app && \
+    mkdir -p /usr/share/awk/ && \
+    cp core/Rearrangement/correct_micro_homology.awk /usr/share/awk/ && \
+    # install removeDup
+    cp core/removeDuplicates.md /usr/local/bin/ && \
+    # install demultiplex
+    cp core/demultiplex/demultiplex.md /usr/local/bin/ && \
+    cp core/demultiplex/getAlignPos.awk /usr/share/awk/ && \
+    rm -rf core
+COPY ["./sx", "/app/sx"]
+RUN cd /app && \
+    # install getSxCsvFileRef
+    cp sx/getSxCsvFileRef/getSxCsvFileRef.md /usr/local/bin/ && \
+    cp sx/getSxCsvFileRef/getSxCsvFileTarget.pl /usr/local/bin/ && \
+    cp sx/getSxCsvFileRef/getSxRefFile.pl /usr/local/bin/ && \
+    cp sx/getSxCsvFileRef/sxTargetSam2Bed.awk /usr/share/awk/ && \
+    # install cutR2Adapter
+    cp sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.md /usr/local/bin/ && \
+    cp sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk /usr/share/awk/ && \
+    # install sxInderSpliter
+    cp sx/sxExtractSpliter.md /usr/local/bin/ && \
+    rm -rf sx
+COPY ["./runWorkFlow.md", "./workFlow.mak", "/app/"]

@@ -9,14 +9,14 @@ digraph netStruct
     celeryWorkers [label = "Celery Workers"]
     celeryBeat [label = "Celery Beat"]
     celeryFlower [label = "Celery Flower"]
-    rabbitmqRPC [label = "RabbitMQ RPC"]
+    redis [label = "Redis"]
     rabbitmqAMQP [label = "RabbitMQ AMQP"]
     shinyServer [label = "Shiny Server"]
     shinyApp [label = "Shiny Applications"]
     waitress [label = "Waitress"]
     nginx [label = "Nginx"]
 
-    {rabbitmqRPC, celeryWorkers} -> rabbitmqAMQP -> flaskVue3 -> waitress -> nginx
+    {redis, celeryWorkers} -> rabbitmqAMQP -> flaskVue3 -> waitress -> nginx
     rabbitmqAMQP -> celeryFlower
     rabbitmqAMQP -> celeryBeat
     celeryFlower -> nginx

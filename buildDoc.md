@@ -26,7 +26,7 @@ add_header()
 wrap_script()
 {
     script_type=$1
-    sed -e "1i ~~~$script_type" -e '$a~~~'
+    sed -e "1i ~~~$script_type" -e '$a ~~~'
 }
 
 # Failure stop the execution.
