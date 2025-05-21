@@ -1,7 +1,0 @@
-FROM python:latest
-LABEL maintainer="ljw2017@sjtu.edu.cn"
-LABEL org.opencontainers.image.source=https://github.com/ljw20180420/sx_lcy
-LABEL org.opencontainers.image.description="flask app of rearr workflow"
-LABEL org.opencontainers.image.licenses=MIT
-WORKDIR /app
-RUN pip install flask celery[redis] waitress

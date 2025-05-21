@@ -23,7 +23,7 @@ chmod a+w docker-images/shiny/apps/diffloopAnalysisPair/www
 chmod a+w docker-images/shiny/apps/downstreamAnalysis/www
 
 # workflow
-chmod a+w docker-images/flask/flask_project/tmp
+chmod a+w docker-images/flask/tmp
 
 # Stop and remove previous up
 docker compose down
