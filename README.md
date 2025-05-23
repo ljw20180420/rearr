@@ -35,6 +35,7 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
+- [ ] move shiny app for diffloop and hic to another repo
 - [ ] do benchmark based on DWGSIM, Rabema, Seal
 - [ ] compare with divide-and-conquer
 - [ ] modulerize demultiplex
