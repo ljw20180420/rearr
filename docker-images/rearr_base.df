@@ -1,0 +1,48 @@
+FROM continuumio/miniconda3
+LABEL maintainer="ljw2017@sjtu.edu.cn"
+LABEL org.opencontainers.image.source=https://github.com/ljw20180420/sx_lcy
+LABEL org.opencontainers.image.description="base container with all dependencies installed"
+LABEL org.opencontainers.image.licenses=MIT
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        unzip \
+        gawk \
+        cutadapt \
+        samtools \
+        cmake \
+        bedtools \
+        bowtie2 \
+        gdebi-core \
+        systemd
+RUN conda update -n base -c defaults conda
+RUN conda install -y \
+        conda-forge::imagemagick \
+        conda-forge::r-base \
+        conda-forge::r-essentials \
+        conda-forge::r-shinywidgets \
+        conda-forge::r-ggseqlogo \
+        conda-forge::r-ggforce \
+        conda-forge::r-waffle
+RUN pip install -U pip && \
+    pip install \
+        flask \
+        waitress \
+        celery[redis] \
+        numpy
+RUN cd /app && \
+    SHINY_SERVER_VERSION=$(wget -qO- https://download3.rstudio.org/ubuntu-20.04/x86_64/VERSION) && \
+    wget --no-verbose "https://download3.rstudio.org/ubuntu-20.04/x86_64/shiny-server-${SHINY_SERVER_VERSION}-amd64.deb" -O ss-latest.deb && \
+    gdebi -n ss-latest.deb && \
+    rm ss-latest.deb && \
+    systemctl --now disable shiny-server
+WORKDIR /app
+COPY ["./docker-images/kpLogo-1.1.zip", "/app/"]
+RUN cd /app && \
+    unzip -o kpLogo-1.1.zip && \
+    sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && \
+    cd kpLogo-1.1/src && \
+    make && \
+    cp ../bin/kpLogo /usr/local/bin/ && \
+    cd /app && \
+    rm -rf kpLogo-1.1

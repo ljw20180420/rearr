@@ -19,19 +19,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: sudo ./install.md core sx
-      
-      - uses: conda-incubator/setup-miniconda@v3
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
         with:
-          auto-update-conda: true
-          channels: conda-forge,bioconda,defaults
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Install numpy
-        # bash -el {0} is necessary to properly activate conda. See https://github.com/marketplace/actions/setup-miniconda#important.
-        shell: bash -el {0}
-        run:  conda install numpy -c conda-forge
-
-      - name: Unit test
-        shell: bash -el {0}
-        run: python -m unittest test.test_suite_no_genome
+      - name: Build rearr
+        run: docker compose build
+      
+      - name: Run unit test in docker
+        run: docker run --rm -v "./test:/app/test" -v "./data:/app/data" ghcr.io/ljw20180420/rearr python -m unittest test.test_suite_no_genome
