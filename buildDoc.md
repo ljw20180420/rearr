@@ -61,8 +61,6 @@ add_header "Build documentation" "/others/build-doc/" < buildDoc.md > docs/_docs
 add_header "Compose script" "/others/compose/" < compose.md > docs/_docs/compose.md
 wrap_script yaml < compose.yaml | add_header "Compose yaml" "/others/compose/yaml" > docs/_docs/compose.yaml.md
 
-add_header "Install" "/others/install/" < install.md > docs/_docs/install.md
-
 add_header "Login worker" "/other/login-worker/" < loginWorker.md > docs/_docs/loginWorker.md
 
 add_header "Run work flow" "/other/run-work-flow/" < runWorkFlow.md > docs/_docs/runWorkFlow.md
