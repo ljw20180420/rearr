@@ -6,43 +6,34 @@ LABEL org.opencontainers.image.licenses=MIT
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
-        unzip \
-        gawk \
-        cutadapt \
-        samtools \
         cmake \
+        gawk \
+        samtools \
         bedtools \
         bowtie2 \
-        gdebi-core \
-        systemd
-RUN conda update -n base -c defaults conda
-RUN conda install -y \
+        gdebi-core
+RUN conda update -n base -c defaults conda && \
+    conda install -y \
+        # system packages
+        genomedk::kplogo \
         conda-forge::imagemagick \
-        conda-forge::r-base \
-        conda-forge::r-essentials \
+        # r packages
+        conda-forge::r-shiny \
         conda-forge::r-shinywidgets \
-        conda-forge::r-ggseqlogo \
+        conda-forge::r-tidyverse \
         conda-forge::r-ggforce \
+        conda-forge::r-ggseqlogo \
         conda-forge::r-waffle
 RUN pip install -U pip && \
     pip install \
+        cutadapt \
+        numpy \
         flask \
         waitress \
-        celery[redis] \
-        numpy
+        celery[redis]
+WORKDIR /app
 RUN cd /app && \
     SHINY_SERVER_VERSION=$(wget -qO- https://download3.rstudio.org/ubuntu-20.04/x86_64/VERSION) && \
     wget --no-verbose "https://download3.rstudio.org/ubuntu-20.04/x86_64/shiny-server-${SHINY_SERVER_VERSION}-amd64.deb" -O ss-latest.deb && \
     gdebi -n ss-latest.deb && \
-    rm ss-latest.deb && \
-    systemctl --now disable shiny-server
-WORKDIR /app
-COPY ["./docker-images/kpLogo-1.1.zip", "/app/"]
-RUN cd /app && \
-    unzip -o kpLogo-1.1.zip && \
-    sed -i -r 's/(\$\(CC\) \$\(CFLAGS\))/\1 -static/; s/(gcc -O3)/\1 -static/' kpLogo-1.1/src/makefile && \
-    cd kpLogo-1.1/src && \
-    make && \
-    cp ../bin/kpLogo /usr/local/bin/ && \
-    cd /app && \
-    rm -rf kpLogo-1.1
+    rm ss-latest.deb

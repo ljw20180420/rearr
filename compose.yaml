@@ -98,4 +98,6 @@ services:
       - "./docker-images/shiny/apps:/srv/shiny-server"
       - "./docker-images/shiny/conf:/etc/shiny-server"
       - "./docker-images/shiny/logs:/var/log/shiny-server"
-    command: systemctl start shiny-server
+    environment:
+      R: /opt/conda/bin/R
+    command: shiny-server
