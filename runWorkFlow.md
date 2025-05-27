@@ -167,10 +167,12 @@ rv=${rv:-0}
 qu=${qu:-0}
 qv=${qv:--5}
 
-# Get the path of current script.
-script_path=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-make $@ -f ${script_path}/workFlow.mak $makeTarget fastqFiles=$fastqFiles spliterIndices=$spliterIndices minScores=$minScores genome=$genome bowtie2index=$bowtie2index refFile=$refFile correctFile=$correctFile s0=$s0 s1=$s1 s2=$s2 u=$u v=$v ru=$ru rv=$rv qu=$qu qv=$qv minToMapShear=$minToMapShear
+if [ -n $CONDA_PREFIX ]
+then
+    make_search_path="$CONDA_PREFIX/share/rearr/"
+fi
+make $@ -f ${make_search_path}workFlow.mak $makeTarget fastqFiles=$fastqFiles spliterIndices=$spliterIndices minScores=$minScores genome=$genome bowtie2index=$bowtie2index refFile=$refFile correctFile=$correctFile s0=$s0 s1=$s1 s2=$s2 u=$u v=$v ru=$ru rv=$rv qu=$qu qv=$qv minToMapShear=$minToMapShear
 ~~~
 
 ~~~bash
