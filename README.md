@@ -35,7 +35,7 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
-- [ ] move shiny app for diffloop and hic to another repo
+- [ ] Use small genome data to recover genome test.
 - [ ] do benchmark based on DWGSIM, Rabema, Seal
 - [ ] compare with divide-and-conquer
 - [ ] modulerize demultiplex
