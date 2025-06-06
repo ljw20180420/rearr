@@ -81,12 +81,13 @@ void cross_align(
         infsimd[k] = -inf;
     }
 
-    /// @brief Initialize values for w = 0.
+    /// @brief Initialize values for w = 0. There are totally (ref_sz + 1) rows in DP table. Actually, seg_sz = (ref_sz + 1 - 1) / simd_sz + 1. This is a common trick to simulate ceil(ref_sz + 1 / simd_sz).
     size_t seg_sz = ref_sz / simd_sz + 1;
     for (size_t i = 0; i < seg_sz; ++i) {
         Es[i] = infsimd;
         Gs[i] = tAs[0] + grp[i];
     }
+    /// @brief grp[seg_sz - 1][ref_sz - (seg_sz - 1) * simd_sz] is the last value of the last segment, which penalties the full reference gap of length ref_sz.
     hAs[0] = hCs[0] = Gs[0][0] + grp[seg_sz - 1][ref_sz - (seg_sz - 1) * simd_sz];
     hDs[0] = 0;
     hBs[0] = -inf;
@@ -242,7 +243,7 @@ size_t EdgeTrack(
         SCORETYPE G = std::min(E, F) - v + u;
         /// @brief Check whether source scores satisfy hAs restriction.
         bool legal_G = (G + gr[ref_sz - s] <= hAs[w - j]);
-        bool legal_E = (E - v + u + gr[ref_sz - s] <= hAs[w - j] + (qv > u ? 0 : (u - qv)));
+        bool legal_E = (G + gr[ref_sz - s] <= hAs[w - j] + v - qv) || (E - v + u + gr[ref_sz - s] <= hAs[w - j] + u - qv);
         /// @brief If not, then hAs restriction is impossible for further upstream position in query, so break.
         if (!legal_G && !legal_E) {
             break;
@@ -294,7 +295,7 @@ size_t EdgeTrack(
             }
             /// @brief Check whether source scores satisfy hAs restriction. Determine the range.
             bool legal_G = (G + gr[ref_sz - ss] <= hAs[ww]);
-            bool legal_E = (E - v + u + gr[ref_sz - ss] <= hAs[ww] + (qv > u ? 0 : (u - qv)));
+            bool legal_E = (G + gr[ref_sz - ss] <= hAs[ww] + v - qv) || (E - v + u + gr[ref_sz - ss] <= hAs[ww] + u - qv);
             if (j > 0 || legal_G || legal_E) {
                 Gs.push_back(G);
                 Fs.push_back(F);
@@ -303,7 +304,8 @@ size_t EdgeTrack(
             } else {
                 --wends[i];
             }
-            if (!legal_G && !legal_E && wends[i - 1] - ww >= shifts[i] - shifts[i - 1]) break;
+            /// @brief pj >= shifts[i] - shifts[i - 1] means no more previous EFG in s - i + 1. In this case, F is inf, thereby illegal. If G and E are also illegal, then break.
+            if (!legal_G && !legal_E && pj >= shifts[i] - shifts[i - 1]) break;
 
             /// @brief If G has a source in tAs, then the track is over.
             if (G - gr[ss] == tAs[ww]) {
