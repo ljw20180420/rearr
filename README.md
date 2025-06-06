@@ -35,15 +35,18 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
+- [ ] Add assumption check.
+- [ ] Rename the repo.
+- [ ] Rewrite pruned backtracking.
+- [ ] Add a simulation for branch-and-bound backtracking.
+- [ ] Resemble outputs of previous software
 - [ ] Use small genome data to recover genome test.
 - [ ] do benchmark based on DWGSIM, Rabema, Seal
 - [ ] compare with divide-and-conquer
 - [ ] modulerize demultiplex
-- [ ] install jekyll workspace conda
 - [ ] add manim to show the core algorithm of rearr
 - [ ] add method to search genome-wide off-target for sequences not found in sgRNA libraries
 - [ ] add benchmark to demultiplex
-- [ ] distribute to conda
 - [ ] github action to deploy to qiangwulab.sjtu.edu.cn
 - [ ] add github wiki
 - [ ] other CDCI support by github (git -> github cli -> github docs|skills|support|community)
@@ -51,26 +54,17 @@ See [`rearrTest.md`][`rearrTest.md`].
 - [ ] add benchmark for SIQ: https://github.com/RobinVanSchendel/SIQ
 - [ ] add benchmark for PEM-Q: https://github.com/liumz93/PEM-Q
 - [ ] convert alg to sam
-- [ ] kvm
-- [ ] vue -> uniapp -> tauri2
 - [ ] Deploy to JCloud. Celery flower does not work properly on JCloud. Maybe permission problem.
 - [ ] asgi is more advance than wsgi
-- [ ] resemble indelphi
+- [ ] resemble indelphi to explicitly list sequences
 - [ ] implement tidymodels (need to install tidymodels in shiny rocker, not install by apt)
 - [ ] CDN
-- [ ] Add 3D structure prediction shiny App
-- [ ] Add large language model for DNA
 - [ ] Use explicit base in shiny app microHomology
 - [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
 ```
 
 # TODO (Long term)
 ```[tasklist]
-- [ ] 4C normalization algorithm
 - [ ] Use GNU autotools to install Rearrangement
-- [ ] Hi-C apps
 - [ ] DeepFri
-- [ ] PDB structure prediction
-- [ ] molecular dynamics simulation
-- [ ] Call TADs
 ```
