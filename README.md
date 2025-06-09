@@ -1,5 +1,5 @@
 # Download
-https://github.com/ljw20180420/sx_lcy/releases
+https://github.com/ljw20180420/rearr/releases
 
 # Install
 ## Native
