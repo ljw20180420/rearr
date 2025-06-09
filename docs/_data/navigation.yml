@@ -14,8 +14,6 @@ others:
     children:
       - title: "Compose yaml"
         url: /others/compose/yaml
-  - title: "Install"
-    url: /others/install/
   - title: "Login worker"
     url: /other/login-worker/
   - title: "Run work flow"

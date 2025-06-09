@@ -23,9 +23,9 @@ The post-process consists of three steps.
 3. Filter out if the remain of R2 is shorter than minToMapShear.
 4. Accumulate the adjacent duplicates by [`sxCumulateToMapCutAdaptSpliter.awk`][`sxCumulateToMapCutAdaptSpliter.awk`].
 
-[`demultiplex.md`]: /sx_lcy/core/demultiplex/
-[`rearr`]: /sx_lcy/core/rearr/
-[`sxCumulateToMapCutAdaptSpliter.awk`]: /sx_lcy/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/
+[`demultiplex.md`]: /rearr/core/demultiplex/
+[`rearr`]: /rearr/core/rearr/
+[`sxCumulateToMapCutAdaptSpliter.awk`]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/
 
 # Source
 ~~~bash
