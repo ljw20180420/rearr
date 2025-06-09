@@ -129,14 +129,14 @@ This scripts integrate all steps (remove duplicates, demultiplex, alignment and 
 
 Another reason to use `runWorkFlow.md` is that it hides two cumbersome steps from the user. For example, if `spliterIndices` used in [`demultiplex.md`][`demultiplex.md`] is not indexed by `bowtie2`, then `runWorkFlow.md` will do this silently. Also, if `correctFile` has the same path and name as `refFile` (see [`rearr`][`rearr`]), but with the file extension `.correct` instead of `.ref`, and `runWorkFlow.md` cannot find `correctFile` on the file system, then it will generate a default `correctFile` for you with all fields filled with `up`.
 
-[`rearr`]: /sx_lcy/core/rearr/
-[`removeDuplicates.md`]: /sx_lcy/core/remove-duplicates/
-[`demultiplex.md`]: /sx_lcy/core/demultiplex/
-[`workFlow.mak`]: /sx_lcy/other/run-work-flow/work-flow/
-[`sxCutR2AdapterFilterCumulate.md`]: /sx_lcy/sx/sx-cut-r2-adapter-filter-cumulate/
-[`sxExtractSpliter.md`]: /sx_lcy/sx/sx-extract-spliter/
-[`getSxCsvFileRef.md`]: /sx_lcy/sx/get-sx-csvfile-ref/
-[`loginWorker.md`]: /sx_lcy/other/login-worker/
+[`rearr`]: /rearr/core/rearr/
+[`removeDuplicates.md`]: /rearr/core/remove-duplicates/
+[`demultiplex.md`]: /rearr/core/demultiplex/
+[`workFlow.mak`]: /rearr/other/run-work-flow/work-flow/
+[`sxCutR2AdapterFilterCumulate.md`]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
+[`sxExtractSpliter.md`]: /rearr/sx/sx-extract-spliter/
+[`getSxCsvFileRef.md`]: /rearr/sx/get-sx-csvfile-ref/
+[`loginWorker.md`]: /rearr/other/login-worker/
 
 # Source
 ~~~bash

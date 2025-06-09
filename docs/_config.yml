@@ -20,8 +20,8 @@ subtitle                 : "A CRISPR analysis tool"
 name                     : &name "Jingwei Li" # &name is a YAML anchor which can be *referenced later
 description              : &description "Github page for a CRISPR analysis tool."
 url                      : https://ljw20180420.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
-baseurl                  : "/sx_lcy" # the subpath of your site, e.g. "/blog"
-repository               : "ljw20180420/sx_lcy"
+baseurl                  : "/rearr" # the subpath of your site, e.g. "/blog"
+repository               : "ljw20180420/rearr"
 teaser                   : # path of fallback teaser image, e.g. "/assets/images/500x300.png"
 logo                     : # path of logo image to display in the masthead, e.g. "/assets/images/88x88.png"
 masthead_title           : # overrides the website title displayed in the masthead, use " " for no title

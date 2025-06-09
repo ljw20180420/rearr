@@ -2,11 +2,12 @@
 https://github.com/ljw20180420/rearr/releases
 
 # Install
-## Native
-It is recommanded to use `rearr` in docker. If you want to install natively, then in the project folder, execute
+## Conda
 ```bash
-sudo ./install.md core sx
+conda install bioconda::rearr
 ```
+## Image
+Docker is built automatically by the github workflow of bioconda at https://quay.io/repository/biocontainers/rearr. Singularity is built by galaxy project at https://depot.galaxyproject.org/singularity. These images contain only necessary tools for analyes. A docker image containing webUI is at ghcr.io/ljw20180420/rearr.
 
 ## Docker
 1. Install docker engine [here](https://docs.docker.com/engine/install).
@@ -28,15 +29,14 @@ The web server is containerized by docker. In the project folder, execute
 # Usage
 See [`rearrTest.md`][`rearrTest.md`].
 
-[`rearrTest.md`]: /sx_lcy/other/rearr-test/
+[`rearrTest.md`]: /rearr/other/rearr-test/
 
 # Documentation
-[Here](https://ljw20180420.github.io/sx_lcy/).
+[Here](https://ljw20180420.github.io/rearr/).
 
 # TODO
 ```[tasklist]
 - [ ] Add assumption check.
-- [ ] Rename the repo.
 - [ ] Rewrite pruned backtracking.
 - [ ] Add a simulation for branch-and-bound backtracking.
 - [ ] Resemble outputs of previous software

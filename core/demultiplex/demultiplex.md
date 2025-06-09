@@ -26,7 +26,7 @@ seq1<tab>seq2<tab>...<tab>count<tab>refId<tab>rs1<tab>re1<tab>qs1|qe1|rs2|re2|qs
 --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,scoreN
 ```
 
-[`removeDuplicates.md`]: /sx_lcy/core/remove-duplicates/
+[`removeDuplicates.md`]: /rearr/core/remove-duplicates/
 
 # Source
 ~~~bash
