@@ -15,12 +15,8 @@
     // Set the name of the author.  Replaces {author}.
     "doxdocgen.generic.authorName": "Jingwei Li",
 
-    "r.rpath.linux": "${workspaceFolder}/.conda/bin/R",
     "r.rterm.linux": "${workspaceFolder}/.conda/bin/R",
-    "r.libPaths": ["${workspaceFolder}/.conda/lib/R/library"],
-    "r.lsp.promptToInstall": false,
-
-    "python.REPL.enableREPLSmartSend": false,
+    "r.rpath.linux": "${workspaceFolder}/.conda/bin/R",
 
     "cmake.sourceDirectory": "${workspaceFolder}/core/Rearrangement",
     "cmake.buildDirectory": "${workspaceFolder}/core/Rearrangement/build",
@@ -114,6 +110,13 @@
         "valarray": "cpp",
         "variant": "cpp",
         "slist": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "expected": "cpp",
+        "rope": "cpp",
+        "format": "cpp",
+        "spanstream": "cpp",
+        "stacktrace": "cpp",
+        "stdfloat": "cpp",
+        "text_encoding": "cpp"
     },
 }

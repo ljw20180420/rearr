@@ -36,12 +36,13 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
+- [ ] list bad examples in benchmark
+- [ ] Write core functions in c++
 - [ ] Add assumption check.
 - [ ] Rewrite pruned backtracking.
 - [ ] Add a simulation for branch-and-bound backtracking.
 - [ ] Resemble outputs of previous software
 - [ ] Use small genome data to recover genome test.
-- [ ] do benchmark based on DWGSIM, Rabema, Seal
 - [ ] compare with divide-and-conquer
 - [ ] modulerize demultiplex
 - [ ] add manim to show the core algorithm of rearr

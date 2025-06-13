@@ -1,12 +1,10 @@
-bench/
-paper/*
-!paper/function_table/
-paper/function_table/*
-!paper/function_table/function_table.tex
-!paper/function_table/test_function.sh
-!paper/paper_animation.py
-!paper/paper_figures.py
-!paper/workflow.gv
+./bench/
+paper/bench
+paper/complexity
+paper/figures
+paper/references
+paper/bench.tsv
+paper/complexity.tsv
 core/Rearrangement/build/
 **/__pycache__/
 docs/core
@@ -14,3 +12,4 @@ docs/_docs/*
 !docs/_docs/about.md
 test/genome/genome.fa
 manim/media
+.env

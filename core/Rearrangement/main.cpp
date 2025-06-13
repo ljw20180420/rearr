@@ -10,6 +10,7 @@
 
 #include "headers/parser.h"
 #include "headers/align.h"
+#include <ctime>
 
 /**
  * @brief Main function.
@@ -30,6 +31,8 @@ int main(
     int argc,
     char **argv
 ) {
+    clock_t t_start = clock();
+
     /// @brief Search --help, -help, -h in command-line arguments. If found, print help.
     print_help(argc, argv);
     
@@ -121,6 +124,12 @@ int main(
         }
     }
 
+    std::cerr << "preprocess time: " << float(clock() - t_start) / CLOCKS_PER_SEC << "s\n";
+
+    clock_t t_start_align = clock();
+    clock_t t_DP_total = 0;
+    clock_t t_backtrack_total = 0;
+
     /// @brief Read in query sequence. Apply DP process. Backtrack alignment. Output to stdout.
     size_t Omax = 0;
     std::string O;
@@ -151,10 +160,13 @@ int main(
             Ds.resize((Omax + 1) * (refss[ref_id].size()));
         }
     
+        clock_t t_DP_start = clock();
         for (size_t i = 0; i < refss[ref_id].size(); ++i) {
             cross_align(As.data() + i * (Omax + 1), As.data() + (i + 1) * (Omax + 1), Bs.data() + i * (Omax + 1), Cs.data() + i * (Omax + 1), Ds.data() + i * (Omax + 1), Es, Gs, Gps, refss[ref_id][i].size(), O.data(), O.size(), cc.u, cc.v, grpss[ref_id][i], grmss[ref_id][i], gammass[ref_id][i], cc.qu, cc.qv, cc.s0, cc.s1, cc.s2);
         }
+        t_DP_total += clock() - t_DP_start;
 
+        clock_t t_backtrack_start = clock();
         std::deque<std::string> reflines, querylines, random_parts;
         size_t w = O.size();
         for (size_t i = 0; i < refss[ref_id].size(); ++i) {
@@ -166,6 +178,7 @@ int main(
             w = EdgeTrack(reflines.front(), querylines.front(), swp.first, swp.second, As.data() + (j - 1) * (Omax + 1), As.data() + j * (Omax + 1), refss[ref_id][j - 1].data(), refss[ref_id][j - 1].size(), O.data(), cc.u, cc.v, gr.data(), cc.qv, cc.s0, cc.s1, cc.s2, upper_boundariess[ref_id][j - 1], down_boundariess[ref_id][j - 1]);
         }
         random_parts.push_front(O.substr(0, w));
+        t_backtrack_total += clock() - t_backtrack_start;
 
         std::cout << index << '\t' << count << '\t' << As[refss[ref_id].size() * (Omax + 1) + O.size()] << '\t' << ref_id << '\n';
         for (size_t i = 0; i < reflines.size(); ++i) {
@@ -178,38 +191,12 @@ int main(
         std::cout << random_parts.back() << '\n';
     }
 
+    clock_t t_end = clock();
+
+    std::cerr << "total time: " << float(t_end - t_start) / CLOCKS_PER_SEC << "s\n"
+        << "align time: " << float(t_end - t_start_align) / CLOCKS_PER_SEC << "s\n"
+        << "DP time: " << float(t_DP_total) / CLOCKS_PER_SEC << "s\n"
+        << "backtrack time: " << float(t_backtrack_total) / CLOCKS_PER_SEC << "s\n";
+
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
