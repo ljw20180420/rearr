@@ -5,6 +5,7 @@ paper/figures
 paper/references
 paper/bench.tsv
 paper/complexity.tsv
+paper/tools
 core/Rearrangement/build/
 **/__pycache__/
 docs/core

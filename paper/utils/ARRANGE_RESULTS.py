@@ -152,3 +152,18 @@ if __name__ == "__main__":
             sys.stdout.write(
                 f"{query}\t{rpos1min}\t{int(rpos2min) - cut1 + cut2}\t{qpos1min}\t{qpos2min}\t{rpos1max}\t{int(rpos2max) - cut1 + cut2}\t{qpos1max}\t{qpos2max}\n"
             )
+
+    if program.lower() == "indel_searcher_2":
+        refstart = int(sys.argv[4])
+        for line in sys.stdin:
+            seq_name, align_ref, align_seq = line.split("\t")
+            refcoor, seqcoor = Bio.Align.Alignment.parse_printed_alignment(
+                [align_ref.encode(), align_seq.encode()]
+            )[1]
+            indels = coor2indel(refcoor, seqcoor, cut1 - refstart, cut2)
+            sys.stdout.write(seq_name)
+            for indel in indels:
+                sys.stdout.write(
+                    f"\t{indel[0] + refstart}\t{indel[1]}\t{indel[2]}\t{indel[3]}"
+                )
+            sys.stdout.write("\n")

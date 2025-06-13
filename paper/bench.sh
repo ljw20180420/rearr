@@ -110,7 +110,7 @@ query_to_seq() {
     sort -k1,1
 }
 
-attach_diff() {
+opt_indel() {
     join -t $'\t' -1 1 -2 1 \
         <(
             seq -f "seq%g" $query_per_ref |
@@ -171,227 +171,278 @@ do
             row_print rearr $(cat bench/rearr/time.linux) \
                 >> bench.tsv
 
-            title "RESSO"
-            mkdir -p bench/RESSO
-            to_fastq \
-                < bench/query.post \
-                > bench/RESSO/query.fq
-            /bin/time -f '%e\t%U\t%S\t%M' -o bench/RESSO/time.linux \
-                CRISPResso \
-                    -r1 bench/RESSO/query.fq \
-                    -a $(get_ref < bench/ref.ref) \
-                    -g $(get_sgRNA < bench/ref.ref) \
-                    -o bench/RESSO \
-                    -amas 0
-            unzip -q -o \
-                $(find bench/RESSO -name "*.zip") \
-                -d bench/RESSO
-            seq -f "seq%g" $query_per_ref |
-            paste - <(cut -f1 bench/query.post) \
-                > bench/RESSO/sq_file
-            utils/ARRANGE_RESULTS.py \
-                < bench/RESSO/Alleles_frequency_table.txt \
-                CRISPResso \
-                $(cut -f3 bench/ref.ref) \
-                $(cut -f4 bench/ref.ref) |
-                query_to_seq bench/RESSO/sq_file |
-                attach_diff |
-                row_print RESSO $(cat bench/RESSO/time.linux) \
-                    >> bench.tsv
+            # title "RESSO"
+            # mkdir -p bench/RESSO
+            # to_fastq \
+            #     < bench/query.post \
+            #     > bench/RESSO/query.fq
+            # /bin/time -f '%e\t%U\t%S\t%M' -o bench/RESSO/time.linux \
+            #     CRISPResso \
+            #         -r1 bench/RESSO/query.fq \
+            #         -a $(get_ref < bench/ref.ref) \
+            #         -g $(get_sgRNA < bench/ref.ref) \
+            #         -o bench/RESSO \
+            #         -amas 0
+            # unzip -q -o \
+            #     $(find bench/RESSO -name "*.zip") \
+            #     -d bench/RESSO
+            # seq -f "seq%g" $query_per_ref |
+            # paste - <(cut -f1 bench/query.post) \
+            #     > bench/RESSO/sq_file
+            # utils/ARRANGE_RESULTS.py \
+            #     < bench/RESSO/Alleles_frequency_table.txt \
+            #     CRISPResso \
+            #     $(cut -f3 bench/ref.ref) \
+            #     $(cut -f4 bench/ref.ref) |
+            #     query_to_seq bench/RESSO/sq_file |
+            #     opt_indel |
+            #     row_print RESSO $(cat bench/RESSO/time.linux) \
+            #         >> bench.tsv
 
-            title "AMP"
-            mkdir -p bench/AMP
-            amplicon=$(get_amplicon < bench/ref.ref)
-            primer=$(head -c6 <<<$amplicon | tr 'acgtn' 'ACGTN')
-            to_fastq \
+            # title "AMP"
+            # mkdir -p bench/AMP
+            # amplicon=$(get_amplicon < bench/ref.ref)
+            # primer=$(head -c6 <<<$amplicon | tr 'acgtn' 'ACGTN')
+            # to_fastq \
+            #     < bench/query.post |
+            # sed "2~4{s/^/$primer/}; 4~4{s/^/~~~~~~/}" \
+            #     > bench/AMP/query.fq
+            # printf "ID,Barcode,Forward_Reads,Reverse_Reads,Group,Control,guideRNA,Forward_Primer,Reverse_Primer,Direction,Amplicon,Donor\n" \
+            #     > bench/AMP/config.csv
+            # printf "ID_1,barcode_1,query.fq,,group_1,0,%s,%s,,0,%s," \
+            #     $(get_sgRNA < bench/ref.ref) \
+            #     $primer \
+            #     $amplicon \
+            #     >> bench/AMP/config.csv
+            # /bin/time -f '%e\t%U\t%S\t%M' -o bench/AMP/time.linux \
+            #     utils/AMP.r \
+            #         bench/AMP/config.csv \
+            #         bench/AMP/ \
+            #         bench/AMP/
+            # sed -nr '1~4s/^@//; N; s/\n/\t/p' \
+            #     < bench/AMP/query.fq \
+            #     > bench/AMP/sq_file
+            # utils/ARRANGE_RESULTS.py \
+            #     < bench/AMP/alignments/alignments.txt \
+            #     amplican \
+            #     $(cut -f3 bench/ref.ref) \
+            #     $(cut -f4 bench/ref.ref) \
+            #     $(expr $(cut -f1 bench/ref.ref) - 6) \
+            #     ${#primer} |
+            #     paste \
+            #         <(
+            #             sed -n '2~4p' bench/AMP/query.fq |
+            #             sort |
+            #             uniq -c |
+            #             sort -s -k1,1nr |
+            #             awk '{print $2}'
+            #         ) - |
+            #     query_to_seq bench/AMP/sq_file |
+            #     opt_indel |
+            #     row_print AMP $(cat bench/AMP/time.linux) \
+            #         >> bench.tsv
+
+            # title "CRVS"
+            # mkdir -p bench/CRVS
+            # get_ref \
+            #     < bench/ref.ref |
+            # sed '1i >ref' \
+            #     > bench/CRVS/ref.fa
+            # to_fastq \
+            #     < bench/query.post \
+            #     > bench/CRVS/query.fq
+            # /bin/time -f '%e\t%U\t%S\t%M' -o bench/CRVS/time.linux \
+            #     bash -c "
+            #         bwa index -p bench/CRVS/ref bench/CRVS/ref.fa
+            #         bwa mem -v 3 -T -9999 bench/CRVS/ref bench/CRVS/query.fq |
+            #         samtools sort -o bench/CRVS/query.bam
+            #         samtools index -b bench/CRVS/query.bam
+            #         utils/variants.r \
+            #             $(sed '1d' bench/CRVS/ref.fa) \
+            #             bench/CRVS/query.bam \
+            #             $(expr $(cut -f3 bench/ref.ref) - 17) 20 \
+            #             > bench/CRVS/result
+            #     "
+            # cut -f1 bench/CRVS/result |
+            # sort |
+            # join -t $'\t' -1 1 -2 1 - \
+            #     <(
+            #         samtools view bench/CRVS/query.bam |
+            #         sort -k1,1
+            #     ) |
+            # utils/ARRANGE_RESULTS.py \
+            #     CrisprVariants \
+            #     $(cut -f3 bench/ref.ref) \
+            #     $(cut -f4 bench/ref.ref) |
+            # opt_indel |
+            # row_print CRVS $(cat bench/CRVS/time.linux) \
+            #     >> bench.tsv
+
+            # title "ADIV"
+            # mkdir -p bench/ADIV
+            # to_fastq \
+            #     < bench/query.post |
+            # sed '2~4{s/^/AAAAAATGTAAAACGACGGCCAGT/; s/$/aagacac/}; 4~4{s/^/~~~~~~~~~~~~~~~~~~~~~~~~/; s/$/~~~~~~~/}' \
+            #     > bench/ADIV/query.for.fq
+            # reverse_fastq \
+            #     < bench/ADIV/query.for.fq \
+            #     > bench/ADIV/query.rev.fq
+            # printf "plate0\tA0\trefin_ref_45-200\tM\t0\tAAAAAA\n" \
+            #     > bench/ADIV/query.bar
+            # get_ref \
+            #     < bench/ref.ref |
+            # sed '1i >ref' \
+            #     > bench/ADIV/ref.fa
+            # /bin/time -f '%e\t%U\t%S\t%M' -o bench/ADIV/time.linux \
+            #     bash -c "
+            #         novoindex bench/ADIV/ref.nix bench/ADIV/ref.fa
+            #         novoalign -t 0,6 -o SAM -d bench/ADIV/ref.nix -f bench/ADIV/query.for.fq bench/ADIV/query.rev.fq |
+            #         samtools view -o bench/ADIV/query.bam
+            #         rm -rf bench/ADIV/Workdir_target_ bench/ADIV/Output_target_
+            #         cd bench/ADIV
+            #         ../../tools/ampliconDIVider/ampliconDIVider_driver.sh -b query.bar -f ref.fa -x ref.nix query.bam
+            #         cd ../..
+            #     "
+            # samtools view bench/ADIV/Workdir_target_/query.aligned.bam |
+            # utils/ARRANGE_RESULTS.py \
+            #     "ampliconDIVider" \
+            #     $(cut -f3 bench/ref.ref) \
+            #     $(cut -f4 bench/ref.ref) |
+            # sort -k1,1 |
+            # opt_indel |
+            # row_print ADIV $(cat bench/ADIV/time.linux) \
+            #     >> bench.tsv
+
+            # title "CRGR"
+            # mkdir -p bench/CRGR
+            # to_fastq \
+            #     < bench/query.post \
+            #     > bench/CRGR/query.for.fq
+            # reverse_fastq \
+            #     < bench/CRGR/query.for.fq \
+            #     > bench/CRGR/query.rev.fq
+            # get_ref \
+            #     < bench/ref.ref |
+            # sed '1i >ref' \
+            #     > bench/CRGR/ref.fa
+            # rm -rf bench/CRGR/output
+            # /bin/time -f '%e\t%U\t%S\t%M' -o bench/CRGR/time.linux \
+            #     tools/CRISPR-GRANT/bin/indel_analysis \
+            #         -1:bench/CRGR/query.for.fq \
+            #         -2:bench/CRGR/query.rev.fq \
+            #         -r:bench/CRGR/ref.fa \
+            #         -o:bench/CRGR/output
+            # samtools sort -n bench/CRGR/output/4.Mapping_sorted.bam |
+            # samtools view |
+            # utils/ARRANGE_RESULTS.py \
+            #     "CRISPR-GRANT" \
+            #     $(cut -f3 bench/ref.ref) \
+            #     $(cut -f4 bench/ref.ref) |
+            # sort -k1,1 |
+            # opt_indel |
+            # row_print CRGR $(cat bench/CRGR/time.linux) \
+            #     >> bench.tsv
+
+            # title "ZhangFeng"
+            # mkdir -p bench/ZhangFeng
+            # to_fastq \
+            #     < bench/query.post \
+            #     > bench/ZhangFeng/query.fq
+            # printf "query,bench/ZhangFeng/query.fq,%s,%s\n" \
+            #     $(get_sgRNA < bench/ref.ref) \
+            #     $(get_ref_ZhangFeng < bench/ref.ref) \
+            #     > bench/ZhangFeng/samplefile
+            # /bin/time -f '%e\t%U\t%S\t%M' -o bench/ZhangFeng/time.linux \
+            #     tools/Screening_Protocols_manuscript/my_calculate_indel.py \
+            #         -i bench/ZhangFeng/samplefile \
+            #         -no-m \
+            #         -o bench/ZhangFeng/calc_indel_out.csv \
+            #         > bench/ZhangFeng/result
+            # tail -n+2 bench/ZhangFeng/result |
+            # utils/ARRANGE_RESULTS.py \
+            #     ZhangFeng \
+            #     $(cut -f3 bench/ref.ref) \
+            #     $(cut -f4 bench/ref.ref) \
+            #     $(cut -f1 bench/ref.ref) |
+            # sort -k1,1 |
+            # opt_indel |
+            # row_print ZhangFeng $(cat bench/ZhangFeng/time.linux) \
+            #     >> bench.tsv
+
+            # title "SelfTarget"
+            # mkdir -p bench/SelfTarget
+            # printf ">ref %d FORWARD\n%s\n" \
+            #     $(expr $(cut -f3 bench/ref.ref) + 3) \
+            #     $(get_ref < bench/ref.ref) \
+            #     > bench/SelfTarget/oligo.fa
+            # to_fastq \
+            #     < bench/query.post \
+            #     > bench/SelfTarget/query.fq
+            # /bin/time -f '%e\t%U\t%S\t%M' -o bench/SelfTarget/time.linux \
+            #     tools/SelfTarget-master/indel_analysis/indelmap/indelmap \
+            #     bench/SelfTarget/query.fq \
+            #     bench/SelfTarget/oligo.fa \
+            #     bench/SelfTarget/outputfile \
+            #     0
+            # tail -n+2 bench/SelfTarget/outputfile |
+            # utils/ARRANGE_RESULTS.py \
+            #     SelfTarget \
+            #     $(cut -f3 bench/ref.ref) \
+            #     $(cut -f4 bench/ref.ref) |
+            # sort -k1,1 |
+            # opt_indel |
+            # row_print SelfTarget $(cat bench/SelfTarget/time.linux) \
+            #     >> bench.tsv
+
+            title "Indel_searcher_2"
+            mkdir -p bench/Indel_searcher_2
+            user=ljw
+            project=rearr
+            cp tools/CRISPR_toolkit/EDNAFULL bench
+            cp tools/CRISPR_toolkit/Indel_searcher_2/my_Run_indel_searcher.py bench/Indel_searcher_2
+            cp tools/CRISPR_toolkit/Indel_searcher_2/my_Indel_searcher_crispresso_hash.py bench/Indel_searcher_2
+            mkdir -p bench/Indel_searcher_2/Core
+            cp -r tools/CRISPR_toolkit/Core/__init__.py bench/Indel_searcher_2/Core
+            cp -r tools/CRISPR_toolkit/Core/my_CoreSystem.py bench/Indel_searcher_2/Core
+            mkdir -p bench/Indel_searcher_2/Input/${user}/FASTQ/${project}/query
+            barcode=$(
+                cut -f2 bench/ref.ref |
+                cut -c1-19
+            )
+            sed 's/^/'$barcode'/' \
                 < bench/query.post |
-            sed "2~4{s/^/$primer/}; 4~4{s/^/~~~~~~/}" \
-                > bench/AMP/query.fq
-            printf "ID,Barcode,Forward_Reads,Reverse_Reads,Group,Control,guideRNA,Forward_Primer,Reverse_Primer,Direction,Amplicon,Donor\n" \
-                > bench/AMP/config.csv
-            printf "ID_1,barcode_1,query.fq,,group_1,0,%s,%s,,0,%s," \
-                $(get_sgRNA < bench/ref.ref) \
-                $primer \
-                $amplicon \
-                >> bench/AMP/config.csv
-            /bin/time -f '%e\t%U\t%S\t%M' -o bench/AMP/time.linux \
-                utils/AMP.r \
-                    bench/AMP/config.csv \
-                    bench/AMP/ \
-                    bench/AMP/
-            sed -nr '1~4s/^@//; N; s/\n/\t/p' \
-                < bench/AMP/query.fq \
-                > bench/AMP/sq_file
+            to_fastq \
+                > bench/Indel_searcher_2/Input/${user}/FASTQ/${project}/query/query.fastq
+            mkdir -p bench/Indel_searcher_2/Input/${user}/Reference/${project}/ref
+            echo $barcode \
+                > bench/Indel_searcher_2/Input/${user}/Reference/${project}/ref/Barcode.txt
+            get_ref \
+                < bench/ref.ref \
+                > bench/Indel_searcher_2/Input/${user}/Reference/${project}/ref/Reference_sequence.txt
+            get_ref \
+                < bench/ref.ref |
+            cut -c20- \
+                > bench/Indel_searcher_2/Input/${user}/Reference/${project}/ref/Target_region.txt
+            mkdir -p bench/Indel_searcher_2/User/${user}
+            printf "query\tref\n" \
+                > bench/Indel_searcher_2/User/${user}/${project}.txt
+            /bin/time -f '%e\t%U\t%S\t%M' -o bench/Indel_searcher_2/time.linux \
+                bench/Indel_searcher_2/my_Run_indel_searcher.py \
+                    --python $(which python) \
+                    --user ${user} \
+                    --project ${project} \
+                    --pam_type Cas9 \
+                    --pam_pos Forward \
+                    -t 15
+            sort -k1,1 \
+                < bench/Indel_searcher_2/result |
             utils/ARRANGE_RESULTS.py \
-                < bench/AMP/alignments/alignments.txt \
-                amplican \
+                "Indel_searcher_2" \
                 $(cut -f3 bench/ref.ref) \
                 $(cut -f4 bench/ref.ref) \
-                $(expr $(cut -f1 bench/ref.ref) - 6) \
-                ${#primer} |
-                paste \
-                    <(
-                        sed -n '2~4p' bench/AMP/query.fq |
-                        sort |
-                        uniq -c |
-                        sort -s -k1,1nr |
-                        awk '{print $2}'
-                    ) - |
-                query_to_seq bench/AMP/sq_file |
-                attach_diff |
-                row_print AMP $(cat bench/AMP/time.linux) \
-                    >> bench.tsv
-
-            title "CRVS"
-            mkdir -p bench/CRVS
-            get_ref \
-                < bench/ref.ref |
-            sed '1i >ref' \
-                > bench/CRVS/ref.fa
-            to_fastq \
-                < bench/query.post \
-                > bench/CRVS/query.fq
-            /bin/time -f '%e\t%U\t%S\t%M' -o bench/CRVS/time.linux \
-                bash -c "
-                    bwa index -p bench/CRVS/ref bench/CRVS/ref.fa
-                    bwa mem -v 3 -T -9999 bench/CRVS/ref bench/CRVS/query.fq |
-                    samtools sort -o bench/CRVS/query.bam
-                    samtools index -b bench/CRVS/query.bam
-                    utils/variants.r \
-                        $(sed '1d' bench/CRVS/ref.fa) \
-                        bench/CRVS/query.bam \
-                        $(expr $(cut -f3 bench/ref.ref) - 17) 20 \
-                        > bench/CRVS/result
-                "
-            cut -f1 bench/CRVS/result |
-            sort |
-            join -t $'\t' -1 1 -2 1 - \
-                <(
-                    samtools view bench/CRVS/query.bam |
-                    sort -k1,1
-                ) |
-            utils/ARRANGE_RESULTS.py \
-                CrisprVariants \
-                $(cut -f3 bench/ref.ref) \
-                $(cut -f4 bench/ref.ref) |
-            attach_diff |
-            row_print CRVS $(cat bench/CRVS/time.linux) \
-                >> bench.tsv
-
-            title "ADIV"
-            mkdir -p bench/ADIV
-            to_fastq \
-                < bench/query.post |
-            sed '2~4{s/^/AAAAAATGTAAAACGACGGCCAGT/; s/$/aagacac/}; 4~4{s/^/~~~~~~~~~~~~~~~~~~~~~~~~/; s/$/~~~~~~~/}' \
-                > bench/ADIV/query.for.fq
-            reverse_fastq \
-                < bench/ADIV/query.for.fq \
-                > bench/ADIV/query.rev.fq
-            printf "plate0\tA0\trefin_ref_45-200\tM\t0\tAAAAAA\n" \
-                > bench/ADIV/query.bar
-            get_ref \
-                < bench/ref.ref |
-            sed '1i >ref' \
-                > bench/ADIV/ref.fa
-            /bin/time -f '%e\t%U\t%S\t%M' -o bench/ADIV/time.linux \
-                bash -c "
-                    novoindex bench/ADIV/ref.nix bench/ADIV/ref.fa
-                    novoalign -t 0,6 -o SAM -d bench/ADIV/ref.nix -f bench/ADIV/query.for.fq bench/ADIV/query.rev.fq |
-                    samtools view -o bench/ADIV/query.bam
-                    rm -rf bench/ADIV/Workdir_target_ bench/ADIV/Output_target_
-                    cd bench/ADIV
-                    ../../tools/ampliconDIVider/ampliconDIVider_driver.sh -b query.bar -f ref.fa -x ref.nix query.bam
-                    cd ../..
-                "
-            samtools view bench/ADIV/Workdir_target_/query.aligned.bam |
-            utils/ARRANGE_RESULTS.py \
-                "ampliconDIVider" \
-                $(cut -f3 bench/ref.ref) \
-                $(cut -f4 bench/ref.ref) |
-            sort -k1,1 |
-            attach_diff |
-            row_print ADIV $(cat bench/ADIV/time.linux) \
-                >> bench.tsv
-
-            title "CRGR"
-            mkdir -p bench/CRGR
-            to_fastq \
-                < bench/query.post \
-                > bench/CRGR/query.for.fq
-            reverse_fastq \
-                < bench/CRGR/query.for.fq \
-                > bench/CRGR/query.rev.fq
-            get_ref \
-                < bench/ref.ref |
-            sed '1i >ref' \
-                > bench/CRGR/ref.fa
-            rm -rf bench/CRGR/output
-            /bin/time -f '%e\t%U\t%S\t%M' -o bench/CRGR/time.linux \
-                tools/CRISPR-GRANT/bin/indel_analysis \
-                    -1:bench/CRGR/query.for.fq \
-                    -2:bench/CRGR/query.rev.fq \
-                    -r:bench/CRGR/ref.fa \
-                    -o:bench/CRGR/output
-            samtools sort -n bench/CRGR/output/4.Mapping_sorted.bam |
-            samtools view |
-            utils/ARRANGE_RESULTS.py \
-                "CRISPR-GRANT" \
-                $(cut -f3 bench/ref.ref) \
-                $(cut -f4 bench/ref.ref) |
-            sort -k1,1 |
-            attach_diff |
-            row_print CRGR $(cat bench/CRGR/time.linux) \
-                >> bench.tsv
-
-            title "ZhangFeng"
-            mkdir -p bench/ZhangFeng
-            to_fastq \
-                < bench/query.post \
-                > bench/ZhangFeng/query.fq
-            printf "query,bench/ZhangFeng/query.fq,%s,%s\n" \
-                $(get_sgRNA < bench/ref.ref) \
-                $(get_ref_ZhangFeng < bench/ref.ref) \
-                > bench/ZhangFeng/samplefile
-            /bin/time -f '%e\t%U\t%S\t%M' -o bench/ZhangFeng/time.linux \
-                tools/Screening_Protocols_manuscript/my_calculate_indel.py \
-                    -i bench/ZhangFeng/samplefile \
-                    -no-m \
-                    -o bench/ZhangFeng/calc_indel_out.csv \
-                    > bench/ZhangFeng/result
-            tail -n+2 bench/ZhangFeng/result |
-            utils/ARRANGE_RESULTS.py \
-                ZhangFeng \
-                $(cut -f3 bench/ref.ref) \
-                $(cut -f4 bench/ref.ref) \
-                $(cut -f1 bench/ref.ref) |
-            sort -k1,1 |
-            attach_diff |
-            row_print ZhangFeng $(cat bench/ZhangFeng/time.linux) \
-                >> bench.tsv
-
-            title "SelfTarget"
-            mkdir -p bench/SelfTarget
-            printf ">ref %d FORWARD\n%s\n" \
-                $(expr $(cut -f3 bench/ref.ref) + 3) \
-                $(get_ref < bench/ref.ref) \
-                > bench/SelfTarget/oligo.fa
-            to_fastq \
-                < bench/query.post \
-                > bench/SelfTarget/query.fq
-            /bin/time -f '%e\t%U\t%S\t%M' -o bench/SelfTarget/time.linux \
-                tools/SelfTarget-master/indel_analysis/indelmap/indelmap \
-                bench/SelfTarget/query.fq \
-                bench/SelfTarget/oligo.fa \
-                bench/SelfTarget/outputfile \
-                0
-            tail -n+2 bench/SelfTarget/outputfile |
-            utils/ARRANGE_RESULTS.py \
-                SelfTarget \
-                $(cut -f3 bench/ref.ref) \
-                $(cut -f4 bench/ref.ref) |
-            sort -k1,1 |
-            attach_diff |
-            row_print SelfTarget $(cat bench/SelfTarget/time.linux) \
+                19 |
+            opt_indel |
+            row_print Indel_searcher_2 $(cat bench/Indel_searcher_2/time.linux) \
                 >> bench.tsv
         done
     done
