@@ -36,6 +36,13 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
+- [ ] improve BWT-SW and apply it to the sgRNA library demultiplex and genome-wide CRISPR
+    - [ ] regex DFA and NFA
+    - [ ] SIMD
+    - [ ] prune resembling repeat alignment
+    - [ ] statistic algorithm
+    - [ ] decrease memory usage by record DNA in 2bit
+    - [ ] load suffix array into memory
 - [ ] list bad examples in benchmark
 - [ ] Write core functions in c++
 - [ ] Add assumption check.

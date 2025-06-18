@@ -1,16 +1,31 @@
 {
     "configurations": [
         {
+            "type": "java",
+            "name": "my_SIQ",
+            "request": "launch",
+            "mainClass": "my.my_SIQ",
+            "projectName": "SIQ"
+        },
+        {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            // Resolved by CMake Tools:
             "program": "${command:cmake.launchTargetPath}",
-            
             "cwd": "${workspaceFolder}",
-
-            "args": ["<test.input", ">test.output", "3<test.ref", "-u", "-1", "-v", "-3", "-s0", "-2", "-qv", "-3"],
-
+            "args": [
+                "<test.input",
+                ">test.output",
+                "3<test.ref",
+                "-u",
+                "-1",
+                "-v",
+                "-3",
+                "-s0",
+                "-2",
+                "-qv",
+                "-3"
+            ],
             "stopAtEntry": false,
             "environment": [
                 {
@@ -30,7 +45,7 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
-            ],
+            ]
         }
     ]
 }
