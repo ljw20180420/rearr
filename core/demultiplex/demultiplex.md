@@ -16,7 +16,7 @@ Each `spliterIndice` is `bowtie2` index of a `fasta` file containing possible al
 
 `bowtie2` either aligns `seq` to one of the `spliter`s or failed to align. If all `seq`s in a line output of [`removeDuplicates.md`][`removeDuplicates.md`] successfully align to `spliter`s of the same `refId`, then `demultiplex.md` will print the following to `stdout`.
 ```
-seq1<tab>seq2<tab>...<tab>count<tab>refId<tab>rs1<tab>re1<tab>qs1|qe1|rs2|re2|qs2|qe2|...
+seq1<tab>seq2<tab>...<tab>count<tab>refId<tab>rs1<tab>re1<tab>qs1<tab>qe1<tab>rs2<tab>re2<tab>qs2<tab>qe2<tab>...
 ```
 `seqN` and `count` are copied from `inputFile`. `rsN` and `reN` denotes the left-close-right-open 0-based range of the aligned part of the `Nth` reference (`spliter`) in the local alignment. `qsN` and `qeN` denotes that of the query (`seq`).
 
