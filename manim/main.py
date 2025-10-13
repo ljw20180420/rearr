@@ -3,46 +3,21 @@
 from manim import *
 import numpy as np
 
-rng = np.random.default_rng(63036)
+from utils import SEQ
+
+seq = SEQ()
 
 
-def generate_random_DNA(length, rng):
-    # usage: generate_random_DNA of length
-    return "".join(rng.choice(["A", "C", "G", "T"], length))
-
-
-def SNP_DNA(DNA, probability, rng):
-    DNA = list(DNA)
-    for i in range(len(DNA)):
-        if rng.random() < probability:
-            DNA[i] = rng.choice(["A", "C", "G", "T"])
-    return "".join(DNA)
-
-
-def indel_DNA(DNA, probability, rng):
-    inslens = rng.negative_binomial(1, 1 - probability, len(DNA) + 1)
-    insDNAs = generate_random_DNA(np.sum(inslens), rng)
-    DNAnew, start = [], 0
-    for i in range(len(DNA)):
-        end = start + inslens[i]
-        DNAnew.append(insDNAs[start:end])
-        if rng.random() > probability:
-            DNAnew.append(DNA[i])
-        start = end
-    DNAnew.append(insDNAs[start:])
-    return "".join(DNAnew)
-
-
-ref = generate_random_DNA(18, rng)
+ref = seq.generate_random_DNA(18)
 ref = ref[:13] + "GG" + ref[15:]
-region1 = indel_DNA(SNP_DNA(ref[2:-2], 0.05, rng), 0.05, rng)
-region2 = indel_DNA(SNP_DNA(ref[2:-2], 0.05, rng), 0.05, rng)
+region1 = seq.indel_DNA(seq.SNP_DNA(ref[2:-2], 0.05), 0.05)
+region2 = seq.indel_DNA(seq.SNP_DNA(ref[2:-2], 0.05), 0.05)
 query = (
-    generate_random_DNA(2, rng)
+    seq.generate_random_DNA(2)
     + region1
-    + generate_random_DNA(32 - len(region1) - len(region2), rng)
+    + seq.generate_random_DNA(32 - len(region1) - len(region2))
     + region2
-    + generate_random_DNA(2, rng)
+    + seq.generate_random_DNA(2)
 )
 
 
