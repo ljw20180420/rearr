@@ -287,3 +287,11 @@ class MicroHomology(manim.Scene):
                 manimDNA.move_DNA(queryM[2 - i], manim.RIGHT, 3, self)
             for i in range(3):
                 manimDNA.move_DNA(queryM[i], manim.LEFT, 3, self)
+
+
+class MainScene(manim.Scene):
+    def construct(self):
+        stagger = Stagger()
+        stagger.construct()
+        mmej = MMEJ()
+        mmej.construct()

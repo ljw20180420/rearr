@@ -13,4 +13,5 @@ docs/_docs/*
 !docs/_docs/about.md
 test/genome/genome.fa
 manim/media
+manim_NHEJ/media
 docker-images/netStruct.png
