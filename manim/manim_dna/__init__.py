@@ -1,6 +1,8 @@
 import manim
 import numpy as np
 
+TIME_UNIT = 2
+
 
 class ManimDNA:
     def __init__(self):
@@ -62,7 +64,10 @@ class ManimDNA:
                 )
             objs_list.append(objs)
 
-        scene.play([manim.FadeIn(obj) for objs in objs_list for obj in objs])
+        scene.play(
+            [manim.FadeIn(obj) for objs in objs_list for obj in objs],
+            run_time=TIME_UNIT,
+        )
         if len(objs_list) == 1:
             return objs_list[0]
         return objs_list
@@ -80,7 +85,7 @@ class ManimDNA:
             x += direction[0] * distance
             y += direction[1] * distance
             moved_DNA.append(base.animate.move_to(self.number_plane.c2p(x, y, 0)))
-        scene.play(moved_DNA)
+        scene.play(moved_DNA, run_time=TIME_UNIT)
 
     def delete_DNA(
         self,
@@ -88,7 +93,7 @@ class ManimDNA:
         scene: manim.Scene,
         run_time: float = 1.0,
     ) -> None:
-        scene.play([manim.FadeOut(base) for base in DNA], run_time=run_time)
+        scene.play([manim.FadeOut(base) for base in DNA], run_time=run_time * TIME_UNIT)
 
     def change_color(
         self,
@@ -96,4 +101,6 @@ class ManimDNA:
         color: manim.ManimColor,
         scene: manim.Scene,
     ) -> None:
-        scene.play([manim.FadeToColor(base, color=color) for base in DNA])
+        scene.play(
+            [manim.FadeToColor(base, color=color) for base in DNA], run_time=TIME_UNIT
+        )
