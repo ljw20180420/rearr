@@ -36,6 +36,7 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
+- [ ] Add homepage for qiangwulab.sjtu.edu.cn.
 - [ ] improve BWT-SW and apply it to the sgRNA library demultiplex and genome-wide CRISPR
     - [ ] regex DFA and NFA
     - [ ] SIMD
@@ -74,5 +75,4 @@ See [`rearrTest.md`][`rearrTest.md`].
 # TODO (Long term)
 ```[tasklist]
 - [ ] Use GNU autotools to install Rearrangement
-- [ ] DeepFri
 ```
