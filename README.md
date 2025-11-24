@@ -36,7 +36,6 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
-- [ ] Use vscode "terminal.integrated.env.linux" to handle environment variable instead of .env
 - [ ] Change default parameters for rearrangement binary.
 - [ ] Add homepage for qiangwulab.sjtu.edu.cn.
 - [ ] improve BWT-SW and apply it to the sgRNA library demultiplex and genome-wide CRISPR
