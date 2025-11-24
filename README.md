@@ -36,7 +36,6 @@ See [`rearrTest.md`][`rearrTest.md`].
 
 # TODO
 ```[tasklist]
-- [ ] Change default parameters for rearrangement binary.
 - [ ] Add homepage for qiangwulab.sjtu.edu.cn.
 - [ ] improve BWT-SW and apply it to the sgRNA library demultiplex and genome-wide CRISPR
     - [ ] regex DFA and NFA

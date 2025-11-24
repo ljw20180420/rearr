@@ -17,58 +17,20 @@
 typedef int32_t SCORETYPE;
 
 /**
- * @brief Print help if --help, -help, or -h is passed through command-line.
- * 
- * @param[in] argc argc of main function.
- * @param[in] argv argv of main function.
- */
-void print_help(
-    int argc,
-    char **argv
-) {
-    bool print_help = false;
-    for(int i=1; i<argc; ++i) {
-        if(!strcmp(argv[i],"--help") || !strcmp(argv[i],"-help") || !strcmp(argv[i],"-h")) {
-            print_help = true;
-            break;
-        }
-    }
-    if (print_help) {
-        std::cout << "###Basic Usage\n"
-        << "rearrangement <input_file 3<reference_file\n"
-
-        << "\n### Parameters\n"
-        << "-h, -help, --help: Display help.\n"
-        << "# Aligning Parameters\n"
-        << "-s0: Mismatching score. (default: -3)\n"
-        << "-s1: Matching score for non-extension reference part. (default: +1)\n"
-        << "-s2: Matching score for extension reference part. (default: +1)\n"
-        << "-u: Gap-extending penalty. (default: -2)\n"
-        << "-v: Gap-opening penalty. (default: -5)\n"
-        << "-ru: Gap-extending penalty for unaligned reference ends. (default: 0)\n"
-        << "-rv: Gap-opening penalty for unaligned reference ends. (default: 0)\n"
-        << "-qu: Gap-extending penalty for unaligned query parts. (default: 0)\n"
-        << "-qv: Gap-opening penalty for unaligned query parts. (default: 0)\n";
-        exit(EXIT_SUCCESS);
-    }
-    return;
-}
-
-/**
  * @brief Structure holding command-line arguments.
  * 
  */
 struct Command_content {
     /// @brief Mismatching score.
-    SCORETYPE s0=-3;
+    SCORETYPE s0=-6;
     /// @brief Matching score for non-extension reference part.
-    SCORETYPE s1=1;
+    SCORETYPE s1=4;
     /// @brief Matching score for extension reference part.
-    SCORETYPE s2=1;
+    SCORETYPE s2=2;
     /// @brief Gap-extending penalty.
-    SCORETYPE u=-2;
+    SCORETYPE u=-3;
     /// @brief Gap-opening penalty.
-    SCORETYPE v=-5;
+    SCORETYPE v=-9;
     /// @brief Gap-extending penalty for unaligned reference ends.
     SCORETYPE ru=0;
     /// @brief Gap-opening penalty for unaligned reference ends.
@@ -76,7 +38,7 @@ struct Command_content {
     /// @brief Gap-extending penalty for unaligned query parts.
     SCORETYPE qu=0;
     /// @brief Gap-opening penalty for unaligned query parts.
-    SCORETYPE qv=0;
+    SCORETYPE qv=-5;
 };
 
 /**
@@ -114,6 +76,45 @@ Command_content command(
     }
     
     return cc;
+}
+
+/**
+ * @brief Print help if --help, -help, or -h is passed through command-line.
+ * 
+ * @param[in] argc argc of main function.
+ * @param[in] argv argv of main function.
+ */
+void print_help(
+    int argc,
+    char **argv
+) {
+    bool print_help = false;
+    for(int i=1; i<argc; ++i) {
+        if(!strcmp(argv[i],"--help") || !strcmp(argv[i],"-help") || !strcmp(argv[i],"-h")) {
+            print_help = true;
+            break;
+        }
+    }
+    if (print_help) {
+        Command_content cc;
+        std::cout << "###Basic Usage\n"
+        << "rearrangement <input_file 3<reference_file\n"
+
+        << "\n### Parameters\n"
+        << "-h, -help, --help: Display help.\n"
+        << "# Aligning Parameters\n"
+        << "-s0: Mismatching score. (default: " << cc.s0 << ")\n"
+        << "-s1: Matching score for non-extension reference part. (default: " << cc.s1 << ")\n"
+        << "-s2: Matching score for extension reference part. (default: " << cc.s2 << ")\n"
+        << "-u: Gap-extending penalty. (default: " << cc.u << ")\n"
+        << "-v: Gap-opening penalty. (default: " << cc.v << ")\n"
+        << "-ru: Gap-extending penalty for unaligned reference ends. (default: " << cc.ru << ")\n"
+        << "-rv: Gap-opening penalty for unaligned reference ends. (default: " << cc.rv << ")\n"
+        << "-qu: Gap-extending penalty for unaligned query parts. (default: " << cc.qu << ")\n"
+        << "-qv: Gap-opening penalty for unaligned query parts. (default: " << cc.qv << ")\n";
+        exit(EXIT_SUCCESS);
+    }
+    return;
 }
 
 #endif
