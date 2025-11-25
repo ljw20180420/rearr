@@ -18,12 +18,12 @@ seq1<tab>seq2<tab>...<tab>count<newline>
 ```
 
 ## Why use several `fastq` files as input of `removeDuplicates.sh`
-The paired-end next-generation sequencing (NGS) is quite common. Although mappable segment may be only in `R1` or `R2`, the other end still helps to determine the locus of the sequence. See [`demultiplex.md`][`demultiplex.md`].
+The paired-end next-generation sequencing (NGS) is quite common. Although mappable segment may be only in `R1` or `R2`, the other end still helps to determine the locus of the sequence. See [`demultiplex.md`][demultiplex.md].
 
 ## Should I directly input raw `fastq` file, or remove `adapter`, `barcode` and so on before the input into `removeDuplicates.sh`
-The `stdout` of `removeDuplicates.sh` are aligned to the so-call `spliters` in [`demultiplex.md`][`demultiplex.md`] to determine the loci of lines. If you preserve `adapter`, `barcode` and so on in the input `fastq` files, it is suggested to provide them in `spliters` as well.
+The `stdout` of `removeDuplicates.sh` are aligned to the so-call `spliters` in [`demultiplex.md`][demultiplex.md] to determine the loci of lines. If you preserve `adapter`, `barcode` and so on in the input `fastq` files, it is suggested to provide them in `spliters` as well.
 
-[`demultiplex.md`]: /rearr/core/demultiplex/
+[demultiplex.md]: /rearr/core/demultiplex/
 
 # Source
 ~~~bash

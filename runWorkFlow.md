@@ -21,17 +21,17 @@ makeTarget=<dataDir>/<name>.noDup \
 fastqFiles=<fq1>,<fq2>,... \
 ./runWorkFlow.md
 ```
-For more details, see [`removeDuplicates.sh`][`removeDuplicates.sh.md`].
+For more details, see [`removeDuplicates.sh`][removeDuplicates.sh.md].
 
 ## Demultiplex
-If you has a file `<dataDir>/<name>.noDup` output by [`removeDuplicates.sh`][`removeDuplicates.sh.md`], then run
+If you has a file `<dataDir>/<name>.noDup` output by [`removeDuplicates.sh`][removeDuplicates.sh.md], then run
 ```bash
 makeTarget=<dataDir>/<name>.demultiplex \
 spliterIndices=<path1>,<path2>,... \
 minScores=<score1>,<scores2>,... \
 ./runWorkFlow.md
 ```
-For more details, see [`demultiplex.md`][`demultiplex.md`].
+For more details, see [`demultiplex.md`][demultiplex.md].
 
 ## Align
 If you has a file `<dataDir>/<name>.post` ready to align, then run
@@ -53,10 +53,10 @@ rv=0
 qu=0
 qv=-5
 ```
-Note that the defaults in this scripts override those in [`rearr`][`rearr`]. If you do not have `correctFile` and your `refFile=<path>.ref`, then you may just set `correctFile=<path>.correct`. `runWorkFlow.md` will generate `correctFile` with all corrections target `up`. For more details, see [`workFlow.mak`][`workFlow.mak`].
+Note that the defaults in this scripts override those in [`rearr`][rearr]. If you do not have `correctFile` and your `refFile=<path>.ref`, then you may just set `correctFile=<path>.correct`. `runWorkFlow.md` will generate `correctFile` with all corrections target `up`. For more details, see [`workFlow.mak`][workFlow.mak].
 
 ## Post-process by sx module
-The output of [`demultiplex.md`][`demultiplex.md`] does not fit the input of [`rearr`][`rearr`]. The transformation between them is highly customized and changes from now and that. For Shi Xing's data, this is done by [`sxCutR2AdapterFilterCumulate.md`][`sxCutR2AdapterFilterCumulate.md`]. If you has a file `<dataDir>/<name>.demultiplex` output by [`demultiplex.md`][`demultiplex.md`], then just run
+The output of [`demultiplex.md`][demultiplex.md] does not fit the input of [`rearr`][rearr]. The transformation between them is highly customized and changes from now and that. For Shi Xing's data, this is done by [`sxCutR2AdapterFilterCumulate.md`][sxCutR2AdapterFilterCumulate.md]. If you has a file `<dataDir>/<name>.demultiplex` output by [`demultiplex.md`][demultiplex.md], then just run
 ```bash
 makeTarget=<dataDir>/<name>.post \
 ./runWorkFlow.md
@@ -69,15 +69,15 @@ minToMapShear=31 \
 ```
 
 ## Extract spliter by sx module
-If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`sxExtractSpliter.md`][`sxExtractSpliter.md`].
+If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`sxExtractSpliter.md`][sxExtractSpliter.md].
 ```bash
 makeTarget=<fullPathToCsvFile>.target.fa \
 ./runWorkFlow.md
 ```
-Besides `<fullPathToCsvFile>.target.fa`, another file `<fullPathToCsvFile>.pair.fa` will be generated as well. This is because [`sxExtractSpliter.md`][`sxExtractSpliter.md`] always generate both `spliterIndices` simultaneously.
+Besides `<fullPathToCsvFile>.target.fa`, another file `<fullPathToCsvFile>.pair.fa` will be generated as well. This is because [`sxExtractSpliter.md`][sxExtractSpliter.md] always generate both `spliterIndices` simultaneously.
 
 ## Get reference by sx module
-If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`getSxCsvFileRef.md`][`getSxCsvFileRef.md`].
+If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`getSxCsvFileRef.md`][getSxCsvFileRef.md].
 ```bash
 makeTarget=<fullPathToCsvFile>.ref \
 genome=<pathToGenome> \
@@ -127,15 +127,15 @@ minToMapShear=30
 # Introduction
 This scripts integrate all steps (remove duplicates, demultiplex, alignment and so on). However, why not just use the corresponding script to run each step? If you run test data for the second time, then `runWorkFlow.md` will not do anythin because the underlying `make` engine is smart enough to skip the updating of the outputs when no change is detected in the inputs. Thus, the reason to use `runWorkFlow.md` is that it may skip some duplicated computations for you. To actually run the test again, one need delete the previous results first.
 
-Another reason to use `runWorkFlow.md` is that it hides two cumbersome steps from the user. For example, if `spliterIndices` used in [`demultiplex.md`][`demultiplex.md`] is not indexed by `bowtie2`, then `runWorkFlow.md` will do this silently. Also, if `correctFile` has the same path and name as `refFile` (see [`rearr`][`rearr`]), but with the file extension `.correct` instead of `.ref`, and `runWorkFlow.md` cannot find `correctFile` on the file system, then it will generate a default `correctFile` for you with all fields filled with `up`.
+Another reason to use `runWorkFlow.md` is that it hides two cumbersome steps from the user. For example, if `spliterIndices` used in [`demultiplex.md`][demultiplex.md] is not indexed by `bowtie2`, then `runWorkFlow.md` will do this silently. Also, if `correctFile` has the same path and name as `refFile` (see [`rearr`][rearr]), but with the file extension `.correct` instead of `.ref`, and `runWorkFlow.md` cannot find `correctFile` on the file system, then it will generate a default `correctFile` for you with all fields filled with `up`.
 
-[`rearr`]: /rearr/core/rearr/
-[`removeDuplicates.sh.md`]: /rearr/core/remove-duplicates/
-[`demultiplex.md`]: /rearr/core/demultiplex/
-[`workFlow.mak`]: /rearr/other/run-work-flow/work-flow/
-[`sxCutR2AdapterFilterCumulate.md`]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
-[`sxExtractSpliter.md`]: /rearr/sx/sx-extract-spliter/
-[`getSxCsvFileRef.md`]: /rearr/sx/get-sx-csvfile-ref/
+[rearr]: /rearr/core/rearr/
+[removeDuplicates.sh.md]: /rearr/core/remove-duplicates/
+[demultiplex.md]: /rearr/core/demultiplex/
+[workFlow.mak]: /rearr/other/run-work-flow/work-flow/
+[sxCutR2AdapterFilterCumulate.md]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
+[sxExtractSpliter.md]: /rearr/sx/sx-extract-spliter/
+[getSxCsvFileRef.md]: /rearr/sx/get-sx-csvfile-ref/
 
 # Source
 ~~~bash

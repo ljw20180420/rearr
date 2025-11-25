@@ -12,7 +12,7 @@ sxCutR2AdapterFilterCumulate.md demultiplexFile minToMapShear >toMapFile
 ```
 
 # Introduction
-The output of [`demultiplex.md`][`demultiplex.md`] needs further post-process before feed to [`rearr`][`rearr`]. For Shi Xing's data, this is done by this in-house script. The output format fits the input format of [`rearr`][`rearr`].
+The output of [`demultiplex.md`][demultiplex.md] needs further post-process before feed to [`rearr`][rearr]. For Shi Xing's data, this is done by this in-house script. The output format fits the input format of [`rearr`][rearr].
 ```bash
 query<tab>count<tab>refId<newline>
 ```
@@ -21,11 +21,11 @@ The post-process consists of three steps.
 1. Remove `adapter` from 3' of R2.
 2. Remove `primer`, `barcode` and a 3bp gap from 5' of R2.
 3. Filter out if the remain of R2 is shorter than minToMapShear.
-4. Accumulate the adjacent duplicates by [`sxCumulateToMapCutAdaptSpliter.awk`][`sxCumulateToMapCutAdaptSpliter.awk`].
+4. Accumulate the adjacent duplicates by [`sxCumulateToMapCutAdaptSpliter.awk`][sxCumulateToMapCutAdaptSpliter.awk].
 
-[`demultiplex.md`]: /rearr/core/demultiplex/
-[`rearr`]: /rearr/core/rearr/
-[`sxCumulateToMapCutAdaptSpliter.awk`]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/
+[demultiplex.md]: /rearr/core/demultiplex/
+[rearr]: /rearr/core/rearr/
+[sxCumulateToMapCutAdaptSpliter.awk]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/
 
 # Source
 ~~~bash

@@ -12,9 +12,9 @@ spliterIndices=index1,index2,... minScores=score1,score2,... demultiplex.md inpu
 ```
 
 # Introduction
-Each `spliterIndice` is `bowtie2` index of a `fasta` file containing possible alignment references (i.e. `spliter`s) of the corresponding (depends on the order) output `seq` of [`removeDuplicates.sh`][`removeDuplicates.sh.md`]. The `Nth` `spliter`s of `spliterIndice`s are usually different. However, they must have the same name. The name denotes the 0-based reference id (`refId`).
+Each `spliterIndice` is `bowtie2` index of a `fasta` file containing possible alignment references (i.e. `spliter`s) of the corresponding (depends on the order) output `seq` of [`removeDuplicates.sh`][removeDuplicates.sh.md]. The `Nth` `spliter`s of `spliterIndice`s are usually different. However, they must have the same name. The name denotes the 0-based reference id (`refId`).
 
-`bowtie2` either aligns `seq` to one of the `spliter`s or failed to align. If all `seq`s in a line output of [`removeDuplicates.sh`][`removeDuplicates.sh.md`] successfully align to `spliter`s of the same `refId`, then `demultiplex.md` will print the following to `stdout`.
+`bowtie2` either aligns `seq` to one of the `spliter`s or failed to align. If all `seq`s in a line output of [`removeDuplicates.sh`][removeDuplicates.sh.md] successfully align to `spliter`s of the same `refId`, then `demultiplex.md` will print the following to `stdout`.
 ```
 seq1<tab>seq2<tab>...<tab>count<tab>refId<tab>rs1<tab>re1<tab>qs1<tab>qe1<tab>rs2<tab>re2<tab>qs2<tab>qe2<tab>...
 ```
@@ -26,7 +26,7 @@ seq1<tab>seq2<tab>...<tab>count<tab>refId<tab>rs1<tab>re1<tab>qs1<tab>qe1<tab>rs
 --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,scoreN
 ```
 
-[`removeDuplicates.sh.md`]: /rearr/core/remove-duplicates/
+[removeDuplicates.sh.md]: /rearr/core/remove-duplicates/
 
 # Source
 ~~~bash
