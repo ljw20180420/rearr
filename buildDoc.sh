@@ -39,7 +39,7 @@ cd core/Rearrangement
 doxygen
 cd -
 
-add_header "Shi Xing extract spliter" "/sx/sx-extract-spliter/" < sx/sxExtractSpliter.md > docs/_docs/sxExtractSpliter.md
+add_header "Shi Xing extract spliter" "/sx/sx-extract-spliter/" < sx/sxExtractSpliter.sh > docs/_docs/sxExtractSpliter.sh.md
 
 add_header "Shi Xing post-process from demultiplex to rearr" "/sx/sx-cut-r2-adapter-filter-cumulate/" < sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.md > docs/_docs/sxCutR2AdapterFilterCumulate.md
 wrap_script awk < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk | add_header "Accumulate adjacent duplicated queries" "/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/" > docs/_docs/sxCumulateToMapCutAdaptSpliter.awk.md

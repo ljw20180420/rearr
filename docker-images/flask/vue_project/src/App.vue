@@ -50,7 +50,7 @@ const edgeTypes = {
 const nodes = ref([
   initDataTankNode(
     'csvfile', 0, 0,
-    "Shi Xing's .csv file contains hints to extract reference from genome. See sx/sxExtractSpliter.md.",
+    "Shi Xing's .csv file contains hints to extract reference from genome. See sx/sxExtractSpliter.sh.",
     {
       '.csv file': {
         type: 'file'
@@ -182,7 +182,7 @@ const nodes = ref([
   ),
   initRunJobNode(
     'sxGetSpliters', 300, 1500,
-    "Extract spliter from .csv file in the same format as Xing Shi. See sx/sxExtractSpliter.md."
+    "Extract spliter from .csv file in the same format as Xing Shi. See sx/sxExtractSpliter.sh."
   ),
   initDataTankNode(
     'spliters', 600, 1500,

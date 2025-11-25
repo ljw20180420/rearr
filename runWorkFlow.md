@@ -69,12 +69,12 @@ minToMapShear=31 \
 ```
 
 ## Extract spliter by sx module
-If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`sxExtractSpliter.md`][sxExtractSpliter.md].
+If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`sxExtractSpliter.sh`][sxExtractSpliter.sh.md].
 ```bash
 makeTarget=<fullPathToCsvFile>.target.fa \
 ./runWorkFlow.md
 ```
-Besides `<fullPathToCsvFile>.target.fa`, another file `<fullPathToCsvFile>.pair.fa` will be generated as well. This is because [`sxExtractSpliter.md`][sxExtractSpliter.md] always generate both `spliterIndices` simultaneously.
+Besides `<fullPathToCsvFile>.target.fa`, another file `<fullPathToCsvFile>.pair.fa` will be generated as well. This is because [`sxExtractSpliter.sh`][sxExtractSpliter.sh.md] always generate both `spliterIndices` simultaneously.
 
 ## Get reference by sx module
 If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`getSxCsvFileRef.md`][getSxCsvFileRef.md].
@@ -134,7 +134,7 @@ Another reason to use `runWorkFlow.md` is that it hides two cumbersome steps fro
 [demultiplex.sh.md]: /rearr/core/demultiplex/
 [workFlow.mak]: /rearr/other/run-work-flow/work-flow/
 [sxCutR2AdapterFilterCumulate.md]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
-[sxExtractSpliter.md]: /rearr/sx/sx-extract-spliter/
+[sxExtractSpliter.sh]: /rearr/sx/sx-extract-spliter/
 [getSxCsvFileRef.md]: /rearr/sx/get-sx-csvfile-ref/
 
 # Source

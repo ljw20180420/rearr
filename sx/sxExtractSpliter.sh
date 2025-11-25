@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 ```bash
-sxExtractSpliter.md csvfile >spliter1 3>spliter2
+sxExtractSpliter.sh csvfile >spliter1 3>spliter2
 ```
 
 # Introduction
