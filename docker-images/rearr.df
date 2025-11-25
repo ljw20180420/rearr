@@ -33,4 +33,4 @@ RUN cd /app && \
     # install sxInderSpliter
     cp sx/sxExtractSpliter.sh /usr/local/bin/ && \
     rm -rf sx
-COPY ["./runWorkFlow.md", "./workFlow.mak", "/app/"]
+COPY ["./runWorkFlow.sh", "./workFlow.mak", "/app/"]

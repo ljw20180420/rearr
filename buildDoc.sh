@@ -49,7 +49,7 @@ wrap_script perl < sx/getSxCsvFileRef/getSxCsvFileTarget.pl | add_header "Get Sh
 wrap_script awk < sx/getSxCsvFileRef/sxTargetSam2Bed.awk | add_header "Shi Xing target sam to bed" "/sx/get-sx-csvfile-ref/sx-target-sam-2-bed/" > docs/_docs/sxTargetSam2Bed.awk.md
 wrap_script perl < sx/getSxCsvFileRef/getSxRefFile.pl | add_header "Get Shi Xing reference file" "/sx/get-sx-csvfile-ref/get-sx-ref-file/" > docs/_docs/getSxRefFile.pl.md
 
-add_header "Run work flow" "/other/run-work-flow/" < runWorkFlow.md > docs/_docs/runWorkFlow.md
+add_header "Run work flow" "/other/run-work-flow/" < runWorkFlow.sh > docs/_docs/runWorkFlow.sh.md
 wrap_script makefile < workFlow.mak | add_header "Work flow" "/other/run-work-flow/work-flow/" > docs/_docs/workFlow.mak.md
 
 cd docs
