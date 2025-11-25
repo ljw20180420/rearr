@@ -61,7 +61,7 @@ def celeryDemultiplex(rmDupFile, spliterIndices, minScores, demultiplexFile):
 @celeryApp.task
 def celerySxPostProcess(demultiplexFile, minToMapShear, toMapFile):
     subprocess.run(
-        f"""sxCutR2AdapterFilterCumulate.md {demultiplexFile} {minToMapShear} >{toMapFile}""",
+        f"""sxCutR2AdapterFilterCumulate.sh {demultiplexFile} {minToMapShear} >{toMapFile}""",
         shell=True,
         executable="/bin/bash",
     )

@@ -27,7 +27,7 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 	gawk '{for (i = 1; i < NF / 3 - 1; ++i) printf("up\t"); printf("up\n");}' $< >$@
 
 %.post: %.demultiplex
-	sxCutR2AdapterFilterCumulate.md $< $(minToMapShear) >$@
+	sxCutR2AdapterFilterCumulate.sh $< $(minToMapShear) >$@
 
 %.target.fa %.pair.fa: %
 	sxExtractSpliter.sh $< >$<.target.fa 3>$<.pair.fa

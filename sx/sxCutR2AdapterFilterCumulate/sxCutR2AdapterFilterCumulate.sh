@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 ```bash
-sxCutR2AdapterFilterCumulate.md demultiplexFile minToMapShear >toMapFile
+sxCutR2AdapterFilterCumulate.sh demultiplexFile minToMapShear >toMapFile
 ```
 
 # Introduction

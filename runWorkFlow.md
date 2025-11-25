@@ -56,7 +56,7 @@ qv=-5
 Note that the defaults in this scripts override those in [`rearr`][rearr]. If you do not have `correctFile` and your `refFile=<path>.ref`, then you may just set `correctFile=<path>.correct`. `runWorkFlow.md` will generate `correctFile` with all corrections target `up`. For more details, see [`workFlow.mak`][workFlow.mak].
 
 ## Post-process by sx module
-The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [`rearr`][rearr]. The transformation between them is highly customized and changes from now and that. For Shi Xing's data, this is done by [`sxCutR2AdapterFilterCumulate.md`][sxCutR2AdapterFilterCumulate.md]. If you has a file `<dataDir>/<name>.demultiplex` output by [`demultiplex.sh`][demultiplex.sh.md], then just run
+The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [`rearr`][rearr]. The transformation between them is highly customized and changes from now and that. For Shi Xing's data, this is done by [`sxCutR2AdapterFilterCumulate.sh`][sxCutR2AdapterFilterCumulate.sh.md]. If you has a file `<dataDir>/<name>.demultiplex` output by [`demultiplex.sh`][demultiplex.sh.md], then just run
 ```bash
 makeTarget=<dataDir>/<name>.post \
 ./runWorkFlow.md
@@ -133,7 +133,7 @@ Another reason to use `runWorkFlow.md` is that it hides two cumbersome steps fro
 [removeDuplicates.sh.md]: /rearr/core/remove-duplicates/
 [demultiplex.sh.md]: /rearr/core/demultiplex/
 [workFlow.mak]: /rearr/other/run-work-flow/work-flow/
-[sxCutR2AdapterFilterCumulate.md]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
+[sxCutR2AdapterFilterCumulate.sh.md]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
 [sxExtractSpliter.sh]: /rearr/sx/sx-extract-spliter/
 [getSxCsvFileRef.md]: /rearr/sx/get-sx-csvfile-ref/
 
