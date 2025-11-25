@@ -1,21 +1,10 @@
 #!/bin/bash
 
-shopt -s expand_aliases
+# change to the dir of the script
+cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-alias ~~~=":<<'~~~bash'"
+# This is the start script for docker compose. It handles volume permissions, stop and remove previous up if the compose is already running, pull the latest remote images, and finally up the compose in the background.
 
-:<<'~~~bash'
-
-# Usage
-```bash
-./compose.sh
-```
-
-# Introduction
-This is the start script for docker compose. It handles volume permissions, stop and remove previous up if the compose is already running, pull the latest remote images, and finally up the compose in the background.
-
-# Source
-~~~bash
 # shiny
 chmod a+w docker-images/shiny/logs
 chmod a+w docker-images/shiny/apps/downstreamAnalysis/www
@@ -29,8 +18,3 @@ docker compose down
 docker compose pull
 # Up in the background
 docker compose up -d
-~~~
-
-~~~bash
-alias ~~~=":" # This suppresses a warning and is not part of source.
-~~~
