@@ -32,7 +32,7 @@ add_header "Remove duplicates" "/core/remove-duplicates/" < core/removeDuplicate
 add_header "Demultiplex" "/core/demultiplex/" < core/demultiplex/demultiplex.sh > docs/_docs/demultiplex.sh.md
 wrap_script awk < core/demultiplex/getAlignPos.awk | add_header "Get alignment position" "/core/demultiplex/get-alignment-position/" > docs/_docs/getAlignPos.awk.md
 
-add_header "Chimeric alignment" "/core/rearr/" < core/Rearrangement/rearr.md > docs/_docs/rearr.md
+add_header "Chimeric alignment" "/core/rearr/" < core/Rearrangement/rearr.sh > docs/_docs/rearr.sh.md
 wrap_script awk < core/Rearrangement/correct_micro_homology.awk | add_header "Correct micro-homology" "/core/rearr/correct-micro-homology/" > docs/_docs/correct_micro_homology.awk.md
 mkdir -p docs/core/rearr
 cd core/Rearrangement
