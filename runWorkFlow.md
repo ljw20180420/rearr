@@ -136,7 +136,6 @@ Another reason to use `runWorkFlow.md` is that it hides two cumbersome steps fro
 [`sxCutR2AdapterFilterCumulate.md`]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
 [`sxExtractSpliter.md`]: /rearr/sx/sx-extract-spliter/
 [`getSxCsvFileRef.md`]: /rearr/sx/get-sx-csvfile-ref/
-[`loginWorker.md`]: /rearr/other/login-worker/
 
 # Source
 ~~~bash

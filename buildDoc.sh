@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 ```bash
-./buildDoc.md
+./buildDoc.sh
 ```
 
 # Introduction
@@ -56,12 +56,10 @@ wrap_script perl < sx/getSxCsvFileRef/getSxCsvFileTarget.pl | add_header "Get Sh
 wrap_script awk < sx/getSxCsvFileRef/sxTargetSam2Bed.awk | add_header "Shi Xing target sam to bed" "/sx/get-sx-csvfile-ref/sx-target-sam-2-bed/" > docs/_docs/sxTargetSam2Bed.awk.md
 wrap_script perl < sx/getSxCsvFileRef/getSxRefFile.pl | add_header "Get Shi Xing reference file" "/sx/get-sx-csvfile-ref/get-sx-ref-file/" > docs/_docs/getSxRefFile.pl.md
 
-add_header "Build documentation" "/others/build-doc/" < buildDoc.md > docs/_docs/buildDoc.md
+add_header "Build documentation" "/others/build-doc/" < buildDoc.sh > docs/_docs/buildDoc.sh.md
 
-add_header "Compose script" "/others/compose/" < compose.md > docs/_docs/compose.md
+add_header "Compose script" "/others/compose/" < compose.sh > docs/_docs/compose.sh.md
 wrap_script yaml < compose.yaml | add_header "Compose yaml" "/others/compose/yaml" > docs/_docs/compose.yaml.md
-
-add_header "Login worker" "/other/login-worker/" < loginWorker.md > docs/_docs/loginWorker.md
 
 add_header "Run work flow" "/other/run-work-flow/" < runWorkFlow.md > docs/_docs/runWorkFlow.md
 wrap_script makefile < workFlow.mak | add_header "Work flow" "/other/run-work-flow/work-flow/" > docs/_docs/workFlow.mak.md

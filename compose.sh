@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 ```bash
-./compose.md
+./compose.sh
 ```
 
 # Introduction
