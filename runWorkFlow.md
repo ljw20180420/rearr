@@ -77,7 +77,7 @@ makeTarget=<fullPathToCsvFile>.target.fa \
 Besides `<fullPathToCsvFile>.target.fa`, another file `<fullPathToCsvFile>.pair.fa` will be generated as well. This is because [`sxExtractSpliter.sh`][sxExtractSpliter.sh.md] always generate both `spliterIndices` simultaneously.
 
 ## Get reference by sx module
-If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`getSxCsvFileRef.md`][getSxCsvFileRef.md].
+If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`getSxCsvFileRef.sh`][getSxCsvFileRef.sh.md].
 ```bash
 makeTarget=<fullPathToCsvFile>.ref \
 genome=<pathToGenome> \
@@ -135,7 +135,7 @@ Another reason to use `runWorkFlow.md` is that it hides two cumbersome steps fro
 [workFlow.mak]: /rearr/other/run-work-flow/work-flow/
 [sxCutR2AdapterFilterCumulate.sh.md]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
 [sxExtractSpliter.sh]: /rearr/sx/sx-extract-spliter/
-[getSxCsvFileRef.md]: /rearr/sx/get-sx-csvfile-ref/
+[getSxCsvFileRef.sh.md]: /rearr/sx/get-sx-csvfile-ref/
 
 # Source
 ~~~bash

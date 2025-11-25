@@ -44,7 +44,7 @@ add_header "Shi Xing extract spliter" "/sx/sx-extract-spliter/" < sx/sxExtractSp
 add_header "Shi Xing post-process from demultiplex to rearr" "/sx/sx-cut-r2-adapter-filter-cumulate/" < sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh > docs/_docs/sxCutR2AdapterFilterCumulate.sh.md
 wrap_script awk < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk | add_header "Accumulate adjacent duplicated queries" "/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/" > docs/_docs/sxCumulateToMapCutAdaptSpliter.awk.md
 
-add_header "Get Shi Xing csvfile reference" "/sx/get-sx-csvfile-ref/" < sx/getSxCsvFileRef/getSxCsvFileRef.md > docs/_docs/getSxCsvFileRef.md
+add_header "Get Shi Xing csvfile reference" "/sx/get-sx-csvfile-ref/" < sx/getSxCsvFileRef/getSxCsvFileRef.sh > docs/_docs/getSxCsvFileRef.sh.md
 wrap_script perl < sx/getSxCsvFileRef/getSxCsvFileTarget.pl | add_header "Get Shi Xing csvfile target" "/sx/get-sx-csvfile-ref/get-sx-csvfile-target/" > docs/_docs/getSxCsvFileTarget.pl.md
 wrap_script awk < sx/getSxCsvFileRef/sxTargetSam2Bed.awk | add_header "Shi Xing target sam to bed" "/sx/get-sx-csvfile-ref/sx-target-sam-2-bed/" > docs/_docs/sxTargetSam2Bed.awk.md
 wrap_script perl < sx/getSxCsvFileRef/getSxRefFile.pl | add_header "Get Shi Xing reference file" "/sx/get-sx-csvfile-ref/get-sx-ref-file/" > docs/_docs/getSxRefFile.pl.md

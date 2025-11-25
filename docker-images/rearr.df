@@ -23,7 +23,7 @@ RUN cd /app && \
 COPY ["./sx", "/app/sx"]
 RUN cd /app && \
     # install getSxCsvFileRef
-    cp sx/getSxCsvFileRef/getSxCsvFileRef.md /usr/local/bin/ && \
+    cp sx/getSxCsvFileRef/getSxCsvFileRef.sh /usr/local/bin/ && \
     cp sx/getSxCsvFileRef/getSxCsvFileTarget.pl /usr/local/bin/ && \
     cp sx/getSxCsvFileRef/getSxRefFile.pl /usr/local/bin/ && \
     cp sx/getSxCsvFileRef/sxTargetSam2Bed.awk /usr/share/awk/ && \

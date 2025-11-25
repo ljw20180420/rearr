@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 ```bash
-getSxCsvFileRef.md csvfile genome bowtie2index [ext1up ext1down ext2up ext2down]
+getSxCsvFileRef.sh csvfile genome bowtie2index [ext1up ext1down ext2up ext2down]
 ```
 
 # Introcution

@@ -93,7 +93,7 @@ def celerySxGetReference(
     csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile
 ):
     subprocess.run(
-        f"""getSxCsvFileRef.md {csvFile} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}""",
+        f"""getSxCsvFileRef.sh {csvFile} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}""",
         shell=True,
         executable="/bin/bash",
     )
