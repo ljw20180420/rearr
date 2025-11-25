@@ -33,7 +33,16 @@ Containers of `apptainer` share io and network with the host. The current workin
 
 ## WebUI
 
-The webUI is heavy, so not suitable to release as conda package. There is a prebuild [github docker package](https://ghcr.io/ljw20180420/rearr). To launch the webUI locally, either clone the repository
+This project has a webUI. The webUI contains a visualizing workflow.
+
+- Remove duplicates in fastq files.
+- Demultiplex according to markers like sgRNA (this diffs from data to data).
+- Extract alignable parts from fastq reads (this diffs from data to data).
+- Align reads chimerically.
+
+The webUI also contains shiny apps for post process and visualization.
+
+The webUI is too heavy to release as conda package. There is a prebuild [github docker package](https://ghcr.io/ljw20180420/rearr). To launch the webUI locally, either clone the repository
 ```console
 $ git clone https://github.com/ljw20180420/rearr.git
 ```
@@ -41,7 +50,9 @@ or download the latest working [release](https://github.com/ljw20180420/rearr/re
 ```console
 $ ./compose.sh
 ```
-The webUI is served at `http://ocalhost:80`. The first running of `./compose.sh` will pull the following images.
+The webUI is served at `http://ocalhost:80`. The visualizing workflow is at `http://ocalhost:80/workflow/`. The shiny apps for post process and visualization is at `http://ocalhost:80/shiny/`. The job history of the visualizing workflow can be checked at `http://ocalhost:80/flower/`.
+
+The first running of `./compose.sh` will pull the following images.
 
 - ghcr.io/ljw20180420/rearr:latest
 - rabbitmq:latest
