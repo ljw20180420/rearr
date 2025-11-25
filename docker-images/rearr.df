@@ -15,7 +15,7 @@ RUN cd /app && \
     mkdir -p /usr/share/awk/ && \
     cp core/Rearrangement/correct_micro_homology.awk /usr/share/awk/ && \
     # install removeDup
-    cp core/removeDuplicates.md /usr/local/bin/ && \
+    cp core/removeDuplicates.sh /usr/local/bin/ && \
     # install demultiplex
     cp core/demultiplex/demultiplex.md /usr/local/bin/ && \
     cp core/demultiplex/getAlignPos.awk /usr/share/awk/ && \

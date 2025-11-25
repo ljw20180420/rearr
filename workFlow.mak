@@ -8,7 +8,7 @@ spliterIndexBts = $(foreach dir,$(subst $(comma), ,$(spliterIndices)),$(addprefi
 outputDir = $(dir $(word 1, $(subst $(comma), ,$(fastqFiles))))
 
 $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
-	removeDuplicates.md $^ >$@
+	removeDuplicates.sh $^ >$@
 
 %.1.bt2 %.2.bt2 %.3.bt2 %.4.bt2 %.rev.1.bt2 %.rev.2.bt2: %
 	bowtie2-build -q $< $<

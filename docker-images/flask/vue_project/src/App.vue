@@ -155,7 +155,7 @@ const nodes = ref([
   ),
   initDataTankNode(
     'rawData', 600, 1000,
-    'Files containing rawdata. See core/removeDuplicates.md.',
+    'Files containing rawdata. See core/removeDuplicates.sh.',
     {
       '.fastq files': [
         {
@@ -169,11 +169,11 @@ const nodes = ref([
   ),
   initRunJobNode(
     'removeDuplicates', 900, 1000,
-    'Remove duplicated reads in rawData fastq files. See core/removeDuplicates.md.'
+    'Remove duplicated reads in rawData fastq files. See core/removeDuplicates.sh.'
   ),
   initDataTankNode(
     'noDuplicates', 1200, 1000,
-    'File of side-by-side reads in rawData fastq files without duplicates. See core/removeDuplicates.md.',
+    'File of side-by-side reads in rawData fastq files without duplicates. See core/removeDuplicates.sh.',
     {
       '.noDup file': {
         type: 'file'
@@ -350,7 +350,6 @@ const edges = ref(source_target_pairs);
 
 const { onConnect, addEdges } = useVueFlow();
 onConnect(param => {
-  debugger;
   param.id = `${param.source}-${param.target}`;
   param.type = 'dataTunnelEdge';
   addEdges(param);
