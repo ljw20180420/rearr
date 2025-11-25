@@ -21,11 +21,17 @@ wrap_script()
 # Failure stop the execution.
 set -e
 
+# # Build vue3 front end
+# cd docker-images/flask/vue_project
+# npm run build
+# cd -
+
+# # Render videos
 # ./render.sh
-cp \
-    manim/media/video/main/MainScene.mp4 \
-    manim/media/video/algorithm/Forward.mp4 \
-    docs/assets/videos/
+# cp \
+#     manim/media/videos/main/480p30/MainScene.mp4 \
+#     manim/media/videos/algorithm/480p30/Forward.mp4 \
+#     docs/assets/videos/
 
 add_header "Remove duplicates" "/core/remove-duplicates/" < core/removeDuplicates.sh > docs/_docs/removeDuplicates.sh.md
 
