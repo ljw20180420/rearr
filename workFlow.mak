@@ -14,7 +14,7 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 	bowtie2-build -q $< $<
 
 %.demultiplex: %.noDup $(spliterIndexBts)
-	spliterIndices=$(spliterIndices) minScores=$(minScores) demultiplex.md $< >$@
+	spliterIndices=$(spliterIndices) minScores=$(minScores) demultiplex.sh $< >$@
 
 %.alg: %.post $(refFile) $(correctFile)
 	rearrangement <$< 3<$(refFile) -s0 $(s0) -s1 $(s1) -s2 $(s2) -u $(u) -v $(v) -ru $(ru) -rv $(rv) -qu $(qu) -qv $(qv) | gawk -f correct_micro_homology.awk -- $(refFile) $(correctFile) >$@

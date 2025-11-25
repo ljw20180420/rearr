@@ -51,7 +51,7 @@ def celeryBuildSpliter(spliters):
 @celeryApp.task
 def celeryDemultiplex(rmDupFile, spliterIndices, minScores, demultiplexFile):
     subprocess.run(
-        f"""spliterIndices={",".join(spliterIndices)} minScores={",".join([str(minScore) for minScore in minScores])} demultiplex.md {rmDupFile} >{demultiplexFile}""",
+        f"""spliterIndices={",".join(spliterIndices)} minScores={",".join([str(minScore) for minScore in minScores])} demultiplex.sh {rmDupFile} >{demultiplexFile}""",
         shell=True,
         executable="/bin/bash",
     )

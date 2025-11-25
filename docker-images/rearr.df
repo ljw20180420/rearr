@@ -17,7 +17,7 @@ RUN cd /app && \
     # install removeDup
     cp core/removeDuplicates.sh /usr/local/bin/ && \
     # install demultiplex
-    cp core/demultiplex/demultiplex.md /usr/local/bin/ && \
+    cp core/demultiplex/demultiplex.sh /usr/local/bin/ && \
     cp core/demultiplex/getAlignPos.awk /usr/share/awk/ && \
     rm -rf core
 COPY ["./sx", "/app/sx"]

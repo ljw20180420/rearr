@@ -186,7 +186,7 @@ const nodes = ref([
   ),
   initDataTankNode(
     'spliters', 600, 1500,
-    'Reads for demultiplexing .noDup file. Spliters maps to rawData fastq files bijectively. See core/demultiplex.md.',
+    'Reads for demultiplexing .noDup file. Spliters maps to rawData fastq files bijectively. See core/demultiplex.sh.',
     {
       '.fasta files': [
         {
@@ -204,7 +204,7 @@ const nodes = ref([
   ),
   initDataTankNode(
     'demultiplexAuxiliary', 1200, 1500,
-    'Bowtie2 index of spliters. minScores are used to filter low-quality maps in demultiplex step. See core/demultiplex.md.',
+    'Bowtie2 index of spliters. minScores are used to filter low-quality maps in demultiplex step. See core/demultiplex.sh.',
     {
       'auxiliaries': [
         {
@@ -264,11 +264,11 @@ const nodes = ref([
   ),
   initRunJobNode(
     'demultiplex', 1500, 1500,
-    'Demultiplex .noDup reads by spliters. See core/demultiplex.md.'
+    'Demultiplex .noDup reads by spliters. See core/demultiplex.sh.'
   ),
   initDataTankNode(
     'noMix', 1800, 1500,
-    "Demultiplexed .noDup reads. Minimal base number is feed to sxPostProcess together with .demultiplex file to filter too short reads after remove 5' spliter and 3' adapter. See core/demultiplex.md.",
+    "Demultiplexed .noDup reads. Minimal base number is feed to sxPostProcess together with .demultiplex file to filter too short reads after remove 5' spliter and 3' adapter. See core/demultiplex.sh.",
     {
       'minimal base number': {
         type: 'value',

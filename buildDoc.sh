@@ -29,7 +29,7 @@ cp \
 
 add_header "Remove duplicates" "/core/remove-duplicates/" < core/removeDuplicates.sh > docs/_docs/removeDuplicates.sh.md
 
-add_header "Demultiplex" "/core/demultiplex/" < core/demultiplex/demultiplex.md > docs/_docs/demultiplex.md
+add_header "Demultiplex" "/core/demultiplex/" < core/demultiplex/demultiplex.sh > docs/_docs/demultiplex.sh.md
 wrap_script awk < core/demultiplex/getAlignPos.awk | add_header "Get alignment position" "/core/demultiplex/get-alignment-position/" > docs/_docs/getAlignPos.awk.md
 
 add_header "Chimeric alignment" "/core/rearr/" < core/Rearrangement/rearr.md > docs/_docs/rearr.md
