@@ -14,4 +14,3 @@ docs/_docs/*
 test/genome/genome.fa
 manim/media
 manim_NHEJ/media
-docker-images/netStruct.png

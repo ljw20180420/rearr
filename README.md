@@ -1,4 +1,4 @@
-# Install
+# Accessibility
 
 ## Conda
 
@@ -41,7 +41,32 @@ or download the latest working [release](https://github.com/ljw20180420/rearr/re
 ```console
 $ ./compose.sh
 ```
-The webUI is served at `http://ocalhost:80`. The first running of `./compose.sh` will pull necessary images including the prebuild [github docker package](https://ghcr.io/ljw20180420/rearr).
+The webUI is served at `http://ocalhost:80`. The first running of `./compose.sh` will pull the following images.
+
+- ghcr.io/ljw20180420/rearr:latest
+- rabbitmq:latest
+- redis:latest
+- mher/flower:latest
+- nginx:latest
+
+```mermaid
+---
+title: Network topology
+---
+flowchart TD
+    CW1[celery worker 1] --> RA[rabbitMQ AMQP]
+    CW2[celery worker 2] --> RA
+    CWDOT[celery worker ...] --> RA
+    RD[redis] --> RA
+    RA --> FV[flask + vue3] --> WT[waitress] --> NX[nginx]
+    RA --> CB[celery beat] 
+    RA --> CF[celery flower] --> NX
+    SA1[shiny app 1] --> SS[shiny server] --> NX
+    SA2[shiny app 2] --> SS
+    SADOT[shiny app ...] --> SS
+```
+
+A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 
 # Documentation
 
