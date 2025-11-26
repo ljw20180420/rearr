@@ -1,46 +1,16 @@
-main:
-  - title: "Docs"
-    url: /about/
-
-others:
-  - title: "About"
-    url: /about/
-  - title: "Run work flow"
-    url: /other/run-work-flow/
-    children:
-    - title: "Work flow"
-      url: /other/run-work-flow/work-flow/
-
-core:
-  - title: "Remove duplicates"
-    url: /core/remove-duplicates/
-  - title: "Demultiplex"
-    url: /core/demultiplex/
-    children:
-      - title: "Get alignment position"
-        url: /core/demultiplex/get-alignment-position/
-  - title: "Chimeric alignment"
-    url: /core/rearr/
-    children:
-      - title: "Rearr detailed documentation"
-        url: /core/rearr/html/
-      - title: "Correct micro-homology"
-        url: /core/rearr/correct-micro-homology/
-
-sx:
-  - title: "Shi Xing extract spliter"
-    url: /sx/sx-extract-spliter/
-  - title: "Shi Xing post-process from demultiplex to rearr"
-    url: /sx/sx-cut-r2-adapter-filter-cumulate/
-    children:
-    - title: "Accumulate adjacent duplicated queries"
-      url: /sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/
-  - title: "Get Shi Xing csvfile reference"
-    url: /sx/get-sx-csvfile-ref/
-    children:
-    - title: "Get Shi Xing csvfile target"
-      url: /sx/get-sx-csvfile-ref/get-sx-csvfile-target/
-    - title: "Shi Xing target sam to bed"
-      url: /sx/get-sx-csvfile-ref/sx-target-sam-2-bed/
-    - title: "Get Shi Xing reference file"
-      url: /sx/get-sx-csvfile-ref/get-sx-ref-file/
+- name: Home
+  link: /
+- name: About
+  link: /about.html
+- name: Rearr
+  link: /core/rearr.html
+- name: Rearrangement
+  link: /core/rearr/html/
+- name: CMH
+  link: /core/correct_micro_homology.awk.html
+- name: RmDup
+  link: /auxilary/removeDuplicates.sh.html
+- name: RunWorkFlow
+  link: /workflow/runWorkFlow.sh.html
+- name: WorkFlow
+  link: /workflow/workFlow.mak.html
