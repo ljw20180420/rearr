@@ -45,6 +45,3 @@ wrap_script perl < sx/getSxCsvFileRef/getSxRefFile.pl | add_header "Get Shi Xing
 
 add_header "Run work flow" "/other/run-work-flow/" < runWorkFlow.sh > docs/_docs/runWorkFlow.sh.md
 wrap_script makefile < workFlow.mak | add_header "Work flow" "/other/run-work-flow/work-flow/" > docs/_docs/workFlow.mak.md
-
-cd docs
-bundle exec jekyll serve
