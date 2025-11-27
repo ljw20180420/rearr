@@ -63,7 +63,7 @@ const nodes = ref([
   ),
   initDataTankNode(
     'reference', 2400, 0,
-    'Reads in .post file are aligned to these references. See core/Rearrangement/rearr.md.',
+    'Reads in .post file are aligned to these references. See core/Rearrangement/core.md.',
     {
       '.ref file': {
         type: 'file'
@@ -285,7 +285,7 @@ const nodes = ref([
   ),
   initDataTankNode(
     'toAlign', 2400, 1500,
-    'Clean target reads ready for alignment. Alignment score settings are based on affine gap penalty. See rearrangment --help for details about s0, s1, s2, u, v, ru, rv, qu, qv. See core/Rearrangement/rearr.md.',
+    'Clean target reads ready for alignment. Alignment score settings are based on affine gap penalty. See rearrangment --help for details about s0, s1, s2, u, v, ru, rv, qu, qv. See core/Rearrangement/core.md.',
     {
       'align scores': {
         's0': {

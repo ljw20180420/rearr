@@ -48,7 +48,7 @@ set -e
 ########################
 
 add_header "Rearr" \
-    < core/Rearrangement/rearr.md
+    < core/Rearrangement/core.md
 
 mkdir -p docs/core/rearr
 cd core/Rearrangement
