@@ -10,7 +10,25 @@
   link: /core/correct_micro_homology.awk.html
 - name: RmDup
   link: /auxilary/removeDuplicates.sh.html
+- name: Demultiplex
+  link: /auxilary/demultiplex/demultiplex.sh.html
+- name: GetAlignPos
+  link: /auxilary/demultiplex/getAlignPos.awk.html
 - name: RunWorkFlow
   link: /workflow/runWorkFlow.sh.html
 - name: WorkFlow
   link: /workflow/workFlow.mak.html
+- name: SxExtractSpliter
+  link: /sx/sxExtractSpliter.sh.html
+- name: SxCutR2AdapterFilterCumulate
+  link: /sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh.html
+- name: SxCumulateToMapCutAdaptSpliter
+  link: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk.html
+- name: GetSxCsvFileRef
+  link: /sx/getSxCsvFileRef/getSxCsvFileRef.sh.html
+- name: GetSxCsvFileTarget
+  link: /sx/getSxCsvFileRef/getSxCsvFileTarget.pl.html
+- name: SxTargetSam2Bed
+  link: /sx/getSxCsvFileRef/sxTargetSam2Bed.awk.html
+- name: GetSxRefFile
+  link: /sx/getSxCsvFileRef/getSxRefFile.pl.html

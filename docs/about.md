@@ -1,5 +1,4 @@
 ---
-layout: default
 title: About
 ---
 
@@ -13,17 +12,17 @@ The CRISPR editing output is highly chimeric due to the following reasons.
 - Random insertion with or without template.
 - Unlisted/Unknown machanisms.
 
-<video controls>
+<iframe src="/assets/videos/MainScene.mp4" width="854" height="480"></iframe>
+<!-- <video controls width="854" height="480">
 <source src="/assets/videos/MainScene.mp4" type="video/mp4">
-Your browser does not support the video tag.
-</video>
+</video> -->
 
 Most current tools rely on non-chimeric alignment engines. [`rearr`][rearr] implements a chimeric alignment engine by applying the Smith-Waterman algorithm twice.
 
-<video controls>
+<iframe src="/assets/videos/Forward.mp4" width="854" height="480"></iframe>
+<!-- <video controls width="854" height="480">
 <source src="/assets/videos/Forward.mp4" type="video/mp4">
-Your browser does not support the video tag.
-</video>
+</video> -->
 
 [`rearr`][rearr] is very efficient in both time and space.
 

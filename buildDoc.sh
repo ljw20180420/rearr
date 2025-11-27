@@ -30,7 +30,7 @@ add_header()
     local name=$1
     local copy_path=$(name_to_link "${name}")
     mkdir -p $(dirname "${copy_path}")
-    sed "1i ---\nlayout: default\ntitle: \"${name}\"\n---\n\n" \
+    sed "1i ---\ntitle: \"${name}\"\n---\n\n" \
         > "${copy_path}"
 }
 
@@ -43,11 +43,9 @@ wrap_script()
 # Failure stop the execution.
 set -e
 
-add_header "RmDup" \
-    < core/removeDuplicates.sh
-
-# add_header "Demultiplex" "/core/demultiplex/" < core/demultiplex/demultiplex.sh > docs/_docs/demultiplex.sh.md
-# wrap_script awk < core/demultiplex/getAlignPos.awk | add_header "Get alignment position" "/core/demultiplex/get-alignment-position/" > docs/_docs/getAlignPos.awk.md
+########################
+# core
+########################
 
 add_header "Rearr" \
     < core/Rearrangement/rearr.md
@@ -61,15 +59,23 @@ wrap_script awk \
     < core/Rearrangement/correct_micro_homology.awk |
 add_header "CMH"
 
-# add_header "Shi Xing extract spliter" "/sx/sx-extract-spliter/" < sx/sxExtractSpliter.sh > docs/_docs/sxExtractSpliter.sh.md
+########################
+# auxilary
+########################
 
-# add_header "Shi Xing post-process from demultiplex to rearr" "/sx/sx-cut-r2-adapter-filter-cumulate/" < sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh > docs/_docs/sxCutR2AdapterFilterCumulate.sh.md
-# wrap_script awk < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk | add_header "Accumulate adjacent duplicated queries" "/sx/sx-cut-r2-adapter-filter-cumulate/sx-cumulate-to-map-cut-adapt-spliter/" > docs/_docs/sxCumulateToMapCutAdaptSpliter.awk.md
+add_header "RmDup" \
+    < core/removeDuplicates.sh
 
-# add_header "Get Shi Xing csvfile reference" "/sx/get-sx-csvfile-ref/" < sx/getSxCsvFileRef/getSxCsvFileRef.sh > docs/_docs/getSxCsvFileRef.sh.md
-# wrap_script perl < sx/getSxCsvFileRef/getSxCsvFileTarget.pl | add_header "Get Shi Xing csvfile target" "/sx/get-sx-csvfile-ref/get-sx-csvfile-target/" > docs/_docs/getSxCsvFileTarget.pl.md
-# wrap_script awk < sx/getSxCsvFileRef/sxTargetSam2Bed.awk | add_header "Shi Xing target sam to bed" "/sx/get-sx-csvfile-ref/sx-target-sam-2-bed/" > docs/_docs/sxTargetSam2Bed.awk.md
-# wrap_script perl < sx/getSxCsvFileRef/getSxRefFile.pl | add_header "Get Shi Xing reference file" "/sx/get-sx-csvfile-ref/get-sx-ref-file/" > docs/_docs/getSxRefFile.pl.md
+add_header "Demultiplex" \
+    < core/demultiplex/demultiplex.sh
+
+wrap_script awk \
+    < core/demultiplex/getAlignPos.awk |
+add_header "GetAlignPos"
+
+########################
+# workflow
+########################
 
 add_header "RunWorkFlow" \
     < runWorkFlow.sh
@@ -77,3 +83,32 @@ add_header "RunWorkFlow" \
 wrap_script make \
     < workFlow.mak |
 add_header "WorkFlow"
+
+########################
+# in-house
+########################
+
+add_header "SxExtractSpliter" \
+    < sx/sxExtractSpliter.sh
+
+add_header "SxCutR2AdapterFilterCumulate" \
+    < sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh
+
+wrap_script awk \
+    < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk |
+add_header "SxCumulateToMapCutAdaptSpliter"
+
+add_header "GetSxCsvFileRef" \
+    < sx/getSxCsvFileRef/getSxCsvFileRef.sh
+    
+wrap_script perl \
+    < sx/getSxCsvFileRef/getSxCsvFileTarget.pl |
+add_header "GetSxCsvFileTarget"
+
+wrap_script awk \
+    < sx/getSxCsvFileRef/sxTargetSam2Bed.awk |
+add_header "SxTargetSam2Bed"
+
+wrap_script perl \
+    < sx/getSxCsvFileRef/getSxRefFile.pl |
+add_header "GetSxRefFile"

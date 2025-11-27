@@ -1,8 +1,13 @@
 ---
-layout: default
 title: Home
 ---
 
-# Welcome to rearr!
+<h1>Latest Posts</h1>
 
-Rearr recognizes CRISPR editing outputs.
+<ul>
+  {% for post in site.posts %}
+    <li>
+      <h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
+    </li>
+  {% endfor %}
+</ul>
