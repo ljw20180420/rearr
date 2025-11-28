@@ -1,7 +1,7 @@
 <aside class="sidebar">
   {% for item in site.data.navigation %}
     {% if item.sub %}
-      <details>
+      <details open>
         <summary>
           <a href="{{ item.link }}" {% if page.url == item.link %}class="current"{% endif %}>
             {{ item.name }}
@@ -10,7 +10,7 @@
         <div class="indent">
           {% for subitem in item.sub %}
             {% if subitem.sub %}
-              <details>
+              <details open>
                 <summary>
                   <a href="{{ subitem.link }}" {% if page.url == subitem.link %}class="current"{% endif %}>
                     {{ subitem.name }}
