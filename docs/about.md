@@ -4,7 +4,7 @@ title: About
 
 # Introduction
 
-This is the github page for repository [`rearr`][rearr] includes a core chimeric alignment engine `rearr`. Although `rearr` can be used for any chimeric alignment job in theory, [`rearr`][rearr] is mainly used to analyze CRISPR editing data.
+This is the github page for a chimeric alignment engine [`rearr`][rearr]. Although [`rearr`][rearr] can be used for any chimeric alignment job in theory, [`rearr`][rearr] is mainly used to analyze CRISPR editing data.
 
 The CRISPR editing output is highly chimeric due to the following reasons.
 

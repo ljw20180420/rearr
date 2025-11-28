@@ -7,23 +7,48 @@ alias ~~~=":<<'~~~bash'"
 :<<'~~~bash'
 
 # Usage
+
 ```bash
-removeDuplicates.sh fastq1(.gz|.zip) fastq2(.gz|.zip) fastq3(.gz|.zip) ... >rmDupFile
+$ removeDuplicates.sh fastqR1 [fastqR2 [fastqR3 ...]]
 ```
 
-# Introduction
-The input of `removeDuplicates.sh` are several `fastq` files. `removeDuplicates.sh` accepts `fastq` files in `.gz` or `.zip` compressed form. The `Nth` sequence of each input `fastq` file forms the `Nth` record. Two records are deplicates if their component sequences from the same input `fastq` file are always the same. `removeDuplicates.sh` remove and count duplicated records. The `stdout` are lines of the form
-```
-seq1<tab>seq2<tab>...<tab>count<newline>
-```
+<pre class="mermaid">
+---
+title: removeDuplicates.sh
+---
+flowchart TD
+    R1[(fastqR1)] --> RD[removeDuplicates.sh]
+    R2[(faqstR2)] --> RD
+    RN[(...)] --> RD
+    RD --> UNIQUE[(
+        <table>
+            <tr>
+                <th>R1</th>
+                <th>R2</th>
+                <th>...</th>
+                <th>#</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+</pre>
 
-## Why use several `fastq` files as input of `removeDuplicates.sh`
+- The input fastq files can be gz or zip compressed.
+- Multiple fastq files, even more than two, are supported in theory. However, in practice, one has only R1 and R2.
+- Two sequencings are duplicates if they are the same across all fastq file. The duplication number `#` follows the tandom tab separated list of reads in fastq files in `stdout` of `removeDuplicates.sh`.
+
+# Why use several `fastq` files as input of `removeDuplicates.sh`
 The paired-end next-generation sequencing (NGS) is quite common. Although mappable segment may be only in `R1` or `R2`, the other end still helps to determine the locus of the sequence. See [`demultiplex.sh`][demultiplex.sh.md].
 
-## Should I directly input raw `fastq` file, or remove `adapter`, `barcode` and so on before the input into `removeDuplicates.sh`
+# Should I directly input raw `fastq` file, or remove `adapter`, `barcode` and so on before the input into `removeDuplicates.sh`
 The `stdout` of `removeDuplicates.sh` are aligned to the so-call `spliters` in [`demultiplex.sh`][demultiplex.sh.md] to determine the loci of lines. If you preserve `adapter`, `barcode` and so on in the input `fastq` files, it is suggested to provide them in `spliters` as well.
 
-[demultiplex.sh.md]: /rearr/core/demultiplex/
+[demultiplex.sh.md]: /auxilary/demultiplex.sh.html
 
 # Source
 ~~~bash
