@@ -56,9 +56,6 @@ name_to_link
 # core
 ########################
 
-add_header "Core" \
-    < core/Rearrangement/core.md
-
 mkdir -p docs/core/rearr
 cd core/Rearrangement
 doxygen

@@ -97,7 +97,7 @@ void print_help(
     }
     if (print_help) {
         Command_content cc;
-        std::cout << "###Basic Usage\n"
+        std::cout << "### Basic Usage\n"
         << "rearrangement <input_file 3<reference_file\n"
 
         << "\n### Parameters\n"

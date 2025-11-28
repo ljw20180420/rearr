@@ -10,6 +10,8 @@ class Stagger(manim.Scene):
         if scene is None:
             scene = self
 
+        scene.next_section("Stagger")
+
         manimDNA = ManimDNA()
         watson = manimDNA.generate_random_DNA(20)
         watson = watson[:14] + "GG" + watson[16:]
@@ -35,7 +37,7 @@ class MMEJ(manim.Scene):
         if scene is None:
             scene = self
 
-        scene.next_section("Resection")
+        scene.next_section("MMEJ")
 
         manimDNA = ManimDNA()
         watson = "TACGTGGTGCTCGGGGGGCT"
@@ -50,8 +52,6 @@ class MMEJ(manim.Scene):
 
         for i in range(7):
             manimDNA.delete_DNA([watson[10 + i], crick[9 - i]], scene, run_time=0.2)
-
-        scene.next_section("MMEJ")
 
         manimDNA.move_DNA(watson[-3:] + crick[10:], manim.DOWN, 1, scene)
         manimDNA.move_DNA(watson[-3:] + crick[10:], manim.LEFT, 10, scene)
@@ -83,7 +83,7 @@ class Unilateral(manim.Scene):
         if scene is None:
             scene = self
 
-        scene.next_section("Resection")
+        scene.next_section("Unilateral")
 
         manimDNA = ManimDNA()
         watson = "TACGTGGTGCTCGGGGGGCT"
@@ -98,8 +98,6 @@ class Unilateral(manim.Scene):
 
         for i in range(7):
             manimDNA.delete_DNA([watson[10 + i], crick[9 - i]], scene, run_time=0.2)
-
-        scene.next_section("Unilateral")
 
         manimDNA.move_DNA(watson[-3:] + crick[10:], manim.DOWN, 1, scene)
         manimDNA.move_DNA(watson[-3:] + crick[10:], manim.LEFT, 10, scene)
@@ -117,7 +115,7 @@ class Unilateral2(manim.Scene):
         if scene is None:
             scene = self
 
-        scene.next_section("Resection")
+        scene.next_section("Unilateral2")
 
         manimDNA = ManimDNA()
         watson = "TACGTGGTGCTCGGGGGGCT"
@@ -132,8 +130,6 @@ class Unilateral2(manim.Scene):
 
         for i in range(7):
             manimDNA.delete_DNA([watson[10 + i], crick[9 - i]], scene, run_time=0.2)
-
-        scene.next_section("Unilateral")
 
         manimDNA.move_DNA(watson[-3:] + crick[10:], manim.DOWN, 1, scene)
         manimDNA.move_DNA(watson[-3:] + crick[10:], manim.LEFT, 10, scene)
@@ -150,6 +146,8 @@ class Chimeric(manim.Scene):
     def construct(self, scene: manim.Scene = None):
         if scene is None:
             scene = self
+
+        scene.next_section("Chimeric")
 
         manimDNA = ManimDNA()
 
@@ -225,6 +223,8 @@ class DoubleCleavage(manim.Scene):
         if scene is None:
             scene = self
 
+        scene.next_section("DoubleCleavage")
+
         manimDNA = ManimDNA()
         watson = manimDNA.generate_random_DNA(30)
         watson = watson[:4] + "CC" + watson[6:24] + "GG" + watson[26:]
@@ -270,6 +270,8 @@ class ScoreCrossCleavage(manim.Scene):
         if scene is None:
             scene = self
 
+        scene.next_section("ScoreCrossCleavage")
+
         manimDNA = ManimDNA()
         watson = manimDNA.generate_random_DNA(20)
         watson = watson[:14] + "GG" + watson[16:]
@@ -296,6 +298,8 @@ class MicroHomology(manim.Scene):
     def construct(self, scene: manim.Scene = None):
         if scene is None:
             scene = self
+
+        scene.next_section("MicroHomology")
 
         manimDNA = ManimDNA()
         watson = manimDNA.generate_random_DNA(20)
