@@ -21,6 +21,7 @@ flowchart TD
     R2[(faqstR2)] --> RD
     RN[(...)] --> RD
     RD --> UNIQUE[(
+        <h1>removeDuplicates_file</h1>
         <table>
             <tr>
                 <th>R1</th>
@@ -39,7 +40,7 @@ flowchart TD
 </pre>
 
 - The input fastq files can be gz or zip compressed.
-- Multiple fastq files, even more than two, are supported in theory. However, in practice, one has only R1 and R2.
+- Multiple fastq files, even more than two, are supported in theory. However, in practice, one has only `R1` and `R2`.
 - Two sequencings are duplicates if they are the same across all fastq file. The duplication number `#` follows the tandom tab separated list of reads in fastq files in `stdout` of `removeDuplicates.sh`.
 
 # Why use several `fastq` files as input of `removeDuplicates.sh`

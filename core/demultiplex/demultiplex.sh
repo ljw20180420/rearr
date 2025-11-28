@@ -7,26 +7,122 @@ alias ~~~=":<<'~~~bash'"
 :<<'~~~bash'
 
 # Usage
+
 ```bash
-spliterIndices=index1,index2,... minScores=score1,score2,... demultiplex.sh inputFile >demultiplexFile
+$ spliterIndices=marker1,marker2,... \
+  minScores=score1,score2,... \
+  demultiplex.sh \
+    removeDuplicates_file
 ```
 
-# Introduction
-Each `spliterIndice` is `bowtie2` index of a `fasta` file containing possible alignment references (i.e. `spliter`s) of the corresponding (depends on the order) output `seq` of [`removeDuplicates.sh`][removeDuplicates.sh.md]. The `Nth` `spliter`s of `spliterIndice`s are usually different. However, they must have the same name. The name denotes the 0-based reference id (`refId`).
+<pre class="mermaid">
+---
+title: demultiplex.sh
+---
+flowchart TD
+    UNIQUE[(
+        <h1>removeDuplicates_file</h1>
+        <table>
+            <tr>
+                <th>R1</th>
+                <th>R2</th>
+                <th>...</th>
+                <th>#</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+    UNIQUE --> DM[demultiplex.sh]
+    MARKER[(
+        <h1>spliterIndices</h1>
+        <table>
+            <tr>
+                <th>marker1</th>
+                <th>marker2</th>
+                <th>...</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+    SCORE[(
+        <h1>minScores</h1>
+        <table>
+            <tr>
+                <th>score1</th>
+                <th>score2</th>
+                <th>...</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+    MARKER --> DM
+    SCORE --> DM
+    DM --> ONTARGET[(
+        <h1>stdout</h1>
+        <table>
+            <tr>
+                <th>R1</th>
+                <th>R2</th>
+                <th>...</th>
+                <th>#</th>
+                <th>id</th>
+                <th>rstart1</th>
+                <th>rend1</th>
+                <th>qstart1</th>
+                <th>qend1</th>
+                <th>rstart2</th>
+                <th>rend2</th>
+                <th>qstart2</th>
+                <th>qend2</th>
+                <td>...</td>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+</pre>
 
-`bowtie2` either aligns `seq` to one of the `spliter`s or failed to align. If all `seq`s in a line output of [`removeDuplicates.sh`][removeDuplicates.sh.md] successfully align to `spliter`s of the same `refId`, then `demultiplex.sh` will print the following to `stdout`.
-```
-seq1<tab>seq2<tab>...<tab>count<tab>refId<tab>rs1<tab>re1<tab>qs1<tab>qe1<tab>rs2<tab>re2<tab>qs2<tab>qe2<tab>...
-```
-`seqN` and `count` are copied from `inputFile`. `rsN` and `reN` denotes the left-close-right-open 0-based range of the aligned part of the `Nth` reference (`spliter`) in the local alignment. `qsN` and `qeN` denotes that of the query (`seq`).
-
-## Alignment details
-`minScore`s are feed to `bowtie2` to filter alignments with low scores. The alignments are in local mode instead of end-to-end mode, and there is no reverse complement. The full alignment setting is
+- `markerN` is `bowtie2` index of a `fasta` file containing possible alignment targets of `RN`.
+- `scoreN` is feed to `bowtie2` to filter alignments with low scores. The alignments are in local mode instead of end-to-end mode, and there is no reverse complement. The full alignment setting is
 ```bash
 --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,scoreN
 ```
+- The fasta name of `marker1` and `marker2` must the 0-based reference `id`, see the [core part of rearr][core.md].
+- `R1` and `R2` are given in `removeDuplicates_file`, which is `stdout` of [`removeDuplicates.sh`][removeDuplicates.sh.md].
+- `demultiplex.sh` only output a row in `removeDuplicates_file` only of both `R1` and `R2` aligned to targets with consistant reference `id`.
+- `R1`, `R2` and `#` are copied from `removeDuplicates_file`.
+- `rstartN` and `rendN` denotes the left-close-right-open 0-based range of the aligned part of the target of `RN`. `qstartN` and `qendN` denotes that of `RN`.
+- Mutiple `marker` (more than two) are supported in theory.
 
-[removeDuplicates.sh.md]: /rearr/core/remove-duplicates/
+[core.md]: /core.html
+[removeDuplicates.sh.md]: /auxilary/removeDuplicates.sh.html
 
 # Source
 ~~~bash
