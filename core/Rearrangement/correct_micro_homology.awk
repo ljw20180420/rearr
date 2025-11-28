@@ -1,10 +1,10 @@
 #!/usr/bin/env -S gawk -f
 
-# Usage: correct_micro_homology.AWK -- refFile correctFile <algFile
+# Usage: correct_micro_homology.awk -- reference_file direction_file < rearrangement_output
 
-# refFile is the same as the input of rearrangement. For each row of refFile, correctFile has a row of fields being either up or down. Each field corresponds a junction of two adjacent references in the row of refFile. For up\down, correct_micro_homology.AWK try to remove the deletion or templated insertion of the up\down-stream. This is achieved by modifying the alignment up to the equivalence of micro-homology.
+# reference_file is the same as the input of rearrangement. For each row of reference_file, direction_file has a row of fields being either up or down. Each field corresponds a junction of two adjacent references in the row of reference_file. For up\down, correct_micro_homology.awk try to remove the deletion or templated insertion of the up\down-stream DSB end. This is achieved by modifying the alignment up to the equivalence of microhomology.
 
-# The header line of each alignment output by rearrangement only contains index, count, score, refId. correct_micro_homology.AWK enriches the header by adding unaligned part of query and aligned ranges of both reference and query. The cut sites at junctions of adjacent references are also appended to the header line.
+# The header line of each alignment output by rearrangement only contains idx, #, score, id. correct_micro_homology.awk enriches the header by adding unaligned part of query and aligned ranges of both reference and query. The cut sites at junctions of adjacent references are also appended to the header line.
 
 BEGIN{
     FS = "\t"
