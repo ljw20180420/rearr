@@ -14,7 +14,7 @@
   width: 100px;
   overflow-x: hidden;
   background: #DDDDDD;
-  padding: 0px 0px;
+  padding: 10px 20px;
   transition: all 0.4s ease;
 }
 
@@ -22,3 +22,6 @@
   width: 400px;
 }
 
+.indent {
+  margin-left: 18.5px;
+}
