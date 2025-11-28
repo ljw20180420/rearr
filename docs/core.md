@@ -76,7 +76,8 @@ flowchart TD
                 <td>id</td>
             </tr>
             <tr>
-                <td>ref</td>
+                <td>ref1</td>
+                <td>ref2</td>
             </tr>
             <tr>
                 <td>query</td>
@@ -188,7 +189,8 @@ flowchart TD
                 <td>id</td>
             </tr>
             <tr>
-                <td>ref</td>
+                <td>ref1</td>
+                <td>ref2</td>
             </tr>
             <tr>
                 <td>query</td>
@@ -218,7 +220,8 @@ flowchart TD
                 <td>ref1+cut2</td>
             </tr>
             <tr>
-                <td>ref</td>
+                <td>ref1</td>
+                <td>ref2</td>
             </tr>
             <tr>
                 <td>query</td>
@@ -305,29 +308,54 @@ flowchart TD
         </table>
     )] --> REARR
 
-    REF --> CMH[correct_micro_homology.AWK]
+    REF --> CMH[correct_micro_homology.awk]
     DIRECTION[(
+        <h1>direction_file</h1>
         <table>
             <tr>
-                <th>up/down</th>
+                <th>up/down:1:2</th>
+                <th>up/down:2:3</th>
+                <th>...</th>
+                <th>up/down:N-1:N</th>
             </tr>
             <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
                 <td>...</td>
             </tr>
         </table>
     )] --> CMH
     REARR --> CMH
     CMH --> CORRECTED[(
+        <h1>stdout</h1>
         <table>
             <tr>
                 <td>idx</td>
                 <td>#</td>
                 <td>score</td>
                 <td>id</td>
+                <td>dangle0</td>
+                <td>rstart1</td>
+                <td>qstart1</td>
+                <td>rend1</td>
+                <td>qend1</td>
+                <td>dangle1</td>
+                <td>rstart2</td>
+                <td>qstart2</td>
+                <td>rend2</td>
+                <td>qend2</td>
+                <td>dangle2</td>
                 <td>...</td>
+                <td>rstartN</td>
+                <td>qstartN</td>
+                <td>rendN</td>
+                <td>qendN</td>
+                <td>dangleN</td>
             </tr>
             <tr>
-                <td>ref</td>
+                <td>ref1</td>
+                <td>ref2</td>
             </tr>
             <tr>
                 <td>query</td>
@@ -335,5 +363,7 @@ flowchart TD
         </table>
     )]
 </pre>
+
+Each row of `direction_file` has multiple fields corresponding to the junctions of adjacent references. The extended header of `stdout` of `correct_micro_homology.awk` contains information for all alignment blocks and all unaligned parts of `query`.
 
 [rearr]: https://github.com/ljw20180420/rearr
