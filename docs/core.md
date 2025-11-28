@@ -6,7 +6,7 @@ title: About
 
 `rearrangement` is the core chimeric alignment engine of [`rearr`][rearr].
 
-{% highlight shell %}
+```shell
 $ rearrangement -h
 ### Basic Usage
 rearrangement <input_file 3<reference_file
@@ -23,7 +23,7 @@ rearrangement <input_file 3<reference_file
 -rv: Gap-opening penalty for unaligned reference ends. (default: 0)
 -qu: Gap-extending penalty for unaligned query parts. (default: 0)
 -qv: Gap-opening penalty for unaligned query parts. (default: -5)
-{% endhighlight %}
+```
 
 <pre class="mermaid">
 ---
@@ -116,7 +116,139 @@ Every three lines of the standard output represents a single alignment.
   - `id` is the 0-based line number of reference in `reference_file`.
 - The second line is the sequence of the reference.
 - The third line is the query with `idx`.
-- The second and third lines together form the actual alignment.
+- The second and third lines together form the actual alignment, as shown in the following example.
+
+```plaintext
+1       1       157     9300
+---aGTTGGCTAGTCAATACCTGAAGAGAGATTGGCCTGGAGTAAAAGC-TGAtaAAAGCTGATGATCGGAATGATTACAGGTAAATTAGTAGTTTTTGCCTATTTTCTTTAGAAACGGTTTTACTTAAAGCTATGTTACATATAGATAATGTAACACTCTAGt-------
+CTG----------------------------TTGGCCTGGAGTAAAAGCATGAT----------GATCGGAATGATTACAGGTAAA------------------------------------------------------------------------------CAAAAAA
+```
+
+# `correct_micro_homology.awk`
+
+Microhomology is common in CRISPR editing output. When microhomology happens, `rearrangement` cannot determine how to align `query` to `ref1` and `ref2`, as show in the following video.
+
+<video width="854" height="480" controls>
+  <source src="/assets/videos/MainScene_0008_MicroHomology.mp4" type="video/mp4">
+</video>
+
+`correct_micro_homology.awk` allows one to specify which end of the double strand break should be corrected toward the cleavage site up to the microhomology equivalence.
+
+```shell
+$ gawk -f correct_micro_homology.awk -- \
+    correct_micro_homology/reference_file \
+    correct_micro_homology/direction_file \
+    < correct_micro_homology/rearrangement_file
+```
+
+<pre class="mermaid">
+---
+title: correct_micro_homology.awk
+---
+flowchart TD
+    REF[(
+        <h1>reference_file</h1>
+        <table>
+            <tr>
+                <th>start1</th>
+                <th>ref1</th>
+                <th>end1</th>
+                <th>start2</th>
+                <th>ref2</th>
+                <th>end2</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> CMH[correct_micro_homology.awk]
+    DIRECTION[(
+        <h1>direction_file</h1>
+        <table>
+            <tr>
+                <th>Up/Down</th>
+            </tr>
+            <tr>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> CMH
+    ALG[(
+        <h1>rearrangement_file</h1>
+        <table>
+            <tr>
+                <td>idx</td>
+                <td>#</td>
+                <td>score</td>
+                <td>id</td>
+            </tr>
+            <tr>
+                <td>ref</td>
+            </tr>
+            <tr>
+                <td>query</td>
+            </tr>
+        </table>
+    )] --> CMH
+    CMH --> CORRECTED[(
+        <h1>stdout</h1>
+        <table>
+            <tr>
+                <td>idx</td>
+                <td>#</td>
+                <td>score</td>
+                <td>id</td>
+                <td>udangle</td>
+                <td>rstart1</td>
+                <td>qstart1</td>
+                <td>rend1</td>
+                <td>qend1</td>
+                <td>random</td>
+                <td>rstart2</td>
+                <td>qstart2</td>
+                <td>rend2</td>
+                <td>qend2</td>
+                <td>ddangle</td>
+                <td>cut1</td>
+                <td>ref1+cut2</td>
+            </tr>
+            <tr>
+                <td>ref</td>
+            </tr>
+            <tr>
+                <td>query</td>
+            </tr>
+        </table>
+    )]
+</pre>
+
+- `reference_file` is the same as that takes by `rearrangement`.
+- Each line in `direction_file` corresponds to each line in `reference_file`, which contains an `up` or `down` string to specify whether the upstream DSB end or the downstream DSB end should be corrected towards the cleavage site.
+- `rearrangement_file` is the `stdout` of `rearrangement`.
+- `stdout` of `correct_micro_homology.awk` is similar to `stdout` of `rearrangement` but with an extended header line.
+  - `udangle` is the upstream unaligned part of `query`.
+  - `rstart1` and `rend1` specifies the `ref1` range for the upstream block of the chimeric alignment.
+  - `qstart1` and `qend1` specifies the `query` range for the upstream block of the chimeric alignment.
+  - `random` is the unaligned part of `query` between the upstream and downstream block of the chimeric alignment..
+  - `rstart2` and `rend2` specifies the `ref2` range for the downstream block pf the chimeric alignment.
+  - `qstart2` and `qend2` specifies the `query` range for the downstream block of the chimeric alignment.
+  - `ddangle` is the downstream unaligned part of `query`.
+
+# Core
+
+`rearrangement` and `correct_micro_homology.awk` forms the core part of `rearr`. They are generally piped together.
+```shell
+$ rearrangement \
+    < input_file \
+    3< reference_file |
+  gawk -f correct_micro_homology.awk -- \
+    reference_file \
+    direction_file
 ```
 
 [rearr]: https://github.com/ljw20180420/rearr

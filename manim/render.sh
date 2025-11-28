@@ -13,4 +13,5 @@ cp \
     manim/media/videos/main/480p30/MainScene.mp4 \
     manim/media/videos/algorithm/480p30/Forward.mp4 \
     manim/media/videos/main/480p30/sections/MainScene_0007_ScoreCrossCleavage.mp4 \
+    manim/media/videos/main/480p30/sections/MainScene_0008_MicroHomology.mp4 \
     docs/assets/videos/
