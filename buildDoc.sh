@@ -7,28 +7,33 @@ cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 name_to_link()
 {
-    local query_name=$1
-    local line
-    local name
-    local link
-    while read line
+    local query="$1"
+    local lines
+    readarray lines < <(yq -c '.[]' < docs/_data/navigation.yml)
+    while [ ${#lines[@]} -gt 0 ]
     do
-        IFS="," read name link <<<$line
-        if [ "$query_name" = "$name" ]
+        local line="${lines[0]}"
+        lines=("${lines[@]:1}")
+        local name=$(yq -r '.name' <<<${line})
+        local link=$(yq -r '.link' <<<${line})
+        if ! [ "${link}" = "null" ]
         then
-            echo $link | sed 's/^/docs/;s/html$/md/'
-            return
+            name2link["${name}"]=$(sed 's/^/docs/;s/html$/md/' <<<"${link}")
         fi
-    done < <(
-        yq -c ".[]" docs/_data/navigation.yml | sed -r 's/\{"name":"(.+)","link":"(.+)"\}/\1,\2/'
-    )
-    exit 1
+        local sub=$(yq '.sub' <<<${line})
+        if ! [ "${sub}" = "null" ]
+        then
+            local sublines
+            readarray sublines < <(yq -c '.[]' <<< "${sub}")
+            lines=("${sublines[@]}" "${lines[@]}")
+        fi
+    done
 }
 
 add_header()
 {
     local name=$1
-    local copy_path=$(name_to_link "${name}")
+    local copy_path=${name2link["${name}"]}
     mkdir -p $(dirname "${copy_path}")
     sed "1i ---\ntitle: \"${name}\"\n---\n\n" \
         > "${copy_path}"
@@ -43,11 +48,15 @@ wrap_script()
 # Failure stop the execution.
 set -e
 
+# Initialize name2link
+declare -A name2link
+name_to_link
+
 ########################
 # core
 ########################
 
-add_header "Rearr" \
+add_header "Core" \
     < core/Rearrangement/core.md
 
 mkdir -p docs/core/rearr

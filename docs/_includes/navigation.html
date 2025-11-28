@@ -1,7 +1,31 @@
-<nav>
+<ul>
   {% for item in site.data.navigation %}
-    <a href="{{ item.link }}" {% if page.url == item.link %}class="current"{% endif %}>
-      {{ item.name }}
-    </a>
+    <li>
+      <a href="{{ item.link }}" {% if page.url == item.link %}class="current"{% endif %}>
+        {{ item.name }}
+      </a>
+      {% if item.sub %}
+        <ul>
+          {% for subitem in item.sub %}
+            <li>
+              <a href="{{ subitem.link }}" {% if page.url == subitem.link %}class="current"{% endif %}>
+                {{ subitem.name }}
+              </a>
+              {% if subitem.sub %}
+                <ul>
+                  {% for subsubitem in subitem.sub %}
+                    <li>
+                      <a href="{{ subsubitem.link }}" {% if page.url == subsubitem.link %}class="current"{% endif %}>
+                        {{ subsubitem.name }}
+                      </a>    
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </li>
   {% endfor %}
-</nav>
+</ul>

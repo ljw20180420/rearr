@@ -3,7 +3,9 @@ _site
 .jekyll-cache
 .jekyll-metadata
 vendor
+core.md
 core
 auxilary
-workflow
+runWorkFlow.sh.md
+runWorkFlow
 sx
