@@ -171,7 +171,7 @@ flowchart TD
         <h1>direction_file</h1>
         <table>
             <tr>
-                <th>Up/Down</th>
+                <th>up/down</th>
             </tr>
             <tr>
                 <td>...</td>
@@ -241,7 +241,7 @@ flowchart TD
 
 # Core
 
-`rearrangement` and `correct_micro_homology.awk` forms the core part of `rearr`. They are generally piped together.
+`rearrangement` and `correct_micro_homology.awk` forms the core part of [`rearr`][rearr]. They are generally piped together.
 ```shell
 $ rearrangement \
     < input_file \
@@ -250,5 +250,90 @@ $ rearrangement \
     reference_file \
     direction_file
 ```
+
+# More than two blocks
+
+`rearrangement` and `correct_micro_homology.awk` supports chimeric alignments with more than two blocks. The core part of [`rearr`][rearr] for multiple blocks is as follows.
+
+<pre class="mermaid">
+---
+title: core
+---
+flowchart TD
+    QUERY[(
+        <h1>input_file</h1>
+        <table>
+            <tr>
+                <th>query</th>
+                <th>#</th>
+                <th>id</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> REARR[rearrangement]
+    REF[(
+        <h1>reference_file</h1>
+        <table>
+            <tr>
+                <th>start1</th>
+                <th>ref1</th>
+                <th>end1</th>
+                <th>start2</th>
+                <th>ref2</th>
+                <th>end2</th>
+                <th>...</th>
+                <th>startN</th>
+                <th>refN</th>
+                <th>endN</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> REARR
+
+    REF --> CMH[correct_micro_homology.AWK]
+    DIRECTION[(
+        <table>
+            <tr>
+                <th>up/down</th>
+            </tr>
+            <tr>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> CMH
+    REARR --> CMH
+    CMH --> CORRECTED[(
+        <table>
+            <tr>
+                <td>idx</td>
+                <td>#</td>
+                <td>score</td>
+                <td>id</td>
+                <td>...</td>
+            </tr>
+            <tr>
+                <td>ref</td>
+            </tr>
+            <tr>
+                <td>query</td>
+            </tr>
+        </table>
+    )]
+</pre>
 
 [rearr]: https://github.com/ljw20180420/rearr

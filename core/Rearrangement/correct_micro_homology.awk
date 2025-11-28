@@ -121,7 +121,7 @@ function print_mark(insert, seg_range, ref, target,       ref_block, query_block
             
             # Determine the correct direction based on both correct_type in correctFile and the actual indel type.
             correct_direct = ""
-            if (correct_type[ref_id][i] == "up") {
+            if (tolower(correct_type[ref_id][i]) == "up") {
                 if (seg_range1[2] < gap_cut1) {
                     receiver = substr(refs[i], seg_range1[2] + 1, gap_cut1 - seg_range1[2])
                     provider = substr(refs[i + 1], seg_range2[1] + 1, seg_range2[2] - seg_range2[1])
