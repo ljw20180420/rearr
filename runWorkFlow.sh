@@ -166,12 +166,14 @@ rv=${rv:-0}
 qu=${qu:-0}
 qv=${qv:--5}
 
-
-if [ -n $CONDA_PREFIX ]
+if [ -f "workFlow.mak" ]
 then
-    make_search_path="$CONDA_PREFIX/share/rearr/"
+    make_file="workFlow.mak"
+else
+    make_file="$CONDA_PREFIX/share/rearr/workFlow.mak"
 fi
-make $@ -f ${make_search_path}workFlow.mak $makeTarget fastqFiles=$fastqFiles spliterIndices=$spliterIndices minScores=$minScores genome=$genome bowtie2index=$bowtie2index refFile=$refFile correctFile=$correctFile s0=$s0 s1=$s1 s2=$s2 u=$u v=$v ru=$ru rv=$rv qu=$qu qv=$qv minToMapShear=$minToMapShear
+
+make $@ -f ${make_file} $makeTarget fastqFiles=$fastqFiles spliterIndices=$spliterIndices minScores=$minScores genome=$genome bowtie2index=$bowtie2index refFile=$refFile correctFile=$correctFile s0=$s0 s1=$s1 s2=$s2 u=$u v=$v ru=$ru rv=$rv qu=$qu qv=$qv minToMapShear=$minToMapShear
 ~~~
 
 ~~~bash
