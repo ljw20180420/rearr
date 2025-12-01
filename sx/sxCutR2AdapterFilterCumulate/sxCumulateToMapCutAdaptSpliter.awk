@@ -1,9 +1,9 @@
 #!/usr/bin/env -S gawk -f
 
-# Usage: sxCumulateToMapCutAdaptSplite.awk <query|count|refId
+# Usage: sxCumulateToMapCutAdaptSplite.awk <query|#|id
 # Accumulate the counts of adjacent duplicated queries
-# Input: query|count|refId
-# Output: query|count|refId
+# Input: query|#|id
+# Output: query|#|id
 
 BEGIN{
     FS = "\t"
