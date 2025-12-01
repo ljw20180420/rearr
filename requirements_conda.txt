@@ -1,0 +1,9 @@
+make
+cmake
+file
+sed
+gawk
+perl
+samtools
+bedtools
+bowtie2
