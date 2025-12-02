@@ -30,7 +30,7 @@ RUN cd /app && \
     # install cutR2Adapter
     cp sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh /usr/local/bin/ && \
     cp sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk /usr/share/awk/ && \
-    # install sxInderSpliter
+    # install sxInderMarker
     cp sx/sxExtractMarker.sh /usr/local/bin/ && \
     rm -rf sx
 COPY ["./runWorkFlow.sh", "./workFlow.mak", "/app/"]

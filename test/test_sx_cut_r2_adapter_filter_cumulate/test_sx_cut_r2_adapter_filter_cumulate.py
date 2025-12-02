@@ -29,7 +29,7 @@ class TestSxCumulateToMapCutAdaptMarker(unittest.TestCase):
             suffix=".post.partial.test",
         )[1]
 
-    def test_sx_cumulate_to_map_cut_adapt_Marker(self):
+    def test_sx_cumulate_to_map_cut_adapt_marker(self):
         subprocess.run(
             f"""gawk -f sxCumulateToMapCutAdaptMarker.awk < {self.toAccFile} > {self.postFilePartialTest}""",
             shell=True,

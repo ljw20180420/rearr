@@ -21,7 +21,7 @@ def suite_no_genome():
     suite.addTest(TestRearrangementAlign("test_align"))
     suite.addTest(TestRemoveDuplicates("test_remove_duplicates"))
     suite.addTest(
-        TestSxCumulateToMapCutAdaptMarker("test_sx_cumulate_to_map_cut_adapt_spliter")
+        TestSxCumulateToMapCutAdaptMarker("test_sx_cumulate_to_map_cut_adapt_marker")
     )
     suite.addTest(
         TestSxCutR2AdapterFilterCumulate("test_sx_cut_r2_adapter_filter_cumulate")

@@ -3,8 +3,8 @@ const validTargets = {
     'removeDuplicates': ['noDuplicates'],
     'noDuplicates': ['demultiplex'],
     'demultiplexAuxiliary': ['demultiplex'],
-    'spliters': ['buildSpliter'],
-    'buildSpliter': ['demultiplexAuxiliary'],
+    'markers': ['buildMarker'],
+    'buildMarker': ['demultiplexAuxiliary'],
     'demultiplex': ['noMix'],
     'noMix': ['sxPostProcess'],
     'sxPostProcess': ['toAlign'],
@@ -17,9 +17,9 @@ const validTargets = {
     'genome': ['indexGenome', 'sxGetReference'],
     'indexGenome': ['genomeIndex'],
     'genomeIndex': ['sxGetReference'],
-    'csvfile': ['sxGetSpliters', 'sxGetReference'],
+    'csvfile': ['sxGetMarkers', 'sxGetReference'],
     'sxGetReference': ['reference'],
-    'sxGetSpliters': ['spliters']
+    'sxGetMarkers': ['markers']
 }
 
 export {

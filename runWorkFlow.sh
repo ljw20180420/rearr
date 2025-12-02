@@ -37,7 +37,7 @@ flowchart TD
 
     UNIQUE --> DM[demultiplex.sh]
     MARKER[(
-        <h1>spliterIndices</h1>
+        <h1>markerIndices</h1>
         <table>
             <tr>
                 <th>marker1</th>
@@ -210,7 +210,7 @@ For more details, see [`removeDuplicates.sh`][removeDuplicates.sh.md].
 - To demultiplex `removeDuplicates_file.noDup`, run
 ```bash
 makeTarget=demultiplex_file.demultiplex \
-spliterIndices=marker1,marker2,... \
+markerIndices=marker1,marker2,... \
 minScores=score1,scores2,... \
 runWorkFlow.sh
 ```
@@ -259,7 +259,7 @@ Our in-house data use hg19.
 ```bash
 makeTarget=correct_micro_homology_file.alg \
 fastqFiles=fastqR2,fastqR1 \
-spliterIndices=pasmid_file.target.fa,pasmid_file.pair.fa \
+markerIndices=pasmid_file.target.fa,pasmid_file.pair.fa \
 genome=genome_file \
 bowtie2index=bowtie2index_prefix \
 refFile=plasmid_file.ref \
@@ -281,7 +281,7 @@ refFile=plasmid_file.ref \
 # The following parameters should be replaced.
 makeTarget=${makeTarget:-test/test_work_flow/rearr.alg}
 fastqFiles=${fastqFiles:-test/test_work_flow/A2-g1n-3.R2.fq.gz,test/test_work_flow/A2-g1n-3.fq.gz}
-spliterIndices=${spliterIndices:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.target.fa,test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.pair.fa}
+markerIndices=${markerIndices:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.target.fa,test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.pair.fa}
 minScores=${minScores:-30,100}
 
 minToMapShear=${minToMapShear:-30}
@@ -312,7 +312,7 @@ else
     make_file="$CONDA_PREFIX/share/rearr/workFlow.mak"
 fi
 
-make $@ -f ${make_file} $makeTarget fastqFiles=$fastqFiles spliterIndices=$spliterIndices minScores=$minScores genome=$genome bowtie2index=$bowtie2index refFile=$refFile correctFile=$correctFile s0=$s0 s1=$s1 s2=$s2 u=$u v=$v ru=$ru rv=$rv qu=$qu qv=$qv minToMapShear=$minToMapShear
+make $@ -f ${make_file} $makeTarget fastqFiles=$fastqFiles markerIndices=$markerIndices minScores=$minScores genome=$genome bowtie2index=$bowtie2index refFile=$refFile correctFile=$correctFile s0=$s0 s1=$s1 s2=$s2 u=$u v=$v ru=$ru rv=$rv qu=$qu qv=$qv minToMapShear=$minToMapShear
 ~~~
 
 ~~~bash

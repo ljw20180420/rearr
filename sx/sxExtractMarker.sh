@@ -8,15 +8,15 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 ```bash
-sxExtractMarker.sh csvfile >spliter1 3>spliter2
+sxExtractMarker.sh csvfile >marker1 3>marker2
 ```
 
 # Introduction
-This is an in-house script to extract `spliter`s from the `csvfile` of sx and lcy. The composition of the input csvfile is 
+This is an in-house script to extract `marker`s from the `csvfile` of sx and lcy. The composition of the input csvfile is 
 ```
 adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + target(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
 ```
-Two `spliter`s are output. `spliter1` is output from `fd 1` (`stdout`). `spliter1` consists of `primer` and `barcode`. `R2` is aligned to `spliter1`. Then 44bp `target` is 3bp downstream to the end of `barcode` in `R2`. `spliter2` is output from `fd 3`. `spliter2` consists of `adapter`, `sgRNA` and `scaffold`. `R1` is aligned to `spliter2`.
+Two `marker`s are output. `marker1` is output from `fd 1` (`stdout`). `marker1` consists of `primer` and `barcode`. `R2` is aligned to `marker1`. Then 44bp `target` is 3bp downstream to the end of `barcode` in `R2`. `marker2` is output from `fd 3`. `marker2` consists of `adapter`, `sgRNA` and `scaffold`. `R1` is aligned to `marker2`.
 
 # Source
 ~~~bash

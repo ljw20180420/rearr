@@ -36,22 +36,22 @@ def celeryRemoveDuplicates(inputFiles, rmDupFile):
 
 
 @celeryApp.task
-def celeryBuildSpliter(spliters):
-    for spliter in spliters:
+def celeryBuildMarker(markers):
+    for marker in markers:
         subprocess.run(
-            f"""bowtie2-build {spliter} {spliter}""", shell=True, executable="/bin/bash"
+            f"""bowtie2-build {marker} {marker}""", shell=True, executable="/bin/bash"
         )
     return [
-        f"{os.path.basename(spliter)}.{ext}"
-        for spliter in spliters
+        f"{os.path.basename(marker)}.{ext}"
+        for marker in markers
         for ext in ["1.bt2", "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2", "rev.2.bt2"]
     ]
 
 
 @celeryApp.task
-def celeryDemultiplex(rmDupFile, spliterIndices, minScores, demultiplexFile):
+def celeryDemultiplex(rmDupFile, markerIndices, minScores, demultiplexFile):
     subprocess.run(
-        f"""spliterIndices={",".join(spliterIndices)} minScores={",".join([str(minScore) for minScore in minScores])} demultiplex.sh {rmDupFile} >{demultiplexFile}""",
+        f"""markerIndices={",".join(markerIndices)} minScores={",".join([str(minScore) for minScore in minScores])} demultiplex.sh {rmDupFile} >{demultiplexFile}""",
         shell=True,
         executable="/bin/bash",
     )
@@ -101,10 +101,10 @@ def celerySxGetReference(
 
 
 @celeryApp.task
-def celerySxGetSpliters(csvFile, targetSpliter, pairSpliter):
+def celerySxGetMarkers(csvFile, targetMarker, pairMarker):
     subprocess.run(
-        f"""sxExtractMarker.sh {csvFile} >{targetSpliter} 3>{pairSpliter}""",
+        f"""sxExtractMarker.sh {csvFile} >{targetMarker} 3>{pairMarker}""",
         shell=True,
         executable="/bin/bash",
     )
-    return [os.path.basename(targetSpliter), os.path.basename(pairSpliter)]
+    return [os.path.basename(targetMarker), os.path.basename(pairMarker)]

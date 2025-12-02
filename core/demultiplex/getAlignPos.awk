@@ -1,9 +1,9 @@
 #!/usr/bin/env -S gawk -f
 
 # Usage: getAlignPos.awk <samFile
-# Get the start\end position of local alignment for spliter\sequence
+# Get the start\end position of local alignment for marker\sequence
 # Input: samFile without header
-# Output: flag|spliter|spliterStart|spliterEnd|seqStart|seqEnd
+# Output: flag|marker|markerStart|markerEnd|seqStart|seqEnd
 
 BEGIN{
     FS = "\t"
@@ -15,8 +15,8 @@ BEGIN{
         print $2, $3, 0, 0, 0, 0
     } else {
         n = patsplit($6, cigarSegs, /[0-9]+[MIDNSHPX=]/)
-        spliterStart = $4 - 1 # sam file is 1-based, so minus 1
-        spliterEnd = spliterStart 
+        markerStart = $4 - 1 # sam file is 1-based, so minus 1
+        markerEnd = markerStart 
         seqStart = 0
         seqEnd = 0
         for (i = 1; i <= n; ++i) {
@@ -28,9 +28,9 @@ BEGIN{
                 }
             }
             if (labels[1] ~ /[MD=X]/) {
-                spliterEnd += num[1]
+                markerEnd += num[1]
             }
         }
-        print $2, $3, spliterStart, spliterEnd, seqStart, seqEnd
+        print $2, $3, markerStart, markerEnd, seqStart, seqEnd
     }
 }

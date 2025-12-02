@@ -25,7 +25,7 @@
       link: /runWorkFlow/workFlow.mak.html
 - name: Sx
   sub:
-    - name: SxExtractSpliter
+    - name: SxExtractMarker
       link: /sx/sxExtractMarker.sh.html
     - name: SxCutR2AdapterFilterCumulate
       link: /sx/sxCutR2AdapterFilterCumulate.sh.html

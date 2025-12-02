@@ -9,7 +9,7 @@ alias ~~~=":<<'~~~bash'"
 # Usage
 
 ```bash
-$ spliterIndices=marker1,marker2,... \
+$ markerIndices=marker1,marker2,... \
   minScores=score1,score2,... \
   demultiplex.sh \
     removeDuplicates_file
@@ -39,7 +39,7 @@ flowchart TD
     )]
     UNIQUE --> DM[demultiplex.sh]
     MARKER[(
-        <h1>spliterIndices</h1>
+        <h1>markerIndices</h1>
         <table>
             <tr>
                 <th>marker1</th>
@@ -126,25 +126,25 @@ flowchart TD
 
 # Source
 ~~~bash
-mapSpliter()
+mapMarker()
 {
-    # Usage: mapSpliter minScore spliterIndex <reads
-    # Map reads to spliter by bowtie2
+    # Usage: mapMarker minScore markerIndex <reads
+    # Map reads to marker by bowtie2
     # Input: plain reads
     # Output: sam file without header
     minScore=$1
-    spliterIndex=$2
-    bowtie2 --quiet --mm --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,${minScore} -r -x "${spliterIndex}" -U - 2>/dev/null | samtools view
+    markerIndex=$2
+    bowtie2 --quiet --mm --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,${minScore} -r -x "${markerIndex}" -U - 2>/dev/null | samtools view
 }
 
-filterSpilters()
+filterMarkers()
 {
-    # Input: seq1|seq2|...|count|flag1|refId1|spliterStart1|spliterEnd1|seqStart1|seqEnd1|flag2|refId2|spliterStart2|spliterEnd2|seqStart2|seqEnd2|...
-    # Output: seq1|seq2|...|count|refId|spliterStart1|spliterEnd1|seqStart1|seqEnd1|spliterStart2|spliterEnd2|seqStart2|seqEnd2|...
+    # Input: seq1|seq2|...|count|flag1|refId1|markerStart1|markerEnd1|seqStart1|seqEnd1|flag2|refId2|markerStart2|markerEnd2|seqStart2|seqEnd2|...
+    # Output: seq1|seq2|...|count|refId|markerStart1|markerEnd1|seqStart1|seqEnd1|markerStart2|markerEnd2|seqStart2|seqEnd2|...
     # filter out rows with one of the following happens:
-    # 1. seqN failed to align spliterIndexN
+    # 1. seqN failed to align markerIndexN
     # 2. refIdM != refIdN for some M and N
-    gawk -F "\t" -v OFS="\t" -v firstFlagPos=$((${#spliterIndexArray[@]}+2)) '
+    gawk -F "\t" -v OFS="\t" -v firstFlagPos=$((${#markerIndexArray[@]}+2)) '
         {
             refId = $(firstFlagPos+1)
             for (i = firstFlagPos; i <= NF; i += 6) {
@@ -169,15 +169,15 @@ filterSpilters()
 
 inputFile=$1
 
-IFS=',' read -r -a spliterIndexArray <<< "$spliterIndices"
+IFS=',' read -r -a markerIndexArray <<< "${markerIndices}"
 IFS=',' read -r -a minScoreArray <<< "$minScores"
 maps=""
-for ii in ${!spliterIndexArray[@]}
+for ii in ${!markerIndexArray[@]}
 do
-    maps="${maps} <(cut -f$((ii+1)) ${inputFile} | mapSpliter ${minScoreArray[$ii]} ${spliterIndexArray[$ii]} | gawk -f getAlignPos.awk)"
+    maps="${maps} <(cut -f$((ii+1)) ${inputFile} | mapMarker ${minScoreArray[$ii]} ${markerIndexArray[$ii]} | gawk -f getAlignPos.awk)"
 done
 
-eval paste "${inputFile}" $maps | filterSpilters
+eval paste "${inputFile}" $maps | filterMarkers
 ~~~
 
 ~~~bash
