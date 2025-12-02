@@ -50,7 +50,7 @@ const edgeTypes = {
 const nodes = ref([
   initDataTankNode(
     'csvfile', 0, 0,
-    "Shi Xing's .csv file contains hints to extract reference from genome. See sx/sxExtractSpliter.sh.",
+    "In-house plasmid file contains sgRNAs used to extract references from genome. See sx/sxExtractSpliter.sh.",
     {
       '.csv file': {
         type: 'file'
@@ -59,7 +59,7 @@ const nodes = ref([
   ),
   initRunJobNode(
     'sxGetReference', 2100, 0,
-    "Extract reference from genome based on .csv file in the same format as Shi Xing. See sx/getSxCsvFileRef."
+    "Extract reference from genome based on in-house plasmid file. See sx/getSxCsvFileRef."
   ),
   initDataTankNode(
     'reference', 2400, 0,
@@ -182,7 +182,7 @@ const nodes = ref([
   ),
   initRunJobNode(
     'sxGetSpliters', 300, 1500,
-    "Extract spliter from .csv file in the same format as Xing Shi. See sx/sxExtractSpliter.sh."
+    "Extract marker from in-house plasmid file. See sx/sxExtractSpliter.sh."
   ),
   initDataTankNode(
     'spliters', 600, 1500,
@@ -281,7 +281,7 @@ const nodes = ref([
   ),
   initRunJobNode(
     'sxPostProcess', 2100, 1500,
-    "Remove 5' spliter and 3' adapter, and filter reads which are too short for alignment. sxPostProcess only supports data in the same format as Xing Shi. See sx/sxCutR2AdapterFilterCumulate."
+    "Remove 5' primer+barcode and 3' RCscaffold, and filter reads which are too short for alignment. sxPostProcess only supports data in the same format as our in-house data. See sx/sxCutR2AdapterFilterCumulate."
   ),
   initDataTankNode(
     'toAlign', 2400, 1500,
