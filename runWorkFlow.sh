@@ -293,8 +293,8 @@ ext2up=${ext2up:-10}
 ext2down=${ext2down:-100}
 
 # The following parameters are default in most cases.
-genome=${genome:-test/genome/genome.fa}
-bowtie2index=${bowtie2index:-test/genome/genome}
+genome=${genome:-"${GENOME}"}
+bowtie2index=${bowtie2index:-"${BOWTIE2INDEX}"}
 s0=${s0:--6}
 s1=${s1:-4}
 s2=${s2:-2}

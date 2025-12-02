@@ -4,9 +4,6 @@ import unittest
 import subprocess
 import filecmp
 import os
-import gzip
-import shutil
-import pathlib
 
 
 class TestWorkFlow(unittest.TestCase):
@@ -34,15 +31,6 @@ class TestWorkFlow(unittest.TestCase):
             "test/test_work_flow/rearr.post",
             "test/test_work_flow/rearr.alg",
         ]
-
-        # Uncompress genome.fa.gz if it is not uncompressed yet.
-        if not os.path.exists("test/genome/genome.fa"):
-            with gzip.open(f"test/genome/genome.fa.gz", "rb") as f_in, open(
-                "test/genome/genome.fa", "wb"
-            ) as f_out:
-                shutil.copyfileobj(f_in, f_out)
-            # Touch genome.fa.fai so that getfasta will not regenerate it.
-            pathlib.Path.touch("test/genome/genome.fa.fai")
 
     def test_work_flow(self):
         subprocess.run(f"""./runWorkFlow.sh -s""", shell=True, executable="/bin/bash")

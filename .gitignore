@@ -8,6 +8,5 @@ paper/complexity.tsv
 paper/tools
 core/Rearrangement/build/
 **/__pycache__/
-test/genome/genome.fa
 manim/media
 manim_NHEJ/media
