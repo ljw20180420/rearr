@@ -307,6 +307,25 @@ flowchart TD
             </tr>
         </table>
     )] --> REARR
+    REARR --> ALG[(
+        <h1>rearrangement_file</h1>
+        <table>
+            <tr>
+                <td>idx</td>
+                <td>#</td>
+                <td>score</td>
+                <td>id</td>
+            </tr>
+            <tr>
+                <td>ref1</td>
+                <td>ref2</td>
+                <td>...</td>
+            </tr>
+            <tr>
+                <td>query</td>
+            </tr>
+        </table>
+    )]
 
     REF --> CMH[correct_micro_homology.awk]
     DIRECTION[(
@@ -326,7 +345,7 @@ flowchart TD
             </tr>
         </table>
     )] --> CMH
-    REARR --> CMH
+    ALG --> CMH
     CMH --> CORRECTED[(
         <h1>stdout</h1>
         <table>

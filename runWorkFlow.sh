@@ -7,41 +7,222 @@ alias ~~~=":<<'~~~bash'"
 :<<'~~~bash'
 
 # Usage
-## Run test data
-```bash
-param1=value1 param2=value2 ... ./runWorkFlow.sh [options]
-```
-## Common
-`options` are passed to the underlying `make` calling. `makeTarget` is the file you want to generate. The underly `make` engine use file extensions to determine which step to run, so the file extension matters. Depending on `makeTarget`, you may need to provide additional parameters and input files.
 
-## Remove duplicates
-If you want to remove duplicates for paired (or multiply paired) `fastq` files, then run
 ```bash
-makeTarget=<dataDir>/<name>.noDup \
-fastqFiles=<fq1>,<fq2>,... \
-./runWorkFlow.sh
+param1=value1 param2=value2 ... runWorkFlow.sh [options]
+```
+
+<pre class="mermaid">
+---
+title: runWorkflow.sh
+---
+flowchart TD
+    R1[(fastqR1)] --> RD[removeDuplicates.sh]
+    R2[(faqstR2)] --> RD
+    RD --> UNIQUE[(
+        <h1>removeDuplicates_file</h1>
+        <table>
+            <tr>
+                <th>R1</th>
+                <th>R2</th>
+                <th>#</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+
+    UNIQUE --> DM[demultiplex.sh]
+    MARKER[(
+        <h1>spliterIndices</h1>
+        <table>
+            <tr>
+                <th>marker1</th>
+                <th>marker2</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+    SCORE[(
+        <h1>minScores</h1>
+        <table>
+            <tr>
+                <th>score1</th>
+                <th>score2</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+    MARKER --> DM
+    SCORE --> DM
+    DM --> ONTARGET[(
+        <h1>demultiplex_file</h1>
+        <table>
+            <tr>
+                <th>R1</th>
+                <th>R2</th>
+                <th>#</th>
+                <th>id</th>
+                <th>rstart1</th>
+                <th>rend1</th>
+                <th>qstart1</th>
+                <th>qend1</th>
+                <th>rstart2</th>
+                <th>rend2</th>
+                <th>qstart2</th>
+                <th>qend2</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+
+    ONTARGET --> sxCRAFC[sxCutR2AdapterFilterCumulate.sh] --> QUERY[(
+        <h1>input_file</h1>
+        <table>
+            <tr>
+                <th>query</th>
+                <th>#</th>
+                <th>id</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> REARR[rearrangement]
+    REF[(
+        <h1>reference_file</h1>
+        <table>
+            <tr>
+                <th>start1</th>
+                <th>ref1</th>
+                <th>end1</th>
+                <th>start2</th>
+                <th>ref2</th>
+                <th>end2</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> REARR
+    REARR --> ALG[(
+        <h1>rearrangement_file</h1>
+        <table>
+            <tr>
+                <td>idx</td>
+                <td>#</td>
+                <td>score</td>
+                <td>id</td>
+            </tr>
+            <tr>
+                <td>ref1</td>
+                <td>ref2</td>
+            </tr>
+            <tr>
+                <td>query</td>
+            </tr>
+        </table>
+    )]
+
+    REF --> CMH[correct_micro_homology.awk]
+    DIRECTION[(
+        <h1>direction_file</h1>
+        <table>
+            <tr>
+                <th>up/down</th>
+            </tr>
+            <tr>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> CMH
+    ALG --> CMH
+    CMH --> CORRECTED[(
+        <h1>correct_micro_homology_file</h1>
+        <table>
+            <tr>
+                <td>idx</td>
+                <td>#</td>
+                <td>score</td>
+                <td>id</td>
+                <td>udangle</td>
+                <td>rstart1</td>
+                <td>qstart1</td>
+                <td>rend1</td>
+                <td>qend1</td>
+                <td>random</td>
+                <td>rstart2</td>
+                <td>qstart2</td>
+                <td>rend2</td>
+                <td>qend2</td>
+                <td>ddangle</td>
+                <td>cut1</td>
+                <td>ref1+cut2</td>
+            </tr>
+            <tr>
+                <td>ref1</td>
+                <td>ref2</td>
+            </tr>
+            <tr>
+                <td>query</td>
+            </tr>
+        </table>
+    )]
+</pre>
+
+- `options` are passed to the underlying `make` calling. `makeTarget` is the file you want to generate. The underly `make` engine use file extensions to determine which step to run, so the file extension matters. Depending on `makeTarget`, you may need to provide additional parameters and input files.
+- To remove duplicates for paired (or multiply paired) `fastq` files, run
+```bash
+makeTarget=removeDuplicates_file.noDup \
+fastqFiles=fastqR1,fastqR2,... \
+runWorkFlow.sh
 ```
 For more details, see [`removeDuplicates.sh`][removeDuplicates.sh.md].
-
-## Demultiplex
-If you has a file `<dataDir>/<name>.noDup` output by [`removeDuplicates.sh`][removeDuplicates.sh.md], then run
+- To demultiplex `removeDuplicates_file.noDup`, run
 ```bash
-makeTarget=<dataDir>/<name>.demultiplex \
-spliterIndices=<path1>,<path2>,... \
-minScores=<score1>,<scores2>,... \
-./runWorkFlow.sh
+makeTarget=demultiplex_file.demultiplex \
+spliterIndices=marker1,marker2,... \
+minScores=score1,scores2,... \
+runWorkFlow.sh
 ```
-For more details, see [`demultiplex.sh`][demultiplex.sh.md].
-
-## Align
-If you has a file `<dataDir>/<name>.post` ready to align, then run
+For more details, see [`demultiplex.sh`][demultiplex.sh.md]. If `marker` is not indexed by `bowtie2`, `runWorkFlow.sh` will index it silently
+- To align `query.post` to reference and correct microhomology, run
 ```bash
-makeTarget=<dataDir>/<name>.alg \
-refFile=<pathToRefFile> \
-correctFile=<pathToCorrectFile> \
-./runWorkFlow.sh
+makeTarget=correct_micro_homology_file.alg \
+refFile=reference_file \
+correctFile=direction_file \
+runWorkFlow.sh
 ```
-This will generate the alignment file `<dataDir>/<name>.alg`. Note that the file ready to align must have extension `.post`. These following parameters with defaults control the chimeric alignment.
+Chimeric alignment scores used by `rearrangement` can be set as follows.
 ```bash
 s0=-6
 s1=4
@@ -53,89 +234,47 @@ rv=0
 qu=0
 qv=-5
 ```
-Note that the defaults in this scripts override those in [`rearr`][rearr]. If you do not have `correctFile` and your `refFile=<path>.ref`, then you may just set `correctFile=<path>.correct`. `runWorkFlow.sh` will generate `correctFile` with all corrections target `up`. For more details, see [`workFlow.mak`][workFlow.mak].
-
-## Post-process by sx module
-The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [`rearr`][rearr]. The transformation between them is highly customized and changes from now and that. For Shi Xing's data, this is done by [`sxCutR2AdapterFilterCumulate.sh`][sxCutR2AdapterFilterCumulate.sh.md]. If you has a file `<dataDir>/<name>.demultiplex` output by [`demultiplex.sh`][demultiplex.sh.md], then just run
+For more details, see [core part of rearr][core.md]. If only `refFile` is provided, a default `correctFile=${refFile}.correct` will be created with all `up`. For more details, see [`workFlow.mak`][workFlow.mak.md].
+- The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [core part of rearr][core.md]. The transformation between them is highly dependent on the design of experiment and changes from now and that. For out in-house data, this is done by [`sxCutR2AdapterFilterCumulate.sh`][sxCutR2AdapterFilterCumulate.sh.md] as follows.
 ```bash
-makeTarget=<dataDir>/<name>.post \
+makeTarget=query.post \
+minToMapShear=30 \
 ./runWorkFlow.sh
 ```
-Although the default `minToMapShear=30` works well for Shi Xing's data, you may modifty it as you like.
+- Our in-house data use plasmids in a `plasmid_file`. We extract demultiplex markers from those plasmids by [`sxExtractSpliter.sh`][sxExtractSpliter.sh.md].
 ```bash
-makeTarget=<dataDir>/<name>.post
-minToMapShear=31 \
+makeTarget=plasmid_file.target.fa \
 ./runWorkFlow.sh
 ```
-
-## Extract spliter by sx module
-If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`sxExtractSpliter.sh`][sxExtractSpliter.sh.md].
+Besides `plasmid_file.target.fa` used as demutiplex marker for `R2`, another file `plasmid_file.pair.fa` will be generated as well used as demutiplex marker for `R1`.
+- The `plasmid_file` also contain reference sequences (sgRNAs). These references are extract by [`getSxCsvFileRef.sh`][getSxCsvFileRef.sh.md].
 ```bash
-makeTarget=<fullPathToCsvFile>.target.fa \
+makeTarget=plasmid_file.ref \
+genome=genome_file \
+bowtie2index=bowtie2index_prefix \
 ./runWorkFlow.sh
 ```
-Besides `<fullPathToCsvFile>.target.fa`, another file `<fullPathToCsvFile>.pair.fa` will be generated as well. This is because [`sxExtractSpliter.sh`][sxExtractSpliter.sh.md] always generate both `spliterIndices` simultaneously.
-
-## Get reference by sx module
-If you has a csv file `<fullPathToCsvFile>` in the same format as Shi Xing, then you can extract spliters by [`getSxCsvFileRef.sh`][getSxCsvFileRef.sh.md].
+Our in-house data use hg19.
+- To run the full workflow for our in-house data (our in-house data put fastqR2 before fastqR1),
 ```bash
-makeTarget=<fullPathToCsvFile>.ref \
-genome=<pathToGenome> \
-bowtie2index=<pathToGenomeIndex> \
+makeTarget=correct_micro_homology_file.alg \
+fastqFiles=fastqR2,fastqR1 \
+spliterIndices=pasmid_file.target.fa,pasmid_file.pair.fa \
+genome=genome_file \
+bowtie2index=bowtie2index_prefix \
+refFile=plasmid_file.ref \
 ./runWorkFlow.sh
 ```
-The default settings for `genome` and `bowtie2index` is `hg19.fa`.
-```bash
-genome=test/genome/genome.fa
-bowtie2index=test/genome/genome
-```
-So just run
-```bash
-makeTarget=<fullPathToCsvFile>.ref \
-./runWorkFlow.sh
-```
+`runWorkFlow.sh` will run all steps above for you to generate `correct_micro_homology_file.alg`.
+- `runWorkFlow.sh` use make engine, which skips the updating of the outputs if no change is detected in the inputs necesary to generate that output. This saves computations for you.
 
-## Full workflow
-Assume that your design is the same as Shi Xing.
-```
-Then just run
-```bash
-makeTarget=<dataDir>/<name>.alg \
-fastqFiles=<pathToR2>,<pathToR1> \
-spliterIndices=<pathToCsvFile>.target.fa,<pathToCsvFile>.pair.fa \
-genome=<pathToGenome> \
-bowtie2index=<pathToGenomeIndex> \
-refFile=<pathToCsvFile>.ref \
-correctFile=<pathToCsvFile>.correct \
-./runWorkFlow.sh
-```
-`runWorkFlow.sh` will run all steps above for you to generate `<dataDir>/<name>.alg`. You may also try to modify the following parameters with defaults for better results.
-```bash
-minScores=30,100
-s0=-6
-s1=4
-s2=2
-u=-3
-v=-9
-ru=0
-rv=0
-qu=0
-qv=-5
-minToMapShear=30
-```
-
-# Introduction
-This scripts integrate all steps (remove duplicates, demultiplex, alignment and so on). However, why not just use the corresponding script to run each step? If you run test data for the second time, then `runWorkFlow.sh` will not do anythin because the underlying `make` engine is smart enough to skip the updating of the outputs when no change is detected in the inputs. Thus, the reason to use `runWorkFlow.sh` is that it may skip some duplicated computations for you. To actually run the test again, one need delete the previous results first.
-
-Another reason to use `runWorkFlow.sh` is that it hides two cumbersome steps from the user. For example, if `spliterIndices` used in [`demultiplex.sh`][demultiplex.sh.md] is not indexed by `bowtie2`, then `runWorkFlow.sh` will do this silently. Also, if `correctFile` has the same path and name as `refFile` (see [`rearr`][rearr]), but with the file extension `.correct` instead of `.ref`, and `runWorkFlow.sh` cannot find `correctFile` on the file system, then it will generate a default `correctFile` for you with all fields filled with `up`.
-
-[rearr]: /rearr/core/rearr/
-[removeDuplicates.sh.md]: /rearr/core/remove-duplicates/
-[demultiplex.sh.md]: /rearr/core/demultiplex/
-[workFlow.mak]: /rearr/other/run-work-flow/work-flow/
-[sxCutR2AdapterFilterCumulate.sh.md]: /rearr/sx/sx-cut-r2-adapter-filter-cumulate/
-[sxExtractSpliter.sh]: /rearr/sx/sx-extract-spliter/
-[getSxCsvFileRef.sh.md]: /rearr/sx/get-sx-csvfile-ref/
+[core.md]: /core.html
+[removeDuplicates.sh.md]: /auxilary/removeDuplicates.sh.html
+[demultiplex.sh.md]: /auxilary/demultiplex.sh.html
+[workFlow.mak.md]: /runWorkFlow/workFlow.mak.html
+[sxCutR2AdapterFilterCumulate.sh.md]: /sx/sxCutR2AdapterFilterCumulate.sh.html
+[sxExtractSpliter.sh.md]: /sx/sxExtractSpliter.sh.html
+[getSxCsvFileRef.sh.md]: /sx/getSxCsvFileRef.sh.html
 
 # Source
 ~~~bash
@@ -147,7 +286,7 @@ minScores=${minScores:-30,100}
 
 minToMapShear=${minToMapShear:-30}
 refFile=${refFile:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.ref}
-correctFile=${correctFile:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.correct}
+correctFile=${correctFile:-"${refFile}.correct"}
 ext1up=${ext1up:-50}
 ext1down=${ext1down:-0}
 ext2up=${ext2up:-10}

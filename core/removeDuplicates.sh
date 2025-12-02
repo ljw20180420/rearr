@@ -21,7 +21,7 @@ flowchart TD
     R2[(faqstR2)] --> RD
     RN[(...)] --> RD
     RD --> UNIQUE[(
-        <h1>removeDuplicates_file</h1>
+        <h1>stdout</h1>
         <table>
             <tr>
                 <th>R1</th>
