@@ -9,7 +9,7 @@ const validTargets = {
     'noMix': ['sxPostProcess'],
     'sxPostProcess': ['toAlign'],
     'toAlign': ['rearrange'],
-    'reference': ['defaultCorrect', 'rearrange'],
+    'reference': ['defaultDirection', 'rearrange'],
     'defaultCorrect': ['correct'],
     'correct': ['rearrange'],
     'rearrange': ['alignments'],

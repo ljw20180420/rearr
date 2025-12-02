@@ -15,7 +15,7 @@ from celery_project.tasks import (
     celeryDemultiplex,
     celerySxPostProcess,
     celeryRearrange,
-    celeryDefaultCorrect,
+    celeryDefaultDirection,
     celerySxGetReference,
     celerySxGetMarkers,
 )
@@ -169,7 +169,7 @@ def rearrange():
     json = request.get_json()
     toMapFile = os.path.join(session["dir"], json[".post file"]["value"])
     refFile = os.path.join(session["dir"], json[".ref file"]["value"])
-    directionFile = os.path.join(session["dir"], json[".correct file"]["value"])
+    directionFile = os.path.join(session["dir"], json[".direct file"]["value"])
     alignFile = os.path.splitext(toMapFile)[0] + ".alg"
     result = celeryRearrange.delay(
         toMapFile,
@@ -189,13 +189,13 @@ def rearrange():
     return {".alg file": {"taskId": result.id, "value": os.path.basename(alignFile)}}
 
 
-@flaskApp.put("/runJob/defaultCorrect")
-def defaultCorrect():
+@flaskApp.put("/runJob/defaultDirection")
+def defaultDirection():
     refFile = os.path.join(session["dir"], request.get_json()[".ref file"]["value"])
-    directionFile = os.path.splitext(refFile)[0] + ".correct"
-    result = celeryDefaultCorrect.delay(refFile, directionFile)
+    directionFile = os.path.splitext(refFile)[0] + ".direct"
+    result = celeryDefaultDirection.delay(refFile, directionFile)
     return {
-        ".correct file": {"taskId": result.id, "value": os.path.basename(directionFile)}
+        ".direct file": {"taskId": result.id, "value": os.path.basename(directionFile)}
     }
 
 

@@ -272,7 +272,7 @@ rv=0
 qu=0
 qv=-5
 ```
-For more details, see [core part of rearr][core.md]. If only `refFile` is provided, a default `directionFile=${refFile}.correct` will be created with all `up`. For more details, see [`workFlow.mak`][workFlow.mak.md].
+For more details, see [core part of rearr][core.md]. If only `refFile` is provided, a default `directionFile=${refFile}.direct` will be created with all `up`. For more details, see [`workFlow.mak`][workFlow.mak.md].
 - The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [core part of rearr][core.md]. The transformation between them is highly dependent on the design of experiment and changes from now and that. For out in-house data, this is done by [`sxCutR2AdapterFilterCumulate.sh`][sxCutR2AdapterFilterCumulate.sh.md] as follows.
 ```bash
 makeTarget=query.post \
@@ -324,7 +324,7 @@ minScores=${minScores:-30,100}
 
 minToMapShear=${minToMapShear:-30}
 refFile=${refFile:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.ref}
-directionFile=${directionFile:-"${refFile}.correct"}
+directionFile=${directionFile:-"${refFile}.direct"}
 ext1up=${ext1up:-50}
 ext1down=${ext1down:-0}
 ext2up=${ext2up:-10}

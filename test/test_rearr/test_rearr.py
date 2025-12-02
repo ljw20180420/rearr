@@ -35,12 +35,12 @@ class TestRearrangementAlign(unittest.TestCase):
     def setUp(self):
         rng = np.random.default_rng(63036)
 
-        # Write random references to temp .ref file. Write random correct directions to temp .correct file.
+        # Write random references to temp .ref file. Write random correct directions to temp .direct file.
         _, self.ref_file = mkstemp(dir="test/test_rearr", suffix=".ref")
-        _, self.correct_file = mkstemp(dir="test/test_rearr", suffix=".correct")
+        _, self.direction_file = mkstemp(dir="test/test_rearr", suffix=".direct")
         with open(self.ref_file, "w") as ref_fd, open(
-            self.correct_file, "w"
-        ) as correct_fd:
+            self.direction_file, "w"
+        ) as direction_fd:
             for seg_num in rng.integers(1, 5, 100):
                 for seg_idx in range(seg_num):
                     ref_len = rng.integers(50, 101)
@@ -50,10 +50,10 @@ class TestRearrangementAlign(unittest.TestCase):
                     sep = "\t" if seg_idx < seg_num - 1 else "\n"
                     _ = ref_fd.write(f"{cut1}\t{ref}\t{cut2}{sep}")
                     if seg_idx < seg_num - 1:
-                        correct_type = "up" if rng.random() < 0.5 else "down"
-                        correct_sep = "\t" if seg_idx < seg_num - 2 else ""
-                        _ = correct_fd.write(f"{correct_type}{correct_sep}")
-                correct_fd.write("\n")
+                        direction_type = "up" if rng.random() < 0.5 else "down"
+                        direction_sep = "\t" if seg_idx < seg_num - 2 else ""
+                        _ = direction_fd.write(f"{direction_type}{direction_sep}")
+                direction_fd.write("\n")
 
         # Read random references into ref_lines.
         with open(self.ref_file, "r") as fd:
@@ -100,7 +100,7 @@ class TestRearrangementAlign(unittest.TestCase):
             filecmp.cmp(self.alg_file, "test/test_rearr/output.alg", shallow=False)
         )
         subprocess.run(
-            f"""gawk -f correct_micro_homology.awk -- {self.ref_file} {self.correct_file} < test/test_rearr/output.alg > {self.alg_file}.corrected""",
+            f"""gawk -f correct_micro_homology.awk -- {self.ref_file} {self.direction_file} < test/test_rearr/output.alg > {self.alg_file}.corrected""",
             shell=True,
             executable="/bin/bash",
         )
@@ -114,7 +114,7 @@ class TestRearrangementAlign(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.ref_file)
-        os.remove(self.correct_file)
+        os.remove(self.direction_file)
         os.remove(self.post_file)
         os.remove(self.alg_file)
         os.remove(f"{self.alg_file}.corrected")

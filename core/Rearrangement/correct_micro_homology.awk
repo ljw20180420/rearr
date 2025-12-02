@@ -13,9 +13,9 @@ BEGIN{
     ref_id = 0
     # Read information from refFile.
     while (getline ref < refFile) {
-        getline correct < directionFile
+        getline direction < directionFile
         n = split(ref, ref_arr, "\t")
-        split(correct, correct_type[ref_id], "\t")
+        split(direction, direction_type[ref_id], "\t")
         ref_accum_len = 0
         for (i = 3; i < n; i += 3) {
             cut1s[ref_id, i / 3] = ref_arr[i]
@@ -119,9 +119,9 @@ function print_mark(insert, seg_range, ref, target,       ref_block, query_block
             gap_cut1 = get_gap_cut(refs[i], cut1s[ref_id, i])
             gap_cut2 = get_gap_cut(refs[i + 1], cut2s[ref_id, i])
             
-            # Determine the correct direction based on both correct_type in directionFile and the actual indel type.
+            # Determine the correct direction based on both direction_type in directionFile and the actual indel type.
             correct_direct = ""
-            if (tolower(correct_type[ref_id][i]) == "up") {
+            if (tolower(direction_type[ref_id][i]) == "up") {
                 if (seg_range1[2] < gap_cut1) {
                     receiver = substr(refs[i], seg_range1[2] + 1, gap_cut1 - seg_range1[2])
                     provider = substr(refs[i + 1], seg_range2[1] + 1, seg_range2[2] - seg_range2[1])

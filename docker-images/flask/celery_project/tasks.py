@@ -81,7 +81,7 @@ def celeryRearrange(
 
 
 @celeryApp.task
-def celeryDefaultCorrect(refFile, directionFile):
+def celeryDefaultDirection(refFile, directionFile):
     with open(refFile, "r") as rfd, open(directionFile, "w") as cfd:
         for line in rfd:
             cfd.write("\t".join(["up"] * (len(line.split("\t")) // 3 - 1)) + "\n")

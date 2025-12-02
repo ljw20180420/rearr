@@ -84,14 +84,14 @@ const nodes = ref([
     }
   ),
   initRunJobNode(
-    'defaultCorrect', 2700, 0,
-    'Generate default .correct file with all up.'
+    'defaultDirection', 2700, 0,
+    'Generate default .direct file with all up.'
   ),
   initDataTankNode(
     'correct', 3000, 0,
-    'Correct chimeric alignments. For each junction between two adjacent references, the alignment try to generate blunt end for either upstream or downstream. A default .correct file with all up can be generated from .ref file for convenience. See core/Rearrangement/correct_micro_homology.awk.',
+    'Correct chimeric alignments. For each junction between two adjacent references, the alignment try to generate blunt end for either upstream or downstream. A default .direct file with all up can be generated from .ref file for convenience. See core/Rearrangement/correct_micro_homology.awk.',
     {
-      '.correct file': {
+      '.direct file': {
         type: 'file'
       }
     }

@@ -11,7 +11,7 @@ class TestWorkFlow(unittest.TestCase):
         self.toTestFiles = [
             *[
                 f"test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv{ext}"
-                for ext in [".ref", ".ref.correct"]
+                for ext in [".ref", ".ref.direct"]
             ],
             *[
                 f"test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.{tp}.fa{ext}"

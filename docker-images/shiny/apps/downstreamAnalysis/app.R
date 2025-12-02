@@ -74,7 +74,7 @@ ui <- page_sidebar(
                 "cleavage site position in reference2"
             ),
             tooltip(
-                selectInput("alignOneCorrect", "correct", choices = c("up", "down"), selected = "up"),
+                selectInput("alignOneDirection", "direction", choices = c("up", "down"), selected = "up"),
                 "Remove deletion or templated insertion of the specified end through micro-homology."
             ),
             tooltip(
@@ -392,7 +392,7 @@ server <- function(input, output, session) {
         req(input$alignOneCut1)
         req(input$alignOneCut2)
         req(input$alignOneQuery)
-        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOneCorrect, input$alignOneQuery, algOneRefFile, algOneDirectionFile, algOneAlgFile)
+        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOneDirection, input$alignOneQuery, algOneRefFile, algOneDirectionFile, algOneAlgFile)
     })
 
     #########################################################
