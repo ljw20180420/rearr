@@ -14,21 +14,21 @@ class TestRearrangementHelp(unittest.TestCase):
         result = subprocess.run(
             "rearrangement -h", capture_output=True, shell=True, executable="/bin/bash"
         )
-        self.assertTrue(result.stdout.decode().startswith("###Basic Usage"))
+        self.assertTrue(result.stdout.decode().startswith("### Basic Usage"))
         result = subprocess.run(
             "rearrangement -help",
             capture_output=True,
             shell=True,
             executable="/bin/bash",
         )
-        self.assertTrue(result.stdout.decode().startswith("###Basic Usage"))
+        self.assertTrue(result.stdout.decode().startswith("### Basic Usage"))
         result = subprocess.run(
             "rearrangement --help",
             capture_output=True,
             shell=True,
             executable="/bin/bash",
         )
-        self.assertTrue(result.stdout.decode().startswith("###Basic Usage"))
+        self.assertTrue(result.stdout.decode().startswith("### Basic Usage"))
 
 
 class TestRearrangementAlign(unittest.TestCase):

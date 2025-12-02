@@ -31,7 +31,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Install doxygen
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen yq
       - name: Prepare docs
         run: ./buildDoc.sh
       - name: Build with Jekyll
