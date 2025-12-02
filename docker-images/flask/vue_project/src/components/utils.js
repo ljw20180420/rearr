@@ -10,7 +10,7 @@ const validTargets = {
     'sxPostProcess': ['toAlign'],
     'toAlign': ['rearrange'],
     'reference': ['defaultDirection', 'rearrange'],
-    'defaultCorrect': ['correct'],
+    'defaultDirection': ['correct'],
     'correct': ['rearrange'],
     'rearrange': ['alignments'],
     'alignments': [],
