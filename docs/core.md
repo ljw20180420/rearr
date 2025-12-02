@@ -137,9 +137,9 @@ Microhomology is common in CRISPR editing output. When microhomology happens, `r
 
 ```shell
 $ gawk -f correct_micro_homology.awk -- \
-    correct_micro_homology/reference_file \
-    correct_micro_homology/direction_file \
-    < correct_micro_homology/rearrangement_file
+    reference_file \
+    direction_file \
+    < rearrangement_file
 ```
 
 <pre class="mermaid">
