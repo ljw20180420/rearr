@@ -90,10 +90,10 @@ def celeryDefaultCorrect(refFile, correctFile):
 
 @celeryApp.task
 def celerySxGetReference(
-    csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile
+    plasmid_file, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile
 ):
     subprocess.run(
-        f"""getSxCsvFileRef.sh {csvFile} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}""",
+        f"""getSxPlasmidFileRef.sh {plasmid_file} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}""",
         shell=True,
         executable="/bin/bash",
     )
@@ -101,9 +101,9 @@ def celerySxGetReference(
 
 
 @celeryApp.task
-def celerySxGetMarkers(csvFile, targetMarker, pairMarker):
+def celerySxGetMarkers(plasmid_file, targetMarker, pairMarker):
     subprocess.run(
-        f"""sxExtractMarker.sh {csvFile} >{targetMarker} 3>{pairMarker}""",
+        f"""sxExtractMarker.sh {plasmid_file} >{targetMarker} 3>{pairMarker}""",
         shell=True,
         executable="/bin/bash",
     )

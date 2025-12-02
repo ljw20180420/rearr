@@ -21,7 +21,7 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 
 # the followings are specific to sx data
 %.ref: % $(genome) $(addprefix $(bowtie2index).,1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2)
-	getSxCsvFileRef.sh $< $(genome) $(bowtie2index) $(ext1up) $(ext1down) $(ext2up) $(ext2down) >$@
+	getSxPlasmidFileRef.sh $< $(genome) $(bowtie2index) $(ext1up) $(ext1down) $(ext2up) $(ext2down) >$@
 
 %.correct: %
 	gawk '{for (i = 1; i < NF / 3 - 1; ++i) printf("up\t"); printf("up\n");}' $< >$@

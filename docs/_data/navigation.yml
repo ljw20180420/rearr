@@ -32,12 +32,12 @@
       sub:
         - name: SxCumulateToMapCutAdaptMarker
           link: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk.html
-    - name: GetSxCsvFileRef
-      link: /sx/getSxCsvFileRef.sh.html
+    - name: GetSxPlasmidFileRef
+      link: /sx/getSxPlasmidFileRef.sh.html
       sub:
-        - name: GetSxCsvFileTarget
-          link: /sx/getSxCsvFileRef/getSxCsvFileTarget.pl.html
+        - name: GetSxPlasmidFileTarget
+          link: /sx/getSxPlasmidFileRef/getSxPlasmidFileTarget.pl.html
         - name: SxTargetSam2Bed
-          link: /sx/getSxCsvFileRef/sxTargetSam2Bed.awk.html
+          link: /sx/getSxPlasmidFileRef/sxTargetSam2Bed.awk.html
         - name: GetSxRefFile
-          link: /sx/getSxCsvFileRef/getSxRefFile.pl.html
+          link: /sx/getSxPlasmidFileRef/getSxRefFile.pl.html

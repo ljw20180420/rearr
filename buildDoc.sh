@@ -104,17 +104,17 @@ wrap_script awk \
     < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk |
 add_header "SxCumulateToMapCutAdaptMarker"
 
-add_header "GetSxCsvFileRef" \
-    < sx/getSxCsvFileRef/getSxCsvFileRef.sh
+add_header "GetSxPlasmidFileRef" \
+    < sx/getSxPlasmidFileRef/getSxPlasmidFileRef.sh
     
 wrap_script perl \
-    < sx/getSxCsvFileRef/getSxCsvFileTarget.pl |
-add_header "GetSxCsvFileTarget"
+    < sx/getSxPlasmidFileRef/getSxPlasmidFileTarget.pl |
+add_header "GetSxPlasmidFileTarget"
 
 wrap_script awk \
-    < sx/getSxCsvFileRef/sxTargetSam2Bed.awk |
+    < sx/getSxPlasmidFileRef/sxTargetSam2Bed.awk |
 add_header "SxTargetSam2Bed"
 
 wrap_script perl \
-    < sx/getSxCsvFileRef/getSxRefFile.pl |
+    < sx/getSxPlasmidFileRef/getSxRefFile.pl |
 add_header "GetSxRefFile"

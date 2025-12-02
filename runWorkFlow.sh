@@ -247,7 +247,7 @@ makeTarget=plasmid_file.target.fa \
 ./runWorkFlow.sh
 ```
 Besides `plasmid_file.target.fa` used as demutiplex marker for `R2`, another file `plasmid_file.pair.fa` will be generated as well used as demutiplex marker for `R1`.
-- The `plasmid_file` also contain reference sequences (sgRNAs). These references are extract by [`getSxCsvFileRef.sh`][getSxCsvFileRef.sh.md].
+- The `plasmid_file` also contain reference sequences (sgRNAs). These references are extract by [`getSxPlasmidFileRef.sh`][getSxPlasmidFileRef.sh.md].
 ```bash
 makeTarget=plasmid_file.ref \
 genome=genome_file \
@@ -274,7 +274,7 @@ refFile=plasmid_file.ref \
 [workFlow.mak.md]: /runWorkFlow/workFlow.mak.html
 [sxCutR2AdapterFilterCumulate.sh.md]: /sx/sxCutR2AdapterFilterCumulate.sh.html
 [sxExtractMarker.sh.md]: /sx/sxExtractMarker.sh.html
-[getSxCsvFileRef.sh.md]: /sx/getSxCsvFileRef.sh.html
+[getSxPlasmidFileRef.sh.md]: /sx/getSxPlasmidFileRef.sh.html
 
 # Source
 ~~~bash
