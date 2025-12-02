@@ -306,13 +306,13 @@ refFile=plasmid_file.ref \
 `runWorkFlow.sh` will run all steps above for you to generate `correct_micro_homology_file.alg`.
 - `runWorkFlow.sh` use make engine, which skips the updating of the outputs if no change is detected in the inputs necesary to generate that output. This saves computations for you.
 
-[core.md]: /core.html
-[removeDuplicates.sh.md]: /auxilary/removeDuplicates.sh.html
-[demultiplex.sh.md]: /auxilary/demultiplex.sh.html
-[workFlow.mak.md]: /runWorkFlow/workFlow.mak.html
-[sxCutR2AdapterFilterCumulate.sh.md]: /sx/sxCutR2AdapterFilterCumulate.sh.html
-[sxExtractMarker.sh.md]: /sx/sxExtractMarker.sh.html
-[getSxPlasmidFileRef.sh.md]: /sx/getSxPlasmidFileRef.sh.html
+[core.md]: ./core.html
+[removeDuplicates.sh.md]: ./auxilary/removeDuplicates.sh.html
+[demultiplex.sh.md]: ./auxilary/demultiplex.sh.html
+[workFlow.mak.md]: ./runWorkFlow/workFlow.mak.html
+[sxCutR2AdapterFilterCumulate.sh.md]: ./sx/sxCutR2AdapterFilterCumulate.sh.html
+[sxExtractMarker.sh.md]: ./sx/sxExtractMarker.sh.html
+[getSxPlasmidFileRef.sh.md]: ./sx/getSxPlasmidFileRef.sh.html
 
 # Source
 ~~~bash

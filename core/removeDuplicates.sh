@@ -49,7 +49,7 @@ The paired-end next-generation sequencing (NGS) is quite common. Although mappab
 # Should I directly input raw `fastq` file, or remove `adapter`, `barcode` and so on before the input into `removeDuplicates.sh`
 The `stdout` of `removeDuplicates.sh` are aligned to the so-call `markers` in [`demultiplex.sh`][demultiplex.sh.md] to determine the loci of lines. If you preserve `adapter`, `barcode` and so on in the input `fastq` files, it is suggested to provide them in `markers` as well.
 
-[demultiplex.sh.md]: /auxilary/demultiplex.sh.html
+[demultiplex.sh.md]: ./demultiplex.sh.html
 
 # Source
 ~~~bash

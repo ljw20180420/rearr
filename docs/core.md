@@ -103,7 +103,7 @@ flowchart TD
 - The reason to distinguish extension and non-extension regions is to avoid dummy templated insertion induced by small mutations away from the cleavage site for the single cleavage case, as shown in the following video.
 
 <video width="854" height="480" controls>
-  <source src="/assets/videos/MainScene_0007_ScoreCrossCleavage.mp4" type="video/mp4">
+  <source src="./assets/videos/MainScene_0007_ScoreCrossCleavage.mp4" type="video/mp4">
 </video>
 
 ## `stdout`
@@ -130,7 +130,7 @@ CTG----------------------------TTGGCCTGGAGTAAAAGCATGAT----------GATCGGAATGATTACA
 Microhomology is common in CRISPR editing output. When microhomology happens, `rearrangement` cannot determine how to align `query` to `ref1` and `ref2`, as show in the following video.
 
 <video width="854" height="480" controls>
-  <source src="/assets/videos/MainScene_0008_MicroHomology.mp4" type="video/mp4">
+  <source src="./assets/videos/MainScene_0008_MicroHomology.mp4" type="video/mp4">
 </video>
 
 `correct_micro_homology.awk` allows one to specify which end of the double strand break should be corrected toward the cleavage site up to the microhomology equivalence.

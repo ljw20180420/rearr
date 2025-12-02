@@ -3,7 +3,7 @@
     {% if item.sub %}
       <details open>
         <summary>
-          <a href="{{ item.link }}" {% if page.url == item.link %}class="current"{% endif %}>
+          <a href="{{ item.link | relative_url }}" {% if page.url == item.link %}class="current"{% endif %}>
             {{ item.name }}
           </a>
         </summary>
@@ -12,14 +12,14 @@
             {% if subitem.sub %}
               <details open>
                 <summary>
-                  <a href="{{ subitem.link }}" {% if page.url == subitem.link %}class="current"{% endif %}>
+                  <a href="{{ subitem.link | relative_url }}" {% if page.url == subitem.link %}class="current"{% endif %}>
                     {{ subitem.name }}
                   </a>
                 </summary>
                 <div class="indent">
                   {% for subsubitem in subitem.sub %}
                     <div>
-                      <a href="{{ subsubitem.link }}" {% if page.url == subsubitem.link %}class="current"{% endif %}>
+                      <a href="{{ subsubitem.link | relative_url }}" {% if page.url == subsubitem.link %}class="current"{% endif %}>
                         {{ subsubitem.name }}
                       </a>    
                     </div>
@@ -28,7 +28,7 @@
               </details>
             {% else %}
               <div>
-                <a href="{{ subitem.link }}" {% if page.url == subitem.link %}class="current"{% endif %}>
+                <a href="{{ subitem.link | relative_url }}" {% if page.url == subitem.link %}class="current"{% endif %}>
                   {{ subitem.name }}
                 </a>
               </div>
@@ -38,7 +38,7 @@
       </details>
     {% else %}
       <div>
-        <a href="{{ item.link }}" {% if page.url == item.link %}class="current"{% endif %}>
+        <a href="{{ item.link | relative_url }}" {% if page.url == item.link %}class="current"{% endif %}>
           {{ item.name }}
         </a>
       </div>

@@ -108,8 +108,8 @@ flowchart TD
 - `rstartN` and `rendN` denotes the left-close-right-open 0-based range of the aligned part of the target of `RN`. `qstartN` and `qendN` denotes that of `RN`.
 - Multiple `marker` (more than two) are supported in theory.
 
-[core.md]: /core.html
-[removeDuplicates.sh.md]: /auxilary/removeDuplicates.sh.html
+[core.md]: ../core.html
+[removeDuplicates.sh.md]: ./removeDuplicates.sh.html
 
 # Source
 ~~~bash

@@ -80,9 +80,9 @@ flowchart TD
     3. Filter out `query` shorter than `minToMapShear`.
     4. Accumulate the adjacent duplicates of `query` by [`sxCumulateToMapCutAdaptMarker.awk`][sxCumulateToMapCutAdaptMarker.awk.md].  
 
-[demultiplex.sh.md]: /auxilary/demultiplex.sh.html
-[core.md]: /core.html
-[sxCumulateToMapCutAdaptMarker.awk.md]: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk.html
+[demultiplex.sh.md]: ../auxilary/demultiplex.sh.html
+[core.md]: ../core.html
+[sxCumulateToMapCutAdaptMarker.awk.md]: ./sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk.html
 
 # Source
 ~~~bash
