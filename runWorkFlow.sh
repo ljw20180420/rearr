@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 
-```bash
+```shell
 param1=value1 param2=value2 ... runWorkFlow.sh [options]
 ```
 
@@ -239,14 +239,14 @@ flowchart TD
 
 - `options` are passed to the underlying `make` calling. `makeTarget` is the file you want to generate. The underly `make` engine use file extensions to determine which step to run, so the file extension matters. Depending on `makeTarget`, you may need to provide additional parameters and input files.
 - To remove duplicates for paired (or multiply paired) `fastq` files, run
-```bash
+```shell
 makeTarget=removeDuplicates_file.noDup \
 fastqFiles=fastqR1,fastqR2,... \
 runWorkFlow.sh
 ```
 For more details, see [`removeDuplicates.sh`][removeDuplicates.sh.md].
 - To demultiplex `removeDuplicates_file.noDup`, run
-```bash
+```shell
 makeTarget=demultiplex_file.demultiplex \
 markerIndices=marker1,marker2,... \
 minScores=score1,scores2,... \
@@ -254,14 +254,14 @@ runWorkFlow.sh
 ```
 For more details, see [`demultiplex.sh`][demultiplex.sh.md]. If `marker` is not indexed by `bowtie2`, `runWorkFlow.sh` will index it silently
 - To align `query.post` to reference and correct microhomology, run
-```bash
+```shell
 makeTarget=correct_micro_homology_file.alg \
 refFile=reference_file \
 directionFile=direction_file \
 runWorkFlow.sh
 ```
 Chimeric alignment scores used by `rearrangement` can be set as follows.
-```bash
+```shell
 s0=-6
 s1=4
 s2=2
@@ -274,19 +274,19 @@ qv=-5
 ```
 For more details, see [core part of rearr][core.md]. If only `refFile` is provided, a default `directionFile=${refFile}.direct` will be created with all `up`. For more details, see [`workFlow.mak`][workFlow.mak.md].
 - The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [core part of rearr][core.md]. The transformation between them is highly dependent on the design of experiment and changes from now and that. For out in-house data, this is done by [`sxCutR2AdapterFilterCumulate.sh`][sxCutR2AdapterFilterCumulate.sh.md] as follows.
-```bash
+```shell
 makeTarget=query.post \
 minToMapShear=30 \
 ./runWorkFlow.sh
 ```
 - Our in-house data use plasmids in a `plasmid_file`. We extract demultiplex markers from those plasmids by [`sxExtractMarker.sh`][sxExtractMarker.sh.md].
-```bash
+```shell
 makeTarget=plasmid_file.target.fa \
 ./runWorkFlow.sh
 ```
 Besides `plasmid_file.target.fa` used as demutiplex marker for `R2`, another file `plasmid_file.pair.fa` will be generated as well used as demutiplex marker for `R1`.
 - The `plasmid_file` also contain reference sequences (sgRNAs). These references are extract by [`getSxPlasmidFileRef.sh`][getSxPlasmidFileRef.sh.md].
-```bash
+```shell
 makeTarget=plasmid_file.ref \
 genome=genome_file \
 bowtie2index=bowtie2index_prefix \
@@ -294,7 +294,7 @@ bowtie2index=bowtie2index_prefix \
 ```
 Our in-house data use hg19.
 - To run the full workflow for our in-house data (our in-house data put fastqR2 before fastqR1),
-```bash
+```shell
 makeTarget=correct_micro_homology_file.alg \
 fastqFiles=fastqR2,fastqR1 \
 markerIndices=pasmid_file.target.fa,pasmid_file.pair.fa \

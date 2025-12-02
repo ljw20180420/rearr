@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 
-```bash
+```shell
 $ markerIndices=marker1,marker2,... \
   minScores=score1,score2,... \
   demultiplex.sh \
@@ -98,7 +98,7 @@ flowchart TD
 
 - `markerN` is `bowtie2` index of a `fasta` file containing possible alignment targets of `RN`.
 - `scoreN` is feed to `bowtie2` to filter alignments with low scores. The alignments are in local mode instead of end-to-end mode, and there is no reverse complement. The full alignment setting is
-```bash
+```shell
 --norc --local -L 15 --ma 1 --mp 2,2 --rdg 3,1 --rfg 3,1 --score-min C,scoreN
 ```
 - The fasta name of `marker1` and `marker2` must the 0-based reference `id`, see the [core part of rearr][core.md].

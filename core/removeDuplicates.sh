@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 
-```bash
+```shell
 $ removeDuplicates.sh fastqR1 [fastqR2 [fastqR3 ...]]
 ```
 

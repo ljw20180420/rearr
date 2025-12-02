@@ -8,7 +8,7 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 
-```bash
+```shell
 $ getSxPlasmidFileRef.sh \
     plasmid_file \
     genome \

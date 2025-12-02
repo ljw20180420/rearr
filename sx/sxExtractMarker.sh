@@ -7,7 +7,8 @@ alias ~~~=":<<'~~~bash'"
 :<<'~~~bash'
 
 # Usage
-```bash
+
+```shell
 $ sxExtractMarker.sh plasmid_file \
     >marker1 \
     3>marker2
