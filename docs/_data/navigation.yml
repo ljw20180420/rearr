@@ -30,8 +30,8 @@
     - name: SxCutR2AdapterFilterCumulate
       link: /sx/sxCutR2AdapterFilterCumulate.sh.html
       sub:
-        - name: SxCumulateToMapCutAdaptSpliter
-          link: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk.html
+        - name: SxCumulateToMapCutAdaptMarker
+          link: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk.html
     - name: GetSxCsvFileRef
       link: /sx/getSxCsvFileRef.sh.html
       sub:

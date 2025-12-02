@@ -94,15 +94,15 @@ add_header "WorkFlow"
 # in-house
 ########################
 
-add_header "SxExtractSpliter" \
+add_header "SxExtractMarker" \
     < sx/sxExtractMarker.sh
 
 add_header "SxCutR2AdapterFilterCumulate" \
     < sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh
 
 wrap_script awk \
-    < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk |
-add_header "SxCumulateToMapCutAdaptSpliter"
+    < sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk |
+add_header "SxCumulateToMapCutAdaptMarker"
 
 add_header "GetSxCsvFileRef" \
     < sx/getSxCsvFileRef/getSxCsvFileRef.sh

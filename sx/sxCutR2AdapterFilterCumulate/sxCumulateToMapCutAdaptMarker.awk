@@ -10,11 +10,11 @@ BEGIN{
     OFS = "\t"
 }
 {
-    if ($1 != toMapCutAdaptSpliter)
+    if ($1 != query)
     {
         if (NR > 1)
-            print toMapCutAdaptSpliter, count, refId
-        toMapCutAdaptSpliter = $1
+            print query, count, refId
+        query = $1
         count = $2
         refId = $3
     }
@@ -22,5 +22,5 @@ BEGIN{
         count += $2
 }
 END{
-    print toMapCutAdaptSpliter, count, refId
+    print query, count, refId
 }

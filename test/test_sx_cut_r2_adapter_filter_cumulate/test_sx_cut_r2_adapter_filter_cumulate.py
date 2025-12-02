@@ -9,7 +9,7 @@ import numpy as np
 from ..utils.random_seq_methods import generate_random_DNA
 
 
-class TestSxCumulateToMapCutAdaptSpliter(unittest.TestCase):
+class TestSxCumulateToMapCutAdaptMarker(unittest.TestCase):
     def setUp(self):
         rng = np.random.default_rng(63036)
 
@@ -29,9 +29,9 @@ class TestSxCumulateToMapCutAdaptSpliter(unittest.TestCase):
             suffix=".post.partial.test",
         )[1]
 
-    def test_sx_cumulate_to_map_cut_adapt_spliter(self):
+    def test_sx_cumulate_to_map_cut_adapt_Marker(self):
         subprocess.run(
-            f"""gawk -f sxCumulateToMapCutAdaptSpliter.awk < {self.toAccFile} > {self.postFilePartialTest}""",
+            f"""gawk -f sxCumulateToMapCutAdaptMarker.awk < {self.toAccFile} > {self.postFilePartialTest}""",
             shell=True,
             executable="/bin/bash",
         )
@@ -60,12 +60,12 @@ class TestSxCutR2AdapterFilterCumulate(unittest.TestCase):
                 seq1 = generate_random_DNA(rng.integers(50, 101), rng)
                 seq2 = generate_random_DNA(rng.integers(50, 101), rng)
                 ref_id = rng.integers(100)
-                # spliter_start1, spliter_end1, seq_start1, seq_end1, spliter_start2, spliter_end2, seq_start2, seq_end2
-                spliter_poses = rng.integers(0, 11, 8)
+                # marker_start1, marker_end1, seq_start1, seq_end1, marker_start2, marker_end2, seq_start2, seq_end2
+                marker_poses = rng.integers(0, 11, 8)
                 for repe in range(rng.integers(11)):
                     fd.write(f"{seq1}\t{seq2}\t{rng.integers(11)}\t{ref_id}")
-                    for spliter_pos in spliter_poses:
-                        fd.write(f"\t{spliter_pos}")
+                    for marker_pos in marker_poses:
+                        fd.write(f"\t{marker_pos}")
                     fd.write("\n")
 
         self.postFile = mkstemp(

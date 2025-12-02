@@ -76,11 +76,11 @@ flowchart TD
     1. Trim 3' `RCscaffold`.
     2. Extract `query` 3bp downstream to `qend2` (the alignment end position of `barcode`).
     3. Filter out `query` shorter than `minToMapShear`.
-    4. Accumulate the adjacent duplicates of `query` by [`sxCumulateToMapCutAdaptSpliter.awk`][sxCumulateToMapCutAdaptSpliter.awk.md].  
+    4. Accumulate the adjacent duplicates of `query` by [`sxCumulateToMapCutAdaptMarker.awk`][sxCumulateToMapCutAdaptMarker.awk.md].  
 
 [demultiplex.sh.md]: /auxilary/demultiplex.sh.html
 [core.md]: /core.html
-[sxCumulateToMapCutAdaptSpliter.awk.md]: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptSpliter.awk.html
+[sxCumulateToMapCutAdaptMarker.awk.md]: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk.html
 
 # Source
 ~~~bash
@@ -100,7 +100,7 @@ cut -f1 $rmDupFile | cutadaptPlain GCACCGACTCGGTGCCACTTTTTCAAGTTGATAACGGACTAGCCT
     if ($4 + 3 + minToMapShear <= length($1)) {
         print substr($1, $4 + 4), $2, $3
     }
-}' | gawk -f sxCumulateToMapCutAdaptSpliter.awk
+}' | gawk -f sxCumulateToMapCutAdaptMarker.awk
 ~~~
 
 ~~~bash
