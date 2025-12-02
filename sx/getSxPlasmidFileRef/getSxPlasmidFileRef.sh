@@ -46,7 +46,7 @@ flowchart TD
         </table>
     )] --> GSPFR
     GSPFR --> REF[(
-        <h1>reference_file</h1>
+        <h1>stdout</h1>
         <table>
             <tr>
                 <th>start1</th>
@@ -68,7 +68,7 @@ flowchart TD
     )]
 </pre>
 
-- Extract references from the in-house `plasmid_file`.
+- Extract references from the in-house `plasmid_file` and output to `stdout`.
 - For `NGG` `plasmid_file`, the 44bp `query` can be perfectly mapped to the genome.
 - For `NAA` `plasmid_file`, 17~18bp of `query` is `TT`, which should be replaced by `CC` in order to map genome. 
 - The actual cut site is inferred from mapping result.

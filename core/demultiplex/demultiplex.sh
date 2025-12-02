@@ -38,21 +38,9 @@ flowchart TD
         </table>
     )]
     UNIQUE --> DM[demultiplex.sh]
-    MARKER[(
-        <h1>markerIndices</h1>
-        <table>
-            <tr>
-                <th>marker1</th>
-                <th>marker2</th>
-                <th>...</th>
-            </tr>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-        </table>
-    )]
+    MK1[(marker1)] --> DM
+    MK2[(marker2)] --> DM
+    MKN[(...)] --> DM
     SCORE[(
         <h1>minScores</h1>
         <table>
@@ -68,7 +56,6 @@ flowchart TD
             </tr>
         </table>
     )]
-    MARKER --> DM
     SCORE --> DM
     DM --> ONTARGET[(
         <h1>stdout</h1>
@@ -119,7 +106,7 @@ flowchart TD
 - `demultiplex.sh` only output a row in `removeDuplicates_file` only of both `R1` and `R2` aligned to targets with consistant reference `id`.
 - `R1`, `R2` and `#` are copied from `removeDuplicates_file`.
 - `rstartN` and `rendN` denotes the left-close-right-open 0-based range of the aligned part of the target of `RN`. `qstartN` and `qendN` denotes that of `RN`.
-- Mutiple `marker` (more than two) are supported in theory.
+- Multiple `marker` (more than two) are supported in theory.
 
 [core.md]: /core.html
 [removeDuplicates.sh.md]: /auxilary/removeDuplicates.sh.html

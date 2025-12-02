@@ -17,6 +17,76 @@ param1=value1 param2=value2 ... runWorkFlow.sh [options]
 title: runWorkflow.sh
 ---
 flowchart TD
+    PF[(
+        <h1>plasmid_file</h1>
+        <table>
+            <tr>
+                <th>adapter#0040;20bp#0041; + sgRNA#0040;20bp#0041; + scaffold#0040;83/93bp#0041; + query#0040;44bp#0041; + 3bp + RCbarcode#0040;18bp#0041; + RCprimer#0040;21bp#0041;</th>
+            </tr>
+            <tr>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> GSPFR[getSxPlasmidFileRef.sh]
+    GF[(<h1>genome_file</h1>)] --> GSPFR
+    BI[(<h1>bowtie2index</h1>)] --> GSPFR
+    EXT[(
+        <h1>extentions</h1>
+        <table>
+            <tr>
+                <td>ext1up</td>
+                <td>ext1down</td>
+                <td>ext2up</td>
+                <td>ext2down</td>
+            </tr>
+        </table>
+    )] --> GSPFR
+    GSPFR --> REF[(
+        <h1>reference_file</h1>
+        <table>
+            <tr>
+                <th>start1</th>
+                <th>ref1</th>
+                <th>end1</th>
+                <th>start2</th>
+                <th>ref2</th>
+                <th>end2</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+
+    PF --> SEM[sxExtractMarker.sh]
+    SEM --> MK1[(
+        <h1>stdout</h1>
+        <table>
+            <tr>
+                <th>primer#0040;21bp#0041; + barcode#0040;18bp#0041;</th>
+            </tr>
+            <tr>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+    SEM --> MK2[(
+        <h1>fd3</h1>
+        <table>
+            <tr>
+                <th>adapter#0040;20bp#0041; + sgRNA#0040;20bp#0041; + scaffold#0040;83/93bp#0041;</th>
+            </tr>
+            <tr>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+
     R1[(fastqR1)] --> RD[removeDuplicates.sh]
     R2[(faqstR2)] --> RD
     RD --> UNIQUE[(
@@ -36,19 +106,6 @@ flowchart TD
     )]
 
     UNIQUE --> DM[demultiplex.sh]
-    MARKER[(
-        <h1>markerIndices</h1>
-        <table>
-            <tr>
-                <th>marker1</th>
-                <th>marker2</th>
-            </tr>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-        </table>
-    )]
     SCORE[(
         <h1>minScores</h1>
         <table>
@@ -62,7 +119,8 @@ flowchart TD
             </tr>
         </table>
     )]
-    MARKER --> DM
+    MK1 --> DM
+    MK2 --> DM
     SCORE --> DM
     DM --> ONTARGET[(
         <h1>demultiplex_file</h1>
@@ -113,27 +171,7 @@ flowchart TD
             </tr>
         </table>
     )] --> REARR[rearrangement]
-    REF[(
-        <h1>reference_file</h1>
-        <table>
-            <tr>
-                <th>start1</th>
-                <th>ref1</th>
-                <th>end1</th>
-                <th>start2</th>
-                <th>ref2</th>
-                <th>end2</th>
-            </tr>
-            <tr>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-        </table>
-    )] --> REARR
+    REF --> REARR
     REARR --> ALG[(
         <h1>rearrangement_file</h1>
         <table>
