@@ -7,6 +7,7 @@ alias ~~~=":<<'~~~bash'"
 :<<'~~~bash'
 
 # Usage
+
 ```bash
 $ getSxPlasmidFileRef.sh \
     plasmid_file \
@@ -15,12 +16,65 @@ $ getSxPlasmidFileRef.sh \
     [ext1up ext1down ext2up ext2down]
 ```
 
-# Introcution
-This is an in-house script to extract references from the `plasmid_file` of sx and lcy. The composition of the input `plasmid_file` is 
-```
-adapter(20bp) + sgRNA(20bp) + scaffold(83/93bp) + query(44bp) + 3bp + RCbarcode(18bp) + RCprimer(21bp)
-```
-For `NGG` `plasmid_file`, the 44bp `target` can be perfectly mapped to the genome. For `NAA` `plasmid_file`, 17~18bp of target is `TT`, which should be replaced by `CC` in order to map genome. After mapping, the actual cut site is inferred. `ref1` consists of `ext1up` bases upstream to the cut site and `ext1down` bases downstream to the cut site. `ref2` is composed similarly. Note that for `NAA` `plasmid_file`, the retrieved reference need replace `GG` (target and reference always have opposite strands, so `CC` becomes `GG`) back to `AA`.
+<pre class="mermaid">
+---
+title: getSxPlasmidFileRef
+---
+flowchart TD
+    PF[(
+        <h1>plasmid_file</h1>
+        <table>
+            <tr>
+                <th>adapter#0040;20bp#0041; + sgRNA#0040;20bp#0041; + scaffold#0040;83/93bp#0041; + query#0040;44bp#0041; + 3bp + RCbarcode#0040;18bp#0041; + RCprimer#0040;21bp#0041;</th>
+            </tr>
+            <tr>
+                <td>...</td>
+            </tr>
+        </table>
+    )] --> GSPFR[getSxPlasmidFileRef.sh]
+    GF[(<h1>genome_file</h1>)] --> GSPFR
+    BI[(<h1>bowtie2index</h1>)] --> GSPFR
+    EXT[(
+        <h1>extentions</h1>
+        <table>
+            <tr>
+                <td>ext1up</td>
+                <td>ext1down</td>
+                <td>ext2up</td>
+                <td>ext2down</td>
+            </tr>
+        </table>
+    )] --> GSPFR
+    GSPFR --> REF[(
+        <h1>reference_file</h1>
+        <table>
+            <tr>
+                <th>start1</th>
+                <th>ref1</th>
+                <th>end1</th>
+                <th>start2</th>
+                <th>ref2</th>
+                <th>end2</th>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+    )]
+</pre>
+
+- Extract references from the in-house `plasmid_file`.
+- For `NGG` `plasmid_file`, the 44bp `query` can be perfectly mapped to the genome.
+- For `NAA` `plasmid_file`, 17~18bp of `query` is `TT`, which should be replaced by `CC` in order to map genome. 
+- The actual cut site is inferred from mapping result.
+- `ref1` consists of `ext1up` bases upstream to the cut site and `ext1down` bases downstream to the cut site.
+- `ref2` consists of `ext2up` bases upstream to the cut site and `ext2down` bases downstream to the cut site.
+- Note that for `NAA` `plasmid_file`, the retrieved reference need replace `GG` (`query` and reference have opposite strands, so `CC` becomes `GG`) back to `AA`.
 
 # Source
 ~~~bash
