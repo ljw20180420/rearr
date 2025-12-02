@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v6
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Install doxygen
+      - name: Install doxygen and yq
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends doxygen yq
       - name: Prepare docs
         run: ./buildDoc.sh
