@@ -169,12 +169,12 @@ def rearrange():
     json = request.get_json()
     toMapFile = os.path.join(session["dir"], json[".post file"]["value"])
     refFile = os.path.join(session["dir"], json[".ref file"]["value"])
-    correctFile = os.path.join(session["dir"], json[".correct file"]["value"])
+    directionFile = os.path.join(session["dir"], json[".correct file"]["value"])
     alignFile = os.path.splitext(toMapFile)[0] + ".alg"
     result = celeryRearrange.delay(
         toMapFile,
         refFile,
-        correctFile,
+        directionFile,
         json["align scores"]["s0"]["value"],
         json["align scores"]["s1"]["value"],
         json["align scores"]["s2"]["value"],
@@ -192,10 +192,10 @@ def rearrange():
 @flaskApp.put("/runJob/defaultCorrect")
 def defaultCorrect():
     refFile = os.path.join(session["dir"], request.get_json()[".ref file"]["value"])
-    correctFile = os.path.splitext(refFile)[0] + ".correct"
-    result = celeryDefaultCorrect.delay(refFile, correctFile)
+    directionFile = os.path.splitext(refFile)[0] + ".correct"
+    result = celeryDefaultCorrect.delay(refFile, directionFile)
     return {
-        ".correct file": {"taskId": result.id, "value": os.path.basename(correctFile)}
+        ".correct file": {"taskId": result.id, "value": os.path.basename(directionFile)}
     }
 
 

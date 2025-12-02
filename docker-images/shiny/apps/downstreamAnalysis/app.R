@@ -384,7 +384,7 @@ server <- function(input, output, session) {
     # single alignment
     #########################################################
     algOneRefFile <- tempfile(tmpdir=file.path("www", session$token))
-    algOneCorrectFile <- tempfile(tmpdir=file.path("www", session$token))
+    algOneDirectionFile <- tempfile(tmpdir=file.path("www", session$token))
     algOneAlgFile <- tempfile(tmpdir=file.path("www", session$token))
     output$alignPair <- renderText({
         req(input$alignOneRef1)
@@ -392,7 +392,7 @@ server <- function(input, output, session) {
         req(input$alignOneCut1)
         req(input$alignOneCut2)
         req(input$alignOneQuery)
-        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOneCorrect, input$alignOneQuery, algOneRefFile, algOneCorrectFile, algOneAlgFile)
+        alignOne(input$alignOneRef1, input$alignOneRef2, input$alignOneCut1, input$alignOneCut2, input$alignOneCorrect, input$alignOneQuery, algOneRefFile, algOneDirectionFile, algOneAlgFile)
     })
 
     #########################################################

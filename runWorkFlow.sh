@@ -257,7 +257,7 @@ For more details, see [`demultiplex.sh`][demultiplex.sh.md]. If `marker` is not 
 ```bash
 makeTarget=correct_micro_homology_file.alg \
 refFile=reference_file \
-correctFile=direction_file \
+directionFile=direction_file \
 runWorkFlow.sh
 ```
 Chimeric alignment scores used by `rearrangement` can be set as follows.
@@ -272,7 +272,7 @@ rv=0
 qu=0
 qv=-5
 ```
-For more details, see [core part of rearr][core.md]. If only `refFile` is provided, a default `correctFile=${refFile}.correct` will be created with all `up`. For more details, see [`workFlow.mak`][workFlow.mak.md].
+For more details, see [core part of rearr][core.md]. If only `refFile` is provided, a default `directionFile=${refFile}.correct` will be created with all `up`. For more details, see [`workFlow.mak`][workFlow.mak.md].
 - The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [core part of rearr][core.md]. The transformation between them is highly dependent on the design of experiment and changes from now and that. For out in-house data, this is done by [`sxCutR2AdapterFilterCumulate.sh`][sxCutR2AdapterFilterCumulate.sh.md] as follows.
 ```bash
 makeTarget=query.post \
@@ -324,7 +324,7 @@ minScores=${minScores:-30,100}
 
 minToMapShear=${minToMapShear:-30}
 refFile=${refFile:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.ref}
-correctFile=${correctFile:-"${refFile}.correct"}
+directionFile=${directionFile:-"${refFile}.correct"}
 ext1up=${ext1up:-50}
 ext1down=${ext1down:-0}
 ext2up=${ext2up:-10}
@@ -350,7 +350,24 @@ else
     make_file="$CONDA_PREFIX/share/rearr/workFlow.mak"
 fi
 
-make $@ -f ${make_file} $makeTarget fastqFiles=$fastqFiles markerIndices=$markerIndices minScores=$minScores genome=$genome bowtie2index=$bowtie2index refFile=$refFile correctFile=$correctFile s0=$s0 s1=$s1 s2=$s2 u=$u v=$v ru=$ru rv=$rv qu=$qu qv=$qv minToMapShear=$minToMapShear
+make $@ -f "${make_file}" "${makeTarget}" \
+    fastqFiles="${fastqFiles}" \
+    markerIndices="${markerIndices}" \
+    minScores="${minScores}" \
+    genome="${genome}" \
+    bowtie2index="${bowtie2index}" \
+    refFile="${refFile}" \
+    directionFile="${directionFile}" \
+    s0="${s0}" \
+    s1="${s1}" \
+    s2="${s2}" \
+    u="${u}" \
+    v="${v}" \
+    ru="${ru}" \
+    rv="${rv}" \
+    qu="${qu}" \
+    qv="${qv}" \
+    minToMapShear="${minToMapShear}"
 ~~~
 
 ~~~bash

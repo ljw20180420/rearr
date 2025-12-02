@@ -1,4 +1,4 @@
-# Input: fastqFiles, markerIndices, minScores, genome, bowtie2index, refFile, correctFile, ext1up, ext1down, ext2up, ext2down, s0, s1, s2, u, v, ru, rv, qu, qv, minToMapShear
+# Input: fastqFiles, markerIndices, minScores, genome, bowtie2index, refFile, directionFile, ext1up, ext1down, ext2up, ext2down, s0, s1, s2, u, v, ru, rv, qu, qv, minToMapShear
 
 comma = ,
 
@@ -16,8 +16,8 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 %.demultiplex: %.noDup $(markerIndexBts)
 	markerIndices=$(markerIndices) minScores=$(minScores) demultiplex.sh $< >$@
 
-%.alg: %.post $(refFile) $(correctFile)
-	rearrangement <$< 3<$(refFile) -s0 $(s0) -s1 $(s1) -s2 $(s2) -u $(u) -v $(v) -ru $(ru) -rv $(rv) -qu $(qu) -qv $(qv) | gawk -f correct_micro_homology.awk -- $(refFile) $(correctFile) >$@
+%.alg: %.post $(refFile) $(directionFile)
+	rearrangement <$< 3<$(refFile) -s0 $(s0) -s1 $(s1) -s2 $(s2) -u $(u) -v $(v) -ru $(ru) -rv $(rv) -qu $(qu) -qv $(qv) | gawk -f correct_micro_homology.awk -- $(refFile) $(directionFile) >$@
 
 # the followings are specific to sx data
 %.ref: % $(genome) $(addprefix $(bowtie2index).,1.bt2 2.bt2 3.bt2 4.bt2 rev.1.bt2 rev.2.bt2)

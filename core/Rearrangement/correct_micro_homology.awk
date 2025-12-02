@@ -9,11 +9,11 @@
 BEGIN{
     FS = "\t"
     refFile = ARGV[1]
-    correctFile = ARGV[2]
+    directionFile = ARGV[2]
     ref_id = 0
     # Read information from refFile.
     while (getline ref < refFile) {
-        getline correct < correctFile
+        getline correct < directionFile
         n = split(ref, ref_arr, "\t")
         split(correct, correct_type[ref_id], "\t")
         ref_accum_len = 0
@@ -26,7 +26,7 @@ BEGIN{
         }
         ++ref_id
     }
-    # Delete refFile and correctFile from arguments, so correct_micro_homology.AWK does not process them.
+    # Delete refFile and directionFile from arguments, so correct_micro_homology.AWK does not process them.
     for (i = 1; i <= 2; ++i) {
         delete ARGV[i]
     }
@@ -119,7 +119,7 @@ function print_mark(insert, seg_range, ref, target,       ref_block, query_block
             gap_cut1 = get_gap_cut(refs[i], cut1s[ref_id, i])
             gap_cut2 = get_gap_cut(refs[i + 1], cut2s[ref_id, i])
             
-            # Determine the correct direction based on both correct_type in correctFile and the actual indel type.
+            # Determine the correct direction based on both correct_type in directionFile and the actual indel type.
             correct_direct = ""
             if (tolower(correct_type[ref_id][i]) == "up") {
                 if (seg_range1[2] < gap_cut1) {

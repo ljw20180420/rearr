@@ -70,10 +70,10 @@ def celerySxPostProcess(demultiplexFile, minToMapShear, toMapFile):
 
 @celeryApp.task
 def celeryRearrange(
-    toMapFile, refFile, correctFile, s0, s1, s2, u, v, ru, rv, qu, qv, alignFile
+    toMapFile, refFile, directionFile, s0, s1, s2, u, v, ru, rv, qu, qv, alignFile
 ):
     subprocess.run(
-        f"""rearrangement <{toMapFile} 3<{refFile} -s0 {s0} -s1 {s1} -s2 {s2} -u {u} -v {v} -ru {ru} -rv {rv} -qu {qu} -qv {qv} | gawk -f correct_micro_homology.awk -- {refFile} {correctFile} >{alignFile}""",
+        f"""rearrangement <{toMapFile} 3<{refFile} -s0 {s0} -s1 {s1} -s2 {s2} -u {u} -v {v} -ru {ru} -rv {rv} -qu {qu} -qv {qv} | gawk -f correct_micro_homology.awk -- {refFile} {directionFile} >{alignFile}""",
         shell=True,
         executable="/bin/bash",
     )
@@ -81,11 +81,11 @@ def celeryRearrange(
 
 
 @celeryApp.task
-def celeryDefaultCorrect(refFile, correctFile):
-    with open(refFile, "r") as rfd, open(correctFile, "w") as cfd:
+def celeryDefaultCorrect(refFile, directionFile):
+    with open(refFile, "r") as rfd, open(directionFile, "w") as cfd:
         for line in rfd:
             cfd.write("\t".join(["up"] * (len(line.split("\t")) // 3 - 1)) + "\n")
-    return os.path.basename(correctFile)
+    return os.path.basename(directionFile)
 
 
 @celeryApp.task
