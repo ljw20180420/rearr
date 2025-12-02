@@ -1,7 +1,7 @@
 #!/usr/bin/env -S perl -anF,
 
-# Usage: getSxCsvFileTarget.pl csvfile
-# Extract target from csvfile.
+# Usage: getSxPlasmidFileTarget.pl plasmid_file
+# Extract target from plasmid_file.
 
 use feature 'say';
 

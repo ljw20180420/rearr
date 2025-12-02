@@ -8,7 +8,9 @@ alias ~~~=":<<'~~~bash'"
 
 # Usage
 ```bash
-sxCutR2AdapterFilterCumulate.sh demultiplex_file minToMapShear
+$ sxCutR2AdapterFilterCumulate.sh \
+    demultiplex_file \
+    minToMapShear
 ```
 
 <pre class="mermaid">

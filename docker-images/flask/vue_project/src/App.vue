@@ -49,7 +49,7 @@ const edgeTypes = {
 
 const nodes = ref([
   initDataTankNode(
-    'csvfile', 0, 0,
+    'plasmid', 0, 0,
     "In-house plasmid file contains sgRNAs used to extract references from genome. See sx/sxExtractMarker.sh.",
     {
       '.csv file': {
@@ -59,7 +59,7 @@ const nodes = ref([
   ),
   initRunJobNode(
     'sxGetReference', 2100, 0,
-    "Extract reference from genome based on in-house plasmid file. See sx/getSxCsvFileRef."
+    "Extract reference from genome based on in-house plasmid file. See sx/getSxPlasmidFileRef."
   ),
   initDataTankNode(
     'reference', 2400, 0,

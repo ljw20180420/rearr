@@ -216,7 +216,7 @@ def indexGenome():
 @flaskApp.put("/runJob/sxGetReference")
 def sxGetReference():
     json = request.get_json()
-    csvFile = os.path.join(session["dir"], json[".csv file"]["value"])
+    plasmid_file = os.path.join(session["dir"], json[".csv file"]["value"])
     bowtie2index = os.path.join(
         session["dir"], json["genome index"]["1.bt2"]["value"][:-6]
     )
@@ -225,9 +225,9 @@ def sxGetReference():
     ext1down = json["extensions"]["cut1 downstream"]["value"]
     ext2up = json["extensions"]["cut2 upstream"]["value"]
     ext2down = json["extensions"]["cut2 downstream"]["value"]
-    refFile = f"{csvFile}.ref"
+    refFile = f"{plasmid_file}.ref"
     result = celerySxGetReference.delay(
-        csvFile, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile
+        plasmid_file, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile
     )
     return {".ref file": {"taskId": result.id, "value": os.path.basename(refFile)}}
 
@@ -235,10 +235,10 @@ def sxGetReference():
 @flaskApp.put("/runJob/sxGetMarkers")
 def getSxMarkers():
     json = request.get_json()
-    csvFile = os.path.join(session["dir"], json[".csv file"]["value"])
-    targetMarker = f"{csvFile}.target.fa"
-    pairMarker = f"{csvFile}.pair.fa"
-    result = celerySxGetMarkers.delay(csvFile, targetMarker, pairMarker)
+    plasmid_file = os.path.join(session["dir"], json[".csv file"]["value"])
+    targetMarker = f"{plasmid_file}.target.fa"
+    pairMarker = f"{plasmid_file}.pair.fa"
+    result = celerySxGetMarkers.delay(plasmid_file, targetMarker, pairMarker)
     return {
         ".fasta files": [
             {"taskId": result.id, "value": os.path.basename(targetMarker)},

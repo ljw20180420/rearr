@@ -9,7 +9,7 @@ import os
 
 class TestSxExtractMarker(unittest.TestCase):
     def setUp(self):
-        self.csvfiles = [
+        self.plasmid_files = [
             "test/test_sx_extract_marker/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv",
             "test/test_sx_extract_marker/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G2.csv",
             "test/test_sx_extract_marker/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G3.csv",
@@ -20,25 +20,29 @@ class TestSxExtractMarker(unittest.TestCase):
 
         self.marker1s = [
             mkstemp(dir="test/test_sx_extract_marker", suffix=".target.fa")[1]
-            for _ in self.csvfiles
+            for _ in self.plasmid_files
         ]
 
         self.marker2s = [
             mkstemp(dir="test/test_sx_extract_marker", suffix=".pair.fa")[1]
-            for _ in self.csvfiles
+            for _ in self.plasmid_files
         ]
 
     def test_sx_extract_marker(self):
-        for csvfile, marker1, marker2 in zip(
-            self.csvfiles, self.marker1s, self.marker2s
+        for plasmid_file, marker1, marker2 in zip(
+            self.plasmid_files, self.marker1s, self.marker2s
         ):
             subprocess.run(
-                f"""sxExtractMarker.sh {csvfile} > {marker1} 3> {marker2}""",
+                f"""sxExtractMarker.sh {plasmid_file} > {marker1} 3> {marker2}""",
                 shell=True,
                 executable="/bin/bash",
             )
-            self.assertTrue(filecmp.cmp(marker1, f"{csvfile}.target.fa", shallow=False))
-            self.assertTrue(filecmp.cmp(marker2, f"{csvfile}.pair.fa", shallow=False))
+            self.assertTrue(
+                filecmp.cmp(marker1, f"{plasmid_file}.target.fa", shallow=False)
+            )
+            self.assertTrue(
+                filecmp.cmp(marker2, f"{plasmid_file}.pair.fa", shallow=False)
+            )
 
     def tearDown(self):
         for marker1 in self.marker1s:

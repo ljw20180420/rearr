@@ -17,7 +17,7 @@ const validTargets = {
     'genome': ['indexGenome', 'sxGetReference'],
     'indexGenome': ['genomeIndex'],
     'genomeIndex': ['sxGetReference'],
-    'csvfile': ['sxGetMarkers', 'sxGetReference'],
+    'plasmid': ['sxGetMarkers', 'sxGetReference'],
     'sxGetReference': ['reference'],
     'sxGetMarkers': ['markers']
 }
