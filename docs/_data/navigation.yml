@@ -26,7 +26,7 @@
 - name: Sx
   sub:
     - name: SxExtractSpliter
-      link: /sx/sxExtractSpliter.sh.html
+      link: /sx/sxExtractMarker.sh.html
     - name: SxCutR2AdapterFilterCumulate
       link: /sx/sxCutR2AdapterFilterCumulate.sh.html
       sub:

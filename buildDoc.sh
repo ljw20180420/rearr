@@ -95,7 +95,7 @@ add_header "WorkFlow"
 ########################
 
 add_header "SxExtractSpliter" \
-    < sx/sxExtractSpliter.sh
+    < sx/sxExtractMarker.sh
 
 add_header "SxCutR2AdapterFilterCumulate" \
     < sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh

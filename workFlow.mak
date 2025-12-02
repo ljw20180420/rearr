@@ -30,6 +30,6 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 	sxCutR2AdapterFilterCumulate.sh $< $(minToMapShear) >$@
 
 %.target.fa %.pair.fa: %
-	sxExtractSpliter.sh $< >$<.target.fa 3>$<.pair.fa
+	sxExtractMarker.sh $< >$<.target.fa 3>$<.pair.fa
 
 .PRECIOUS: $(outputDir)rearr.noDup %.1.bt2 %.demultiplex %.alg %.ref %.correct %.post %.target.fa %.pair.fa

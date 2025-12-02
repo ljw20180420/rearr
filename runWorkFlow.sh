@@ -241,7 +241,7 @@ makeTarget=query.post \
 minToMapShear=30 \
 ./runWorkFlow.sh
 ```
-- Our in-house data use plasmids in a `plasmid_file`. We extract demultiplex markers from those plasmids by [`sxExtractSpliter.sh`][sxExtractSpliter.sh.md].
+- Our in-house data use plasmids in a `plasmid_file`. We extract demultiplex markers from those plasmids by [`sxExtractMarker.sh`][sxExtractMarker.sh.md].
 ```bash
 makeTarget=plasmid_file.target.fa \
 ./runWorkFlow.sh
@@ -273,7 +273,7 @@ refFile=plasmid_file.ref \
 [demultiplex.sh.md]: /auxilary/demultiplex.sh.html
 [workFlow.mak.md]: /runWorkFlow/workFlow.mak.html
 [sxCutR2AdapterFilterCumulate.sh.md]: /sx/sxCutR2AdapterFilterCumulate.sh.html
-[sxExtractSpliter.sh.md]: /sx/sxExtractSpliter.sh.html
+[sxExtractMarker.sh.md]: /sx/sxExtractMarker.sh.html
 [getSxCsvFileRef.sh.md]: /sx/getSxCsvFileRef.sh.html
 
 # Source

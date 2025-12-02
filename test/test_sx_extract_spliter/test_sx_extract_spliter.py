@@ -33,7 +33,7 @@ class TestSxExtractSpliter(unittest.TestCase):
             self.csvfiles, self.spliter1s, self.spliter2s
         ):
             subprocess.run(
-                f"""sxExtractSpliter.sh {csvfile} > {spliter1} 3> {spliter2}""",
+                f"""sxExtractMarker.sh {csvfile} > {spliter1} 3> {spliter2}""",
                 shell=True,
                 executable="/bin/bash",
             )

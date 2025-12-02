@@ -103,7 +103,7 @@ def celerySxGetReference(
 @celeryApp.task
 def celerySxGetSpliters(csvFile, targetSpliter, pairSpliter):
     subprocess.run(
-        f"""sxExtractSpliter.sh {csvFile} >{targetSpliter} 3>{pairSpliter}""",
+        f"""sxExtractMarker.sh {csvFile} >{targetSpliter} 3>{pairSpliter}""",
         shell=True,
         executable="/bin/bash",
     )
