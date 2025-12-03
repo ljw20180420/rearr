@@ -6,11 +6,7 @@ LABEL org.opencontainers.image.licenses=MIT
 COPY ["./core", "/app/core"]
 RUN cd /app && \
     # install rearrangement
-    mkdir -p core/Rearrangement/build && \
-    cd core/Rearrangement/build && \
-    cmake -DCMAKE_BUILD_TYPE=Release .. && \
-    make && \
-    make install && \
+    core/Rearrangement/build.sh install && \
     cd /app && \
     mkdir -p /usr/share/awk/ && \
     cp core/Rearrangement/correct_micro_homology.awk /usr/share/awk/ && \
