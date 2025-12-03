@@ -3,7 +3,12 @@
 # change to the dir of the script
 cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-# This is the start script for docker compose. It handles volume permissions, stop and remove previous up if the compose is already running, pull the latest remote images, and finally up the compose in the background.
+# This is the start script for docker compose.
+
+# build vue3
+cd docker-images/flask/vue_project
+npm run build
+cd - 
 
 # shiny
 chmod a+w docker-images/shiny/logs
