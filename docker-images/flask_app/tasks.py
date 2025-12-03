@@ -79,6 +79,10 @@ def celerySxPostProcess(demultiplexFile, minToMapShear, toMapFile):
 def celeryRearrange(
     toMapFile, refFile, directionFile, s0, s1, s2, u, v, ru, rv, qu, qv, alignFile
 ):
+    import sys
+
+    cmd = f"""rearrangement <{toMapFile} 3<{refFile} -s0 {s0} -s1 {s1} -s2 {s2} -u {u} -v {v} -ru {ru} -rv {rv} -qu {qu} -qv {qv} | gawk -f correct_micro_homology.awk -- {refFile} {directionFile} >{alignFile}"""
+    sys.stderr.write(cmd + "\n")
     subprocess.run(
         f"""rearrangement <{toMapFile} 3<{refFile} -s0 {s0} -s1 {s1} -s2 {s2} -u {u} -v {v} -ru {ru} -rv {rv} -qu {qu} -qv {qv} | gawk -f correct_micro_homology.awk -- {refFile} {directionFile} >{alignFile}""",
         shell=True,

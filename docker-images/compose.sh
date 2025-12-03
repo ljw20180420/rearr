@@ -15,7 +15,7 @@ chmod a+w shiny/logs
 chmod a+w shiny/apps/downstreamAnalysis/www
 
 # workflow
-chmod a+w flask/tmp
+chmod a+w flask_app/tmp
 
 # Stop and remove previous up
 docker compose down
