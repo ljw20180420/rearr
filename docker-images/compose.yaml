@@ -1,0 +1,92 @@
+services:
+  rabbitmq:
+    restart: always
+    container_name: celery_rabbitmq
+    image: rabbitmq:latest
+  
+  redis:
+    restart: always
+    container_name: celery_redis
+    image: redis:latest
+
+  beat:
+    depends_on:
+      - rabbitmq
+      - redis
+    restart: always
+    container_name: celery_beat
+    image: mher/flower:latest
+    volumes:
+      - "./flask:/data"
+    command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
+
+  worker:
+    depends_on:
+      - rabbitmq
+      - redis
+    restart: always
+    container_name: celery_worker
+    image: ghcr.io/ljw20180420/rearr:latest
+    build:
+      context: .
+      dockerfile: ./rearr.df
+    volumes:
+      - "./flask:/app"
+    command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
+
+  flask:
+    depends_on:
+      - rabbitmq
+      - redis
+      - worker
+    restart: always
+    container_name: flask_app
+    image: ghcr.io/ljw20180420/rearr:latest
+    build:
+      context: .
+      dockerfile: ./rearr.df
+    volumes:
+      - "./flask:/app"
+    command: ./app.py -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 waitress
+
+  flower:
+    depends_on:
+      - rabbitmq
+      - redis
+      - worker
+    restart: always
+    container_name: celery_flower
+    image: mher/flower:latest
+    volumes:
+      - "./flask:/data"
+    command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
+
+  nginx:
+    depends_on:
+      - flask
+      - flower
+      - shiny
+    restart: always
+    container_name: nginx_server
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - "./nginx/conf:/etc/nginx/conf.d"
+      - "./nginx/html:/usr/share/nginx/html"
+    # command: [nginx-debug, '-g', 'daemon off;']
+
+  shiny:
+    restart: always
+    container_name: shiny_server
+    image: ghcr.io/ljw20180420/rearr:latest
+    build:
+      context: .
+      dockerfile: ./rearr.df
+    volumes:
+      - "./shiny/apps:/srv/shiny-server"
+      - "./shiny/conf:/etc/shiny-server"
+      - "./shiny/logs:/var/log/shiny-server"
+    environment:
+      R: /opt/conda/bin/R
+    command: shiny-server

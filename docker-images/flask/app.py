@@ -1,35 +1,56 @@
 #!/usr/bin/env python
 
-import os, uuid, shutil
+import argparse
+import os
+import shutil
+import uuid
+
+import waitress
+from celery.result import AsyncResult
 from flask import (
     Flask,
     render_template,
+    request,
     send_file,
     send_from_directory,
-    request,
     session,
 )
-from celery_project.tasks import (
-    celeryRemoveDuplicates,
-    celeryBuildMarker,
-    celeryDemultiplex,
-    celerySxPostProcess,
-    celeryRearrange,
-    celeryDefaultDirection,
-    celerySxGetReference,
-    celerySxGetMarkers,
-)
-from celery.result import AsyncResult
 
-# from werkzeug.middleware.proxy_fix import ProxyFix
+from .tasks import (
+    celeryApp,
+    celeryBuildMarker,
+    celeryDefaultDirection,
+    celeryDemultiplex,
+    celeryRearrange,
+    celeryRemoveDuplicates,
+    celerySxGetMarkers,
+    celerySxGetReference,
+    celerySxPostProcess,
+)
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "wasgi", choices=["werkzeug", "waitress"], help="The wsgi/asgi server to use."
+)
+parser.add_argument("-b", "--broker", type=str, required=True, help="TEXT")
+parser.add_argument("--result-backend", type=str, required=True, help="TEXT")
+args = parser.parse_args()
+
+# set_default make default_app = celeryApp. This is necessary because in flask function, _tls.current_app = None, which causes celery.current_app to be default_app. For more details, see https://stackoverflow.com/questions/26527214/why-celery-current-app-refers-the-default-instance-inside-flask-view-functions.
+celeryApp.set_default()
+
+celeryApp.conf.update(
+    broker=args.broker,
+    backend=args.result_backend,
+)
 
 flaskApp = Flask(
-    __name__,
+    import_name=__name__,
+    static_url_path="/assets",
     static_folder="vue_project/dist/assets",
     template_folder="vue_project/dist",
-    static_url_path="/assets",
 )
-# flaskApp.wsgi_app = ProxyFix(flaskApp.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 flaskApp.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024 * 1024
 flaskApp.secret_key = (
     b"913d1c26d46f82f119662371bc71efa4de6902a8ee2a378a6f342b8eb39b2d52"
@@ -248,4 +269,12 @@ def getSxMarkers():
 
 
 if __name__ == "__main__":
-    flaskApp.run()
+    if args.wasgi == "werkzeug":
+        flaskApp.run()
+    else:
+        assert args.wasgi == "waitress", "wasgi must be werkzeug or waitress"
+        waitress.serve(
+            flaskApp,
+            url_prefix="/workflow",
+            max_request_body_size=flaskApp.config["MAX_CONTENT_LENGTH"],
+        )

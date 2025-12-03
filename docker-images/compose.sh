@@ -6,16 +6,16 @@ cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # This is the start script for docker compose.
 
 # build vue3
-cd docker-images/flask/vue_project
+cd flask/vue_project
 npm run build
 cd - 
 
 # shiny
-chmod a+w docker-images/shiny/logs
-chmod a+w docker-images/shiny/apps/downstreamAnalysis/www
+chmod a+w shiny/logs
+chmod a+w shiny/apps/downstreamAnalysis/www
 
 # workflow
-chmod a+w docker-images/flask/tmp
+chmod a+w flask/tmp
 
 # Stop and remove previous up
 docker compose down

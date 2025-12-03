@@ -1,8 +1,15 @@
-from .app import celeryApp
-import subprocess
 import os
-import time
 import shutil
+import subprocess
+import time
+
+from celery import Celery
+
+# Set main to prevent the issue caused by running this file (tasks.py) direction (https://docs.celeryq.dev/en/stable/userguide/application.html#main-name).
+celeryApp = Celery(
+    main=__name__,
+    broker_connection_retry_on_startup=True,
+)
 
 
 @celeryApp.on_after_finalize.connect
