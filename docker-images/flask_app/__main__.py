@@ -69,34 +69,38 @@ def favicon():
 
 @flaskApp.get("/")
 def homePage():
-    if "tempdir" not in session:
-        session["tempdir"] = (
-            pathlib.Path(flaskApp.import_name) / "tmp" / uuid.uuid4().hex
-        ).as_posix()
-    os.makedirs(session["tempdir"], exist_ok=True)
+    if "uuid" not in session:
+        session["uuid"] = uuid.uuid4().hex
+    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
+    os.makedirs(session_path, exist_ok=True)
     return render_template("index.html")
 
 
 @flaskApp.route("/stop")
 def stop():
-    if os.path.exists(session["tempdir"]):
-        shutil.rmtree(session["tempdir"])
+    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
+    if os.path.exists(session_path):
+        shutil.rmtree(session_path)
     return "STOP", 200
 
 
 @flaskApp.put("/upload")
 def upload():
     file = request.files["file[]"]
-    file.save(pathlib.Path(session["tempdir"]) / file.filename)
+    file_path = os.path.join(
+        flaskApp.import_name, "tmp", session["uuid"], file.filename
+    )
+    file.save(file_path)
     return file.filename, 200
 
 
 # This api is accessed by href. Firefox will add trailing slash for cached pages. To avoid using strict_slashes=False, add a slash to this api.
 @flaskApp.get("/download/<string:filename>/")
 def download(filename):
+    file_path = os.path.join("tmp", session["uuid"], filename)
     try:
         return (
-            send_file(pathlib.Path(session["tempdir"]) / filename, as_attachment=True),
+            send_file(file_path, as_attachment=True),
             200,
         )
     except FileNotFoundError:
@@ -112,19 +116,21 @@ def inspect(taskId):
 
 @flaskApp.put("/runJob/removeDuplicates")
 def removeDuplicates():
+    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
     fastqFiles = [
-        (pathlib.Path(session["tempdir"]) / file["value"]).as_posix()
+        os.path.join(session_path, file["value"])
         for file in request.get_json()[".fastq files"]
     ]
-    rmDupFile = (pathlib.Path(session["tempdir"]) / "rearr.noDup").as_posix()
+    rmDupFile = os.path.join(session_path, "rearr.noDup")
     result = celeryRemoveDuplicates.delay(fastqFiles, rmDupFile)
     return {".noDup file": {"taskId": result.id, "value": "rearr.noDup"}}
 
 
 @flaskApp.put("/runJob/buildMarker")
 def buildMarker():
+    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
     markers = [
-        (pathlib.Path(session["tempdir"]) / file["value"]).as_posix()
+        os.path.join(session_path, file["value"])
         for file in request.get_json()[".fasta files"]
     ]
     result = celeryBuildMarker.delay(markers)
@@ -154,14 +160,10 @@ def buildMarker():
 @flaskApp.put("/runJob/demultiplex")
 def demultiplex():
     json = request.get_json()
-    rmDupFile = (
-        pathlib.Path(session["tempdir"]) / json[".noDup file"]["value"]
-    ).as_posix()
+    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
+    rmDupFile = os.path.join(session_path, json[".noDup file"]["value"])
     markerIndices = [
-        (
-            pathlib.Path(session["tempdir"])
-            / auxiliary["markerIndex"]["1.bt2"]["value"][:-6]
-        ).as_posix()
+        os.path.join(session_path, auxiliary["markerIndex"]["1.bt2"]["value"][:-6])
         for auxiliary in json["auxiliaries"]
     ]
     minScores = [
@@ -182,9 +184,9 @@ def demultiplex():
 @flaskApp.put("/runJob/sxPostProcess")
 def sxPostProcess():
     json = request.get_json()
-    demultiplexFile = (
-        pathlib.Path(session["tempdir"]) / json[".demultiplex file"]["value"]
-    ).as_posix()
+    demultiplexFile = os.path.join(
+        flaskApp.import_name, "tmp", session["uuid"], json[".demultiplex file"]["value"]
+    )
     toMapFile = os.path.splitext(demultiplexFile)[0] + ".post"
     result = celerySxPostProcess.delay(
         demultiplexFile, json["minimal base number"]["value"], toMapFile
@@ -195,13 +197,10 @@ def sxPostProcess():
 @flaskApp.put("/runJob/rearrange")
 def rearrange():
     json = request.get_json()
-    toMapFile = (
-        pathlib.Path(session["tempdir"]) / json[".post file"]["value"]
-    ).as_posix()
-    refFile = (pathlib.Path(session["tempdir"]) / json[".ref file"]["value"]).as_posix()
-    directionFile = (
-        pathlib.Path(session["tempdir"]) / json[".direct file"]["value"]
-    ).as_posix()
+    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
+    toMapFile = os.path.join(session_path, json[".post file"]["value"])
+    refFile = os.path.join(session_path, json[".ref file"]["value"])
+    directionFile = os.path.join(session_path, json[".direct file"]["value"])
     alignFile = os.path.splitext(toMapFile)[0] + ".alg"
     result = celeryRearrange.delay(
         toMapFile,
@@ -223,9 +222,12 @@ def rearrange():
 
 @flaskApp.put("/runJob/defaultDirection")
 def defaultDirection():
-    refFile = (
-        pathlib.Path(session["tempdir"]) / request.get_json()[".ref file"]["value"]
-    ).as_posix()
+    refFile = os.path.join(
+        flaskApp.import_name,
+        "tmp",
+        session["uuid"],
+        request.get_json()[".ref file"]["value"],
+    )
     directionFile = os.path.splitext(refFile)[0] + ".direct"
     result = celeryDefaultDirection.delay(refFile, directionFile)
     return {
@@ -235,9 +237,12 @@ def defaultDirection():
 
 @flaskApp.put("/runJob/indexGenome")
 def indexGenome():
-    genomeFile = (
-        pathlib.Path(session["tempdir"]) / request.get_json()["genome file"]["value"]
-    ).as_posix()
+    genomeFile = os.path.join(
+        flaskApp.import_name,
+        "tmp",
+        session["uuid"],
+        request.get_json()["genome file"]["value"],
+    )
     result = celeryBuildMarker.delay([genomeFile])
     return {
         "genome index": {
@@ -250,15 +255,12 @@ def indexGenome():
 @flaskApp.put("/runJob/sxGetReference")
 def sxGetReference():
     json = request.get_json()
-    plasmid_file = (
-        pathlib.Path(session["tempdir"]) / json[".csv file"]["value"]
-    ).ax_posix()
-    bowtie2index = (
-        pathlib.Path(session["tempdir"]) / json["genome index"]["1.bt2"]["value"][:-6]
-    ).as_posix()
-    genome = (
-        pathlib.Path(session["tempdir"]) / json["genome file"]["value"]
-    ).as_posix()
+    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
+    plasmid_file = os.path.join(session_path, json[".csv file"]["value"])
+    bowtie2index = os.path.join(
+        session_path, json["genome index"]["1.bt2"]["value"][:-6]
+    )
+    genome = os.path.join(session_path, json["genome file"]["value"])
     ext1up = json["extensions"]["cut1 upstream"]["value"]
     ext1down = json["extensions"]["cut1 downstream"]["value"]
     ext2up = json["extensions"]["cut2 upstream"]["value"]
@@ -273,9 +275,9 @@ def sxGetReference():
 @flaskApp.put("/runJob/sxGetMarkers")
 def getSxMarkers():
     json = request.get_json()
-    plasmid_file = (
-        pathlib.Path(session["tempdir"]) / json[".csv file"]["value"]
-    ).as_posix()
+    plasmid_file = os.path.join(
+        flaskApp.import_name, "tmp", session["uuid"], json[".csv file"]["value"]
+    )
     targetMarker = f"{plasmid_file}.target.fa"
     pairMarker = f"{plasmid_file}.pair.fa"
     result = celerySxGetMarkers.delay(plasmid_file, targetMarker, pairMarker)
