@@ -25,7 +25,7 @@ alignOne <- function(
     con = directionFile
   )
   alignPipe = pipe(sprintf(
-    'rearrangement 3<%s | gawk -f correct_micro_homology.awk -- %s %s | tail -n+2 >%s',
+    "rearrangement 3<%s | gawk -f correct_micro_homology.awk -- %s %s | tail -n+2 >%s",
     refFile,
     refFile,
     directionFile,

@@ -100,7 +100,7 @@ getMarkdownFromAlign <- function(algTibble) {
         )
       )
     )
-    insertion <- algTibble$refLine[i] |> gregexpr(pattern = '-+') |> _[[1]]
+    insertion <- algTibble$refLine[i] |> gregexpr(pattern = "-+") |> _[[1]]
     if (insertion[1] == -1) {
       queryMd <- sprintf(
         "<details><summary style=\"list-style-position: outside;\">%10d%s</summary></details>",
@@ -166,7 +166,7 @@ getMarkdownFromAlign <- function(algTibble) {
       "%s%s</summary>%s</details>",
       queryMd,
       mdHigh,
-      paste(insertionLines, collapse = '<br>')
+      paste(insertionLines, collapse = "<br>")
     )
     allMd[2 * i] <- queryMd
   }

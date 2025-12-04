@@ -2,7 +2,7 @@ extendToSameLength <- function(seqs) {
   maxLen <- max(nchar(seqs))
   return(
     seqs |>
-      str_pad(width = maxLen, side = 'right', pad = "-") |>
+      str_pad(width = maxLen, side = "right", pad = "-") |>
       strsplit("") |>
       unlist() |>
       matrix(ncol = maxLen, byrow = TRUE)
@@ -15,9 +15,9 @@ extendToAlignCut <- function(seqs, cuts) {
   return(
     paste0(
       substr(seqs, 1, cuts) |>
-        str_pad(width = leftMax, side = 'left', pad = "-"),
+        str_pad(width = leftMax, side = "left", pad = "-"),
       substr(seqs, cuts + 1, nchar(seqs)) |>
-        str_pad(width = rightMax, side = 'right', pad = "-")
+        str_pad(width = rightMax, side = "right", pad = "-")
     ) |>
       strsplit("") |>
       unlist() |>
@@ -33,7 +33,7 @@ vectorToStringVector <- function(vec, strLens) {
 posMatrixToTibble <- function(mat, cut) {
   tibble(
     count = c(mat),
-    pos = rep(seq(ncol(mat)) - 0.5 - cut, each = nrow(mat)),
+    pos = rep(seq_len(ncol(mat)) - 0.5 - cut, each = nrow(mat)),
     type = factor(rep(rownames(mat), times = ncol(mat)), levels = rownames(mat))
   )
 }
@@ -83,8 +83,8 @@ getPositionalBaseFreq <- function(queryMat, counts) {
 getPositionalMSDTibble <- function(queryMat, refMat, counts, cut) {
   refMat <- toupper(refMat)
   MSDFreq <- rbind(
-    colSums((queryMat == '-') * counts),
-    colSums((queryMat != refMat & queryMat != '-') * counts),
+    colSums((queryMat == "-") * counts),
+    colSums((queryMat != refMat & queryMat != "-") * counts),
     colSums((queryMat == refMat) * counts)
   )
   rownames(MSDFreq) <- c("delete", "SNP", "match")

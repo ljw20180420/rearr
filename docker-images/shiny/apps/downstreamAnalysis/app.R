@@ -8,9 +8,20 @@ library(ggforce)
 library(waffle)
 
 Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
-options(shiny.maxRequestSize = 100 * 1024^3)
+options(shiny.maxRequestSize = 10 * 1024^3)
 
-dir(path = "helpers", full.names = TRUE) |> lapply(source)
+source("helpers/alignBrowser.R")
+source("helpers/alignOne.R")
+source("helpers/arcDeletion.R")
+source("helpers/baseSubstitute.R")
+source("helpers/classicClassify.R")
+source("helpers/distribution.R")
+source("helpers/kmerFrequencies.R")
+source("helpers/kpLogo.R")
+source("helpers/microHomology.R")
+source("helpers/pairwise.R")
+source("helpers/polygonInsertion.R")
+source("helpers/positionalStatistics.R")
 
 # Define UI ----
 ui <- page_sidebar(
@@ -426,7 +437,7 @@ server <- function(input, output, session) {
   ################################
   # session end
   ################################
-  onSessionEnded(function() {
+  session$onSessionEnded(function() {
     unlink(file.path("www", session$token), recursive = TRUE)
   })
   ################################
