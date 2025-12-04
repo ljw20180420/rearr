@@ -6,7 +6,7 @@ LABEL org.opencontainers.image.licenses=MIT
 COPY ["./core", "/app/core"]
 RUN cd /app && \
     # install rearrangement
-    core/Rearrangement/build.sh install && \
+    core/Rearrangement/build.sh /usr/local && \
     cd /app && \
     mkdir -p /usr/share/awk/ && \
     cp core/Rearrangement/correct_micro_homology.awk /usr/share/awk/ && \

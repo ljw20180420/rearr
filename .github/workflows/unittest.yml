@@ -27,5 +27,8 @@ jobs:
           environment-file: environment.yml
           auto-update-conda: true
 
+      - name: Install rearr
+        run: ./install.sh
+
       - name: Run unit test
         run: python -m unittest test.test_suite_no_genome

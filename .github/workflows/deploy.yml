@@ -31,20 +31,5 @@ jobs:
       - name: Build flask app
         run: docker build -t ghcr.io/ljw20180420/flask_app:latest -f docker-images/flask_app.df .
 
-      - name: Push base
+      - name: Push flask app
         run: docker push ghcr.io/ljw20180420/flask_app:latest
-
-      - name: Build base
-        run: docker build -t ghcr.io/ljw20180420/rearr_base:latest -f docker-images/rearr_base.df .
-      
-      - name: Push base
-        run: docker push ghcr.io/ljw20180420/rearr_base:latest
-
-      - name: Build rearr
-        run: docker build -t ghcr.io/ljw20180420/rearr:latest -f docker-images/rearr.df .
-
-      - name: Run unit test in docker
-        run: docker run --rm -v "./test:/app/test" ghcr.io/ljw20180420/rearr:latest python -m unittest test.test_suite_no_genome
-
-      - name: Push rearr
-        run: docker push ghcr.io/ljw20180420/rearr:latest
