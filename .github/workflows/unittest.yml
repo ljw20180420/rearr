@@ -19,15 +19,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Build rearr
-        run: docker build -t ghcr.io/ljw20180420/rearr:latest -f docker-images/rearr.df .
+      - name: Install dependencies
+        run: |
+            conda install sed gawk samtools bedtools bowtie2
+            pip install numpy cutadapt
 
-      - name: Run unit test in docker
-        run: docker run --rm -v "./test:/app/test" ghcr.io/ljw20180420/rearr:latest python -m unittest test.test_suite_no_genome
+      - name: Run unit test
+        run: python -m unittest test.test_suite_no_genome
