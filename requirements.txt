@@ -1,5 +1,0 @@
-numpy
-flask
-waitress
-celery[redis]
-cutadapt

@@ -1,0 +1,21 @@
+name: rearr
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - conda-forge::make
+  - conda-forge::cmake
+  - conda-forge::file
+  - conda-forge::sed
+  - conda-forge::gawk
+  - conda-forge::perl
+  - bioconda::samtools
+  - bioconda::bedtools
+  - bioconda::bowtie2
+  - pip:
+    - numpy
+    - flask
+    - waitress
+    - celery[redis]
+    - cutadapt
