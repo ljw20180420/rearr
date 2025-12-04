@@ -1,0 +1,10 @@
+<div>
+    <img src="/assets/images/banner-autumn.jpg" alt="" class="page-header">
+</div>
+<nav>
+  {% for item in site.data.navigation %}
+    <a href="{{ item.link }}" {% if page.url == item.link %}class="current"{% endif %}>
+      {{ item.name }}
+    </a>
+  {% endfor %}
+</nav>

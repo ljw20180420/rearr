@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="author" content="Jingwei Li">
+    <meta name="description" content="qiangwulab">
+    <title>{{ page.title }}</title>
+    <link rel="stylesheet" href={{ "/assets/css/styles.css" | relative_url }}>
+    <link rel="icon" type="image/x-icon" href={{ "/assets/images/favicon.ico" | relative_url }}>
+    {% feed_meta %}
+    {% seo %}
+    <script>
+      /*to prevent Firefox FOUC, this must be here*/
+      let FF_FOUC_FIX;
+    </script>
+  </head>
+  <body>
+    {% include navigation.html %}
+    <div>
+      {{ content }}
+    </div>
+  </body>
+  <footer class="footer">
+    <a href="https://beian.miit.gov.cn" target="_blank">沪交ICP备20240141</a>
+  </footer>
+</html>

@@ -1,0 +1,8 @@
+- name: Home
+  link: /
+- name: Workflow
+  link: /workflow
+- name: Flower
+  link: /flower
+- name: Shiny
+  link: /shiny

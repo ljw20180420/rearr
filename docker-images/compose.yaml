@@ -72,8 +72,8 @@ services:
     ports:
       - "80:80"
     volumes:
-      - "./nginx/conf:/etc/nginx/conf.d"
-      - "./nginx/html:/usr/share/nginx/html"
+      - "./nginx:/etc/nginx/conf.d"
+      - "./jekyll/_site:/usr/share/nginx/html"
     # command: [nginx-debug, '-g', 'daemon off;']
 
   shiny:
