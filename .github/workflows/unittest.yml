@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-            conda install sed gawk samtools bedtools bowtie2
+            conda install conda-forge::sed conda-forge::gawk bioconda::samtools bioconda::bedtools bioconda::bowtie2
             pip install numpy cutadapt
 
       - name: Run unit test
