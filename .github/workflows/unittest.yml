@@ -11,6 +11,9 @@ on:
 jobs:
   unittest:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
 
     permissions:
       contents: read

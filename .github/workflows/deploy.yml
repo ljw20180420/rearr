@@ -28,6 +28,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
+      - name: Build flask app
+        run: docker build -t ghcr.io/ljw20180420/flask_app:latest -f docker-images/flask_app.df .
+
+      - name: Push base
+        run: docker push ghcr.io/ljw20180420/flask_app:latest
+
       - name: Build base
         run: docker build -t ghcr.io/ljw20180420/rearr_base:latest -f docker-images/rearr_base.df .
       
