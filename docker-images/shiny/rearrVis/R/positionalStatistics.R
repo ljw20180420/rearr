@@ -2,7 +2,7 @@ extendToSameLength <- function(seqs) {
   maxLen <- max(nchar(seqs))
   return(
     seqs |>
-      str_pad(width = maxLen, side = "right", pad = "-") |>
+      stringr::str_pad(width = maxLen, side = "right", pad = "-") |>
       strsplit("") |>
       unlist() |>
       matrix(ncol = maxLen, byrow = TRUE)
@@ -15,9 +15,9 @@ extendToAlignCut <- function(seqs, cuts) {
   return(
     paste0(
       substr(seqs, 1, cuts) |>
-        str_pad(width = leftMax, side = "left", pad = "-"),
+        stringr::str_pad(width = leftMax, side = "left", pad = "-"),
       substr(seqs, cuts + 1, nchar(seqs)) |>
-        str_pad(width = rightMax, side = "right", pad = "-")
+        stringr::str_pad(width = rightMax, side = "right", pad = "-")
     ) |>
       strsplit("") |>
       unlist() |>
@@ -31,7 +31,7 @@ vectorToStringVector <- function(vec, strLens) {
 }
 
 posMatrixToTibble <- function(mat, cut) {
-  tibble(
+  tibble::tibble(
     count = c(mat),
     pos = rep(seq_len(ncol(mat)) - 0.5 - cut, each = nrow(mat)),
     type = factor(rep(rownames(mat), times = ncol(mat)), levels = rownames(mat))
@@ -40,28 +40,31 @@ posMatrixToTibble <- function(mat, cut) {
 
 drawPositionalStatic <- function(inputTibble, insertCount, posBaseRefTempFile) {
   ggFig <- inputTibble |>
-    ggplot(aes(pos, count)) +
-    geom_col(aes(fill = type), width = 1) +
-    geom_step(
-      aes(pos, count, color = "black"),
+    ggplot2::ggplot(ggplot2::aes(pos, count)) +
+    ggplot2::geom_col(ggplot2::aes(fill = type), width = 1) +
+    ggplot2::geom_step(
+      ggplot2::aes(pos, count, color = "black"),
       data = insertCount[2:(nrow(insertCount) - 1), ],
       direction = "mid"
     ) +
-    scale_x_continuous(name = "position relative to cut", expand = c(0, 0)) +
-    scale_y_continuous(expand = c(0, 0)) +
-    scale_color_identity(
+    ggplot2::scale_x_continuous(
+      name = "position relative to cut",
+      expand = c(0, 0)
+    ) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::scale_color_identity(
       name = NULL,
-      guide = guide_legend(),
+      guide = ggplot2::guide_legend(),
       labels = "insertion"
     )
-  ggsave(
+  ggplot2::ggsave(
     posBaseRefTempFile,
     plot = ggFig,
     height = 1200,
     width = 3600,
     unit = "px"
   )
-  tags$iframe(
+  htmltools::tags$iframe(
     src = sub("^www/", "", posBaseRefTempFile),
     height = "600px",
     width = "100%"
@@ -101,7 +104,7 @@ calInsertionCount <- function(refList, cuts, maxCutDown) {
   histCount <- insertList |> unlist() |> table()
   fullCount <- rep(0, maxCut + maxCutDown + 1)
   fullCount[as.integer(names(histCount)) + maxCut + 1] <- histCount
-  tibble(
+  tibble::tibble(
     count = fullCount,
     pos = seq(-maxCut, maxCutDown)
   )
@@ -140,34 +143,43 @@ getPositionalReads <- function(mat, counts, resolution, cut) {
     2 -
     1
   resolutionMat |>
-    melt() |>
-    mutate(
-      x = Var2 - cut - 0.5,
-      y = vertCent[Var1],
-      value = value,
-      height = resolutionCount[Var1 + 1] - resolutionCount[Var1]
+    tibble::as_tibble() |>
+    dplyr::mutate(pos1 = dplyr::row_number()) |>
+    tidyr::pivot_longer(
+      cols = tidyselect::starts_with("V"),
+      names_to = "pos2"
     ) |>
-    select(x, y, value, height)
+    dplyr::mutate(pos2 = as.integer(sub("^V", "", pos2))) |>
+    dplyr::mutate(
+      x = pos2 - cut - 0.5,
+      y = vertCent[pos1],
+      value = value,
+      height = resolutionCount[pos1 + 1] - resolutionCount[pos1]
+    ) |>
+    dplyr::select(x, y, value, height)
 }
 
 drawPositionalReads <- function(tibb, maxCut, maxCutdown, posBaseRefTempFile) {
-  ggFig <- ggplot(tibb, aes(x = x, y = y, fill = value, height = height)) +
-    geom_tile(width = 1) +
-    scale_fill_gradient(low = "white", high = "red") +
-    scale_x_continuous(
+  ggFig <- ggplot2::ggplot(
+    tibb,
+    ggplot2::aes(x = x, y = y, fill = value, height = height)
+  ) +
+    ggplot2::geom_tile(width = 1) +
+    ggplot2::scale_fill_gradient(low = "white", high = "red") +
+    ggplot2::scale_x_continuous(
       name = "position relative to cut",
       limits = c(-maxCut, maxCutdown),
       expand = c(0, 0)
     ) +
-    scale_y_continuous(name = "reads", expand = c(0, 0))
-  ggsave(
+    ggplot2::scale_y_continuous(name = "reads", expand = c(0, 0))
+  ggplot2::ggsave(
     posBaseRefTempFile,
     plot = ggFig,
     height = 1200,
     width = 3600,
     unit = "px"
   )
-  tags$iframe(
+  htmltools::tags$iframe(
     src = sub("^www/", "", posBaseRefTempFile),
     height = "600px",
     width = "100%"
@@ -180,18 +192,22 @@ drawPositionalLogo <- function(
   namespace,
   posBaseRefTempFile
 ) {
-  ggFig <- ggplot() +
-    geom_logo(data = baseFreq, method = method, namespace = namespace) +
-    scale_x_continuous(breaks = NULL) +
-    theme_logo()
-  ggsave(
+  ggFig <- ggplot2::ggplot() +
+    ggseqlogo::geom_logo(
+      data = baseFreq,
+      method = method,
+      namespace = namespace
+    ) +
+    ggplot2::scale_x_continuous(breaks = NULL) +
+    ggseqlogo::theme_logo()
+  ggplot2::ggsave(
     posBaseRefTempFile,
     plot = ggFig,
     height = 1200,
     width = 3600,
     unit = "px"
   )
-  tags$iframe(
+  htmltools::tags$iframe(
     src = sub("^www/", "", posBaseRefTempFile),
     height = "600px",
     width = "100%"

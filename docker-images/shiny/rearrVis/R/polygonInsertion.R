@@ -9,7 +9,7 @@ getPolyInsTibble <- function(algTibble) {
       attributes(insReg)$match.length
     }
   )
-  polyInsTibble <- tibble(
+  polyInsTibble <- tibble::tibble(
     count = algTibble$count,
     insPos1 = vector("list", length(insRegs)),
     insPos2 = vector("list", length(insRegs)),
@@ -51,23 +51,27 @@ getPolyXY <- function(polyInsTibble, mode) {
     polyInsTibble$count,
     each = 2
   )
-  return(tibble(x = polyX, y = polyY))
+  return(tibble::tibble(x = polyX, y = polyY))
 }
 
 plotPolyInsTibble <- function(polyXY, limits, polyInsertTempFile) {
   ggFig <- polyXY |>
-    ggplot(aes(x, y)) +
-    geom_polygon(color = "black", fill = NA, linewidth = 0.1) +
-    scale_x_continuous(limits = limits, name = "pos", expand = c(0, 0)) +
-    scale_y_continuous(name = "count", expand = c(0, 0))
-  ggsave(
+    ggplot2::ggplot(ggplot2::aes(x, y)) +
+    ggplot2::geom_polygon(color = "black", fill = NA, linewidth = 0.1) +
+    ggplot2::scale_x_continuous(
+      limits = limits,
+      name = "pos",
+      expand = c(0, 0)
+    ) +
+    ggplot2::scale_y_continuous(name = "count", expand = c(0, 0))
+  ggplot2::ggsave(
     polyInsertTempFile,
     plot = ggFig,
     height = 1200,
     width = 3600,
     unit = "px"
   )
-  tags$iframe(
+  htmltools::tags$iframe(
     src = sub("^www/", "", polyInsertTempFile),
     height = "600px",
     width = "100%"

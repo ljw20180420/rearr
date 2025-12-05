@@ -1,6 +1,6 @@
 getIndelTypes <- function(algTibble) {
   algTibble |>
-    mutate(
+    dplyr::mutate(
       indelType = factor(
         ifelse(
           insert & !delete,
@@ -15,12 +15,12 @@ getIndelTypes <- function(algTibble) {
       ),
       count = count
     ) |>
-    summarise(count = sum(count), .by = "indelType")
+    dplyr::summarise(count = sum(count), .by = "indelType")
 }
 
 getIndelTypesEx <- function(algTibble) {
   algTibble |>
-    mutate(
+    dplyr::mutate(
       indelType = factor(
         ifelse(
           templatedInsert & delete & nchar(randInsert),
@@ -64,7 +64,7 @@ getIndelTypesEx <- function(algTibble) {
       ),
       count = count
     ) |>
-    summarise(count = sum(count), .by = "indelType")
+    dplyr::summarise(count = sum(count), .by = "indelType")
 }
 
 indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
@@ -73,12 +73,12 @@ indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
     fillColors <- fillColors[c(1, 2, 3, 6)]
   }
   ggFig <- indelTypeTibble |>
-    mutate(
+    dplyr::mutate(
       percent = count / sum(count),
       perlabel = scales::percent(percent, accuracy = 0.01)
     ) |>
-    mutate(typeCount = sprintf("%s: %d", indelType, count)) |>
-    mutate(
+    dplyr::mutate(typeCount = sprintf("%s: %d", indelType, count)) |>
+    dplyr::mutate(
       typeCount = factor(
         typeCount,
         levels = sapply(
@@ -89,23 +89,28 @@ indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
           unlist()
       )
     ) |>
-    ggplot(aes(1, percent, fill = typeCount, weight = count)) +
-    geom_col() +
-    geom_text(
-      aes(label = perlabel),
-      position = position_stack(vjust = 0.5),
+    ggplot2::ggplot(ggplot2::aes(
+      1,
+      percent,
+      fill = typeCount,
+      weight = count
+    )) +
+    ggplot2::geom_col() +
+    ggplot2::geom_text(
+      ggplot2::aes(label = perlabel),
+      position = ggplot2::position_stack(vjust = 0.5),
       size = 5
     ) +
-    scale_x_discrete(name = NULL, breaks = NULL) +
-    scale_y_continuous(
+    ggplot2::scale_x_discrete(name = NULL, breaks = NULL) +
+    ggplot2::scale_y_continuous(
       breaks = c(0, 0.25, 0.5, 0.75),
       labels = scales::percent
     ) +
-    scale_fill_manual(values = fillColors) +
-    coord_polar(theta = "y") +
-    theme(text = element_text(size = 30))
-  ggsave(classifyTempFile, plot = ggFig)
-  tags$iframe(
+    ggplot2::scale_fill_manual(values = fillColors) +
+    ggplot2::coord_polar(theta = "y") +
+    ggplot2::theme(text = ggplot2::element_text(size = 30))
+  ggplot2::ggsave(classifyTempFile, plot = ggFig)
+  htmltools::tags$iframe(
     src = sub("^www/", "", classifyTempFile),
     height = "1200px",
     width = "100%"
@@ -117,16 +122,23 @@ indelTypeWafflePlot <- function(indelTypeTibble, classifyTempFile) {
   if (nrow(indelTypeTibble) == 4) {
     fillColors <- fillColors[c(1, 2, 3, 6)]
   }
-  ggFig <- ggplot(indelTypeTibble, aes(fill = indelType, values = count)) +
-    geom_waffle(n_rows = 10, color = "white", make_proportional = TRUE) +
-    scale_fill_manual(
+  ggFig <- ggplot2::ggplot(
+    indelTypeTibble,
+    ggplot2::aes(fill = indelType, values = count)
+  ) +
+    waffle::geom_waffle(
+      n_rows = 10,
+      color = "white",
+      make_proportional = TRUE
+    ) +
+    ggplot2::scale_fill_manual(
       limits = indelTypeTibble$indelType |> levels(),
       values = fillColors
     ) +
-    coord_equal() +
-    theme(text = element_text(size = 30))
-  ggsave(classifyTempFile, plot = ggFig)
-  tags$iframe(
+    ggplot2::coord_equal() +
+    ggplot2::theme(text = ggplot2::element_text(size = 30))
+  ggplot2::ggsave(classifyTempFile, plot = ggFig)
+  htmltools::tags$iframe(
     src = sub("^www/", "", classifyTempFile),
     height = "1200px",
     width = "100%"

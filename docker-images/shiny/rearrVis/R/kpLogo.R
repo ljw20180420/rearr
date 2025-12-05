@@ -6,19 +6,19 @@ getKpLogoAlgTarget <- function(
   method
 ) {
   algTarget <- algTibble |>
-    mutate(target = editTarget) |>
-    summarise(
+    dplyr::mutate(target = editTarget) |>
+    dplyr::summarise(
       count = sum(count),
       targetCount = sum(count * target),
       .by = refId
     ) |>
-    filter(count > countThres) |>
-    mutate(sgRNA = sgRNAs[refId + 1]) |>
-    select(-"refId")
+    dplyr::filter(count > countThres) |>
+    dplyr::mutate(sgRNA = sgRNAs[refId + 1]) |>
+    dplyr::select(-"refId")
   if (method == "weight") {
     algTarget <- algTarget |>
-      mutate(sgRNA = sgRNA, weight = targetCount / count) |>
-      select(sgRNA, weight)
+      dplyr::mutate(sgRNA = sgRNA, weight = targetCount / count) |>
+      dplyr::select(sgRNA, weight)
   }
   return(algTarget)
 }
@@ -34,7 +34,7 @@ plotKpLogoAlgTarget <- function(
   bgFileKpLogoTempFile
 ) {
   if (method == "weight") {
-    algTarget |> write_tsv(weightKpLogoTempFile, col_names = FALSE)
+    algTarget |> readr::write_tsv(weightKpLogoTempFile, col_names = FALSE)
     system2(
       "kpLogo",
       args = c(
@@ -50,13 +50,13 @@ plotKpLogoAlgTarget <- function(
     )
   } else if (method == "background") {
     algTarget |>
-      select(sgRNA, targetCount) |>
-      uncount(targetCount) |>
-      write_tsv(targetKpLogoTempFile, col_names = FALSE)
+      dplyr::select(sgRNA, targetCount) |>
+      tidyr::uncount(targetCount) |>
+      readr::write_tsv(targetKpLogoTempFile, col_names = FALSE)
     algTarget |>
-      select(sgRNA, count) |>
-      uncount(count) |>
-      write_tsv(bgFileKpLogoTempFile, col_names = FALSE)
+      dplyr::select(sgRNA, count) |>
+      tidyr::uncount(count) |>
+      readr::write_tsv(bgFileKpLogoTempFile, col_names = FALSE)
     system2(
       "kpLogo",
       args = c(
@@ -72,7 +72,7 @@ plotKpLogoAlgTarget <- function(
       )
     )
   }
-  return(tags$iframe(
+  return(htmltools::tags$iframe(
     src = paste0(sub("^www/", "", outputKpLogoTempFile), ".all.pdf"),
     height = "1000px",
     width = "100%"

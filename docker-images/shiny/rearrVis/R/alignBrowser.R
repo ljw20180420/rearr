@@ -32,8 +32,8 @@ arrangeInsertion <- function(query, insertion, insertionCollapse) {
 }
 
 snpHighlight <- function(refSeg, querySeg) {
-  refArray <- str_split_1(toupper(refSeg), "")
-  queryArray <- str_split_1(toupper(querySeg), "")
+  refArray <- stringr::str_split_1(toupper(refSeg), "")
+  queryArray <- stringr::str_split_1(toupper(querySeg), "")
   diffs <- (refArray != queryArray & queryArray != "-") |> diff()
   diffs <- c(0, diffs, 0)
   boundaries <- diffs |> as.logical() |> which()

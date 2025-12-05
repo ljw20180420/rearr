@@ -1,6 +1,6 @@
 getMicroHomologyTibble <- function(ref1, ref2, cut1, cut2) {
-  ref1vec <- str_split(toupper(ref1), "")[[1]]
-  ref2vec <- str_split(toupper(ref2), "")[[1]]
+  ref1vec <- stringr::str_split(toupper(ref1), "")[[1]]
+  ref2vec <- stringr::str_split(toupper(ref2), "")[[1]]
   mh_matrix <- matrix(
     as.integer(
       rep(ref1vec, time = length(ref2vec)) ==
@@ -39,10 +39,16 @@ getMicroHomologyTibble <- function(ref1, ref2, cut1, cut2) {
   }
   return(
     mh_matrix |>
-      melt() |>
-      `colnames<-`(c("pos1", "pos2", "cls")) |>
-      filter(cls > 0) |>
-      summarise(
+      tibble::as_tibble() |>
+      dplyr::mutate(pos1 = dplyr::row_number()) |>
+      tidyr::pivot_longer(
+        cols = tidyselect::starts_with("V"),
+        names_to = "pos2",
+        values_to = "cls"
+      ) |>
+      dplyr::mutate(pos2 = as.integer(sub("^V", "", pos2))) |>
+      dplyr::filter(cls > 0) |>
+      dplyr::summarise(
         pos1low = min(pos1) - 1 - cut1,
         pos1up = max(pos1) - cut1,
         shift = pos1up - max(pos2) + cut2,
@@ -62,46 +68,49 @@ drawMicroHomologyHeatmap <- function(
   mhMatrixTempFile
 ) {
   if (mode == "separate") {
-    refEnd1Start2TibbleMicro <- bind_rows(
-      refEnd1Start2TibbleMicro |> filter(cls == 0),
+    refEnd1Start2TibbleMicro <- dplyr::bind_rows(
+      refEnd1Start2TibbleMicro |> dplyr::filter(cls == 0),
       refEnd1Start2TibbleMicro |>
-        filter(cls != 0) |>
-        group_by(cls) |>
-        mutate(count = count / n()) |>
-        ungroup()
+        dplyr::filter(cls != 0) |>
+        dplyr::group_by(cls) |>
+        dplyr::mutate(count = count / dplyr::n()) |>
+        dplyr::ungroup()
     )
   }
   mhPosTibble <- mhTibbleSub |>
-    mutate(nacol = NA) |>
-    pivot_longer(
+    dplyr::mutate(nacol = NA) |>
+    tidyr::pivot_longer(
       cols = c("pos1low", "pos1up", "nacol"),
       values_to = "mhPos1"
     ) |>
-    mutate(mhPos2 = mhPos1 - shift) |>
-    select(mhPos1, mhPos2)
-  ggFig <- ggplot(refEnd1Start2TibbleMicro) +
-    geom_tile(
-      aes(x = pos2, y = pos1, fill = log10(count + 1)),
+    dplyr::mutate(mhPos2 = mhPos1 - shift) |>
+    dplyr::select(mhPos1, mhPos2)
+  ggFig <- ggplot2::ggplot(refEnd1Start2TibbleMicro) +
+    ggplot2::geom_tile(
+      ggplot2::aes(x = pos2, y = pos1, fill = log10(count + 1)),
       height = 1,
       width = 1
     ) +
-    geom_path(aes(x = mhPos2, y = mhPos1), data = mhPosTibble) +
-    scale_x_continuous(
+    ggplot2::geom_path(
+      ggplot2::aes(x = mhPos2, y = mhPos1),
+      data = mhPosTibble
+    ) +
+    ggplot2::scale_x_continuous(
       limits = c(-maxCut2 - 1, maxCut2down + 1),
       expand = c(0, 0)
     ) +
-    scale_y_continuous(
+    ggplot2::scale_y_continuous(
       limits = c(-maxCut1 - 1, maxCut1down + 1),
       expand = c(0, 0)
     ) +
-    scale_fill_gradientn(
+    ggplot2::scale_fill_gradientn(
       limits = c(0, NA),
       colors = c("blue", "white", "red")
     ) +
-    scale_size_area(max_size = 2) +
-    coord_equal(ratio = 1)
-  ggsave(mhMatrixTempFile, plot = ggFig)
-  tags$iframe(
+    ggplot2::scale_size_area(max_size = 2) +
+    ggplot2::coord_equal(ratio = 1)
+  ggplot2::ggsave(mhMatrixTempFile, plot = ggFig)
+  htmltools::tags$iframe(
     src = sub("^www/", "", mhMatrixTempFile),
     height = "1200px",
     width = "100%"
@@ -110,38 +119,38 @@ drawMicroHomologyHeatmap <- function(
 
 getRefEnd1Start2Tibble <- function(algTibble, microRefId) {
   algTibble |>
-    mutate(
+    dplyr::mutate(
       pos1 = ref1End - cut1,
       pos2 = ref2Start - cut2,
       refId = refId,
       count = count,
     ) |>
-    filter(refId == microRefId) |>
-    summarise(count = sum(count), .by = c("pos1", "pos2")) |>
-    mutate(shift = pos1 - pos2)
+    dplyr::filter(refId == microRefId) |>
+    dplyr::summarise(count = sum(count), .by = c("pos1", "pos2")) |>
+    dplyr::mutate(shift = pos1 - pos2)
 }
 
 getRefEnd1Start2TibbleMicro <- function(refEnd1Start2Tibble, mhTibbleSub) {
   joinTibble <- refEnd1Start2Tibble |>
-    left_join(mhTibbleSub, by = "shift", relationship = "many-to-many")
+    dplyr::left_join(mhTibbleSub, by = "shift", relationship = "many-to-many")
   outRangeTibble <- joinTibble |>
-    summarise(
+    dplyr::summarise(
       inRange = any(pos1 >= pos1low & pos1 <= pos1up),
-      count = first(count),
+      count = dplyr::first(count),
       .by = c("pos1", "pos2")
     ) |>
-    filter(is.na(inRange) | !inRange) |>
-    mutate(inRange = NULL, cls = 0)
-  inRangeTibble <- joinTibble |> filter(pos1 >= pos1low, pos1 <= pos1up)
+    dplyr::filter(is.na(inRange) | !inRange) |>
+    dplyr::mutate(inRange = NULL, cls = 0)
+  inRangeTibble <- joinTibble |> dplyr::filter(pos1 >= pos1low, pos1 <= pos1up)
   if (nrow(inRangeTibble) == 0) {
     return(outRangeTibble)
   }
   inRangeTibble |>
-    rowwise() |>
-    mutate(pos1 = list(seq(pos1low, pos1up))) |>
-    ungroup() |>
-    unnest(pos1) |>
-    mutate(pos2 = pos1 - shift) |>
-    select(pos1, pos2, count, cls) |>
-    bind_rows(outRangeTibble)
+    dplyr::rowwise() |>
+    dplyr::mutate(pos1 = list(seq(pos1low, pos1up))) |>
+    dplyr::ungroup() |>
+    tidyr::unnest(pos1) |>
+    dplyr::mutate(pos2 = pos1 - shift) |>
+    dplyr::select(pos1, pos2, count, cls) |>
+    dplyr::bind_rows(outRangeTibble)
 }

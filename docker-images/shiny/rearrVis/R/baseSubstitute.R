@@ -4,17 +4,17 @@ countBaseSubstitute <- function(algTibble) {
     rep(c("-", "A", "C", "G", "T"), each = 5),
     sep = ">"
   )
-  tibble(
+  tibble::tibble(
     sub = lapply(seq_len(nrow(algTibble)), function(i) {
       paste(
-        algTibble$refLine[i] |> toupper() |> str_split_1(""),
-        algTibble$queryLine[i] |> str_split_1(""),
+        algTibble$refLine[i] |> toupper() |> stringr::str_split_1(""),
+        algTibble$queryLine[i] |> stringr::str_split_1(""),
         sep = ">"
       )
     }),
     count = algTibble$count
   ) |>
-    unnest(sub) |>
-    summarise(count = sum(count), .by = "sub") |>
-    mutate(sub = factor(sub, levels = levels))
+    tidyr::unnest(sub) |>
+    dplyr::summarise(count = sum(count), .by = "sub") |>
+    dplyr::mutate(sub = factor(sub, levels = levels))
 }

@@ -1,11 +1,10 @@
 library(shiny)
 library(bslib)
-library(shinyWidgets)
+# library(shinyWidgets)
 library(tidyverse)
 library(scales)
 library(ggseqlogo)
 library(ggforce)
-library(waffle)
 
 Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
 options(shiny.maxRequestSize = 10 * 1024^3)
