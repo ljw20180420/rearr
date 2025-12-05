@@ -41,12 +41,12 @@ services:
       - worker
     restart: always
     container_name: flask_app
-    image: ghcr.io/ljw20180420/rearr:latest
+    image: ghcr.io/ljw20180420/flask_app:latest
     build:
       context: .
-      dockerfile: ./rearr.df
+      dockerfile: ./flask_app.df
     volumes:
-      - "./flask_app:/app/flask_app"
+      - "./flask_app:/flask_app"
     command: python -m flask_app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0
 
   flower:
