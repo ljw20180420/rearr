@@ -13,5 +13,5 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  base: '/workflow' // base: '', when using '' will work with any sub-folder, since the index.html assets URLs will start with ./ and use the relative path
+  base: '/rearr' // base: '', when using '' will work with any sub-folder, since the index.html assets URLs will start with ./ and use the relative path
 })

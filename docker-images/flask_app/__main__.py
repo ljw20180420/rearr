@@ -292,6 +292,6 @@ def getSxMarkers():
 if __name__ == "__main__":
     waitress.serve(
         flaskApp,
-        url_prefix="/workflow",
+        url_prefix="/rearr",
         max_request_body_size=flaskApp.config["MAX_CONTENT_LENGTH"],
     )
