@@ -2,7 +2,6 @@ name: rearr
 channels:
   - conda-forge
   - bioconda
-  - defaults
 dependencies:
   - conda-forge::make
   - conda-forge::cmake
@@ -13,6 +12,7 @@ dependencies:
   - bioconda::samtools
   - bioconda::bedtools
   - bioconda::bowtie2
+  - pip
   - pip:
     - numpy
     - flask
