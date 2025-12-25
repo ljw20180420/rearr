@@ -1127,16 +1127,13 @@ server <- function(input, output, session) {
 ################################
 onStop(function() {
   temps <- setdiff(
-    c(
-      list.files(
-        path = "www",
-        all.files = TRUE,
-        full.names = TRUE,
-        include.dirs = TRUE
-      ),
-      c(".RData", "done")
+    list.files(
+      path = "www",
+      all.files = TRUE,
+      full.names = TRUE,
+      include.dirs = TRUE
     ),
-    c("www/.gitignore", "www/.", "www/..")
+    c("www/assets", "www/.gitignore", "www/.", "www/..")
   )
   unlink(temps, recursive = TRUE)
 })
