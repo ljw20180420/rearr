@@ -1,5 +1,5 @@
 {
-    "jdk.jdkhome": "/home/ljw/wuqiang/sx/rearr/.jdk/Oracle_JDK-24",
+    "jdk.jdkhome": "${workspaceFolder}/.jdk/Oracle_JDK-24",
     // The order to use for the file comment. Values can be used multiple times. Valid values are shown in default setting.
     "doxdocgen.file.fileOrder": [
         "file",
@@ -16,9 +16,6 @@
     // Set the name of the author.  Replaces {author}.
     "doxdocgen.generic.authorName": "Jingwei Li",
 
-    "r.rterm.linux": "${workspaceFolder}/.conda/bin/R",
-    "r.rpath.linux": "${workspaceFolder}/.conda/bin/R",
-
     "terminal.integrated.env.linux": {
         "HTTP_PROXY": "http://127.0.0.1:1081",
         "HTTPS_PROXY": "http://127.0.0.1:1081",
@@ -28,5 +25,5 @@
         "CLASSPATH": "${workspaceFolder}/paper/tools/SIQ-1.8/SIQ/libraries/*:${workspaceFolder}/paper/tools/SIQ-1.8/SIQ/src",
         "GENOME": "/home/ljw/hg19_with_bowtie2_index/hg19.fa",
         "BOWTIE2INDEX": "/home/ljw/hg19_with_bowtie2_index/hg19"
-    }
+    },
 }
