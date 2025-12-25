@@ -1,13 +1,13 @@
 arrangeInsertion <- function(query, insertion, insertionCollapse) {
   insertionLines <- c("")
-  for (i in seq_len(length(insertionCollapse))) {
+  for (i in seq_along(insertionCollapse)) {
     insertionAdded <- FALSE
     insertionSeg <- substr(
       query,
       insertion[i],
       insertion[i] + attr(insertion, which = "match.length")[i] - 1
     )
-    for (j in seq_len(length(insertionLines))) {
+    for (j in seq_along(insertionLines)) {
       if (nchar(insertionLines[j]) < insertionCollapse[i]) {
         insertionLines[j] <- sprintf(
           "%s%s%s ",
@@ -136,7 +136,7 @@ getMarkdownFromAlign <- function(algTibble) {
     }
     start <- 1
     refStart <- 1
-    for (j in seq_len(length(insertion))) {
+    for (j in seq_along(insertion)) {
       refEnd <- insertionCollapse[j] - 1
       mdHigh <- snpHighlight(
         substr(algTibble$refNoGap[i], refStart, refEnd - 1),

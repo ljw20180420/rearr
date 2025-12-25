@@ -10,7 +10,6 @@ Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
 options(shiny.maxRequestSize = 10 * 1024^3)
 
 source("helpers/alignBrowser.R")
-source("helpers/alignOne.R")
 source("helpers/arcDeletion.R")
 source("helpers/baseSubstitute.R")
 source("helpers/classicClassify.R")
@@ -74,45 +73,6 @@ ui <- page_sidebar(
       tooltip(
         htmlOutput("alignments", class = "alignments", inline = TRUE),
         "alignments"
-      )
-    ),
-    tabPanel(
-      title = tooltip(
-        "one",
-        "align single sequence"
-      ),
-      tooltip(
-        textInput("alignOneRef1", label = "reference1", value = ""),
-        "reference1 mainly holding query sequence part upstream to cleavage site"
-      ),
-      tooltip(
-        textInput("alignOneRef2", label = "reference2", value = ""),
-        "reference2 mainly holding query sequence part downstream to cleavage site"
-      ),
-      tooltip(
-        numericInput("alignOneCut1", "cut1", value = NA, min = 0),
-        "cleavage site position in reference1"
-      ),
-      tooltip(
-        numericInput("alignOneCut2", "cut2", value = NA, min = 0),
-        "cleavage site position in reference2"
-      ),
-      tooltip(
-        selectInput(
-          "alignOneDirection",
-          "direction",
-          choices = c("up", "down"),
-          selected = "up"
-        ),
-        "Remove deletion or templated insertion of the specified end through micro-homology."
-      ),
-      tooltip(
-        textInput("alignOneQuery", label = "query read", value = ""),
-        "query sequence"
-      ),
-      tooltip(
-        htmlOutput("alignPair", class = "alignments", inline = TRUE),
-        "alignment"
       )
     ),
     tabPanel(
@@ -561,31 +521,6 @@ server <- function(input, output, session) {
         proxy$browserReadRange[1]:proxy$browserReadRange[2],
       ]),
       collapse = ""
-    )
-  })
-
-  #########################################################
-  # single alignment
-  #########################################################
-  algOneRefFile <- tempfile(tmpdir = file.path("www", session$token))
-  algOneDirectionFile <- tempfile(tmpdir = file.path("www", session$token))
-  algOneAlgFile <- tempfile(tmpdir = file.path("www", session$token))
-  output$alignPair <- renderText({
-    req(input$alignOneRef1)
-    req(input$alignOneRef2)
-    req(input$alignOneCut1)
-    req(input$alignOneCut2)
-    req(input$alignOneQuery)
-    alignOne(
-      input$alignOneRef1,
-      input$alignOneRef2,
-      input$alignOneCut1,
-      input$alignOneCut2,
-      input$alignOneDirection,
-      input$alignOneQuery,
-      algOneRefFile,
-      algOneDirectionFile,
-      algOneAlgFile
     )
   })
 
