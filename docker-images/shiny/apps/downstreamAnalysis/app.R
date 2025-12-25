@@ -1,6 +1,5 @@
 library(shiny)
 library(bslib)
-# library(shinyWidgets)
 library(tidyverse)
 library(scales)
 library(ggseqlogo)
@@ -11,13 +10,10 @@ options(shiny.maxRequestSize = 10 * 1024^3)
 # Define UI ----
 ui <- page_sidebar(
   tags$head(
-    tags$style(
-      HTML(
-        ".alignments {
-          font-family: Courier,courier;
-          white-space: preserve nowrap;
-        }"
-      )
+    tags$link(
+      rel = "stylesheet",
+      type = "text/css",
+      href = "assets/css/styles.css"
     )
   ),
   sidebar = sidebar(
@@ -34,8 +30,13 @@ ui <- page_sidebar(
         "a browser for alignment results"
       ),
       tooltip(
-        uiOutput("browserReadRangeUI"),
-        "read index range to display"
+        numericInput(
+          "browserDisplayCount",
+          "Display count",
+          value = 100,
+          min = 1,
+        ),
+        "read count to display"
       ),
       tooltip(
         htmlOutput("alignments", class = "alignments", inline = TRUE),
@@ -438,24 +439,12 @@ server <- function(input, output, session) {
   ################################
   # alignment browser
   ################################
-  output$browserReadRangeUI <- renderUI({
-    req(input$algfiles)
-    proxy$browserReadRange <- NULL
-    numericRangeInput(
-      "browserReadRange",
-      "read range to browse",
-      value = c(1, min(1000, nrow(algTibble()))),
-      min = 1,
-      max = nrow(algTibble()),
-      step = 1
-    )
-  })
   output$alignments <- renderText({
     req(input$algfiles)
-    req(proxy$browserReadRange)
+    req(input$browserDisplayCount)
     paste(
       getMarkdownFromAlign(algTibble()[
-        proxy$browserReadRange[1]:proxy$browserReadRange[2],
+        seq_len(min(input$browserDisplayCount, nrow(algTibble()))),
       ]),
       collapse = ""
     )
