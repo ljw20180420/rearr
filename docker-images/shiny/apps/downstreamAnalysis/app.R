@@ -4,22 +4,9 @@ library(bslib)
 library(tidyverse)
 library(scales)
 library(ggseqlogo)
-library(ggforce)
 
 Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
 options(shiny.maxRequestSize = 10 * 1024^3)
-
-source("helpers/alignBrowser.R")
-source("helpers/arcDeletion.R")
-source("helpers/baseSubstitute.R")
-source("helpers/classicClassify.R")
-source("helpers/distribution.R")
-source("helpers/kmerFrequencies.R")
-source("helpers/kpLogo.R")
-source("helpers/microHomology.R")
-source("helpers/pairwise.R")
-source("helpers/polygonInsertion.R")
-source("helpers/positionalStatistics.R")
 
 # Define UI ----
 ui <- page_sidebar(
@@ -38,26 +25,6 @@ ui <- page_sidebar(
       fileInput("algfiles", "Alignment files", multiple = TRUE),
       ".alg or .alg.gz files, mutiple files are concatenated"
     ),
-    tooltip(
-      fileInput("sgRNAfile", "sgRNA file"),
-      "sgRNA file, only affect kpLogo and kmer analysis"
-    ),
-    tooltip(
-      selectInput(
-        "editTarget",
-        "edit target",
-        choices = c(
-          "templated insertion",
-          "random insertion",
-          "insertion",
-          "deletion",
-          "templated indel",
-          "indel",
-          "wild type"
-        )
-      ),
-      "targeted sequences mutation type, only affect kpLogo and kmer analysis"
-    )
   ),
   navbarPage(
     title = NULL,
@@ -342,38 +309,28 @@ ui <- page_sidebar(
     ),
     tabPanel(
       title = tooltip(
-        "kpLogo",
-        "kpLogo motif for selected mutation type and kmer"
+        "kmer",
+        "plot kmer frequency in sgRNA"
       ),
       tooltip(
-        numericInput("kpLogoKmer", "kmer", 1, min = 1, max = 10, step = 1),
-        "kmer for kpLogo"
-      ),
-      tooltip(
-        sliderInput("kpLogoRegion", "region", 0, 0, c(0, 0)),
-        "sgRNA region for kpLogo"
+        fileInput("sgRNAfile", "sgRNA file"),
+        "sgRNA file"
       ),
       tooltip(
         selectInput(
-          "kpLogoMethod",
-          "method",
-          choices = c("weight", "background")
+          "editTarget",
+          "edit target",
+          choices = c(
+            "templated insertion",
+            "random insertion",
+            "insertion",
+            "deletion",
+            "templated indel",
+            "indel",
+            "wild type"
+          )
         ),
-        "kpLogo method"
-      ),
-      tooltip(
-        numericInput("kpLogoCountThres", "threshold", 0, min = 0),
-        "filter sgRNA with sequencing count less than this threshold"
-      ),
-      tooltip(
-        uiOutput("kpLogoIframe"),
-        "kpLogo motif"
-      )
-    ),
-    tabPanel(
-      title = tooltip(
-        "kmer",
-        "plot kmer frequency in sgRNA"
+        "targeted sequences mutation type"
       ),
       tooltip(
         uiOutput("kmerRangeUI"),
@@ -402,9 +359,6 @@ server <- function(input, output, session) {
   ################################
   # sidebar
   ################################
-  sgRNAs <- reactive({
-    readLines(input$sgRNAfile$datapath)
-  })
   algTibble <- reactive({
     algLines <- lapply(
       input$algfiles$datapath,
@@ -471,23 +425,6 @@ server <- function(input, output, session) {
       maxCut2down = max(algTibble()$ref2Len - algTibble()$cut2),
       maxRandInsert = max(nchar(algTibble()$randInsert))
     )
-  })
-  editTarget <- reactive({
-    if (input$editTarget == "templated insertion") {
-      return(as.logical(algTibble()$templatedInsert))
-    } else if (input$editTarget == "random insertion") {
-      return(as.logical(algTibble()$randInsert))
-    } else if (input$editTarget == "insertion") {
-      return(as.logical(algTibble()$insert))
-    } else if (input$editTarget == "deletion") {
-      return(as.logical(algTibble()$delete))
-    } else if (input$editTarget == "templated indel") {
-      return(algTibble()$templatedInsert & algTibble()$delete)
-    } else if (input$editTarget == "indel") {
-      return(algTibble()$insert & algTibble()$delete)
-    } else if (input$editTarget == "wild type") {
-      return(!algTibble()$insert & !algTibble()$delete)
-    }
   })
 
   # Use proxy$xxxxx as a proxy of input$xxxxx. update??????Input will not update input$xxxxx until the client send the updated values back to the server. proxy$xxxxx helps to block renderUI until input$xxxxx got updated.
@@ -1137,54 +1074,31 @@ server <- function(input, output, session) {
     )
   })
 
-  ################################
-  # kpLogo
-  ################################
-  observe({
-    proxy$kpLogoRegion <- NULL
-    sgLen <- nchar(sgRNAs()[1])
-    updateSliderInput(
-      inputId = "kpLogoRegion",
-      value = c(max(sgLen - 5, 1), sgLen),
-      min = 1,
-      max = sgLen,
-      step = 1
-    )
-  }) |>
-    bindEvent(input$sgRNAfile$datapath)
-  algTarget <- reactive({
-    getKpLogoAlgTarget(
-      algTibble(),
-      sgRNAs(),
-      editTarget(),
-      input$kpLogoCountThres,
-      input$kpLogoMethod
-    )
-  })
-
-  outputKpLogoTempFile <- tempfile(tmpdir = file.path("www", session$token))
-  weightKpLogoTempFile <- tempfile(tmpdir = file.path("www", session$token))
-  targetKpLogoTempFile <- tempfile(tmpdir = file.path("www", session$token))
-  bgFileKpLogoTempFile <- tempfile(tmpdir = file.path("www", session$token))
-  output$kpLogoIframe <- renderUI({
-    req(input$algfiles)
-    req(input$sgRNAfile)
-    req(proxy$kpLogoRegion)
-    plotKpLogoAlgTarget(
-      algTarget(),
-      input$kpLogoMethod,
-      proxy$kpLogoRegion,
-      input$kpLogoKmer,
-      outputKpLogoTempFile,
-      weightKpLogoTempFile,
-      targetKpLogoTempFile,
-      bgFileKpLogoTempFile
-    )
-  })
-
   #####################################
   # kmer frequencies
   #####################################
+  sgRNAs <- reactive({
+    readLines(input$sgRNAfile$datapath)
+  })
+
+  editTarget <- reactive({
+    if (input$editTarget == "templated insertion") {
+      return(as.logical(algTibble()$templatedInsert))
+    } else if (input$editTarget == "random insertion") {
+      return(as.logical(algTibble()$randInsert))
+    } else if (input$editTarget == "insertion") {
+      return(as.logical(algTibble()$insert))
+    } else if (input$editTarget == "deletion") {
+      return(as.logical(algTibble()$delete))
+    } else if (input$editTarget == "templated indel") {
+      return(algTibble()$templatedInsert & algTibble()$delete)
+    } else if (input$editTarget == "indel") {
+      return(algTibble()$insert & algTibble()$delete)
+    } else if (input$editTarget == "wild type") {
+      return(!algTibble()$insert & !algTibble()$delete)
+    }
+  })
+
   output$kmerRangeUI <- renderUI({
     req(input$sgRNAfile)
     proxy$kmerRange <- NULL
