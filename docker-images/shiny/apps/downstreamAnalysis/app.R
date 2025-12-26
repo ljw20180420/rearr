@@ -9,13 +9,6 @@ options(shiny.maxRequestSize = 10 * 1024^3)
 
 # Define UI ----
 ui <- page_sidebar(
-  tags$head(
-    tags$link(
-      rel = "stylesheet",
-      type = "text/css",
-      href = "assets/css/styles.css"
-    )
-  ),
   sidebar = sidebar(
     tooltip(
       fileInput("algfiles", "Alignment files", multiple = TRUE),
@@ -39,7 +32,11 @@ ui <- page_sidebar(
         "read count to display"
       ),
       tooltip(
-        htmlOutput("alignments", class = "alignments", inline = TRUE),
+        htmlOutput(
+          "alignments",
+          style = "font-family: Courier,courier; white-space: nowrap;",
+          inline = TRUE
+        ),
         "alignments"
       )
     ),
@@ -1133,7 +1130,7 @@ onStop(function() {
       full.names = TRUE,
       include.dirs = TRUE
     ),
-    c("www/assets", "www/.gitignore", "www/.", "www/..")
+    c("www/.gitignore", "www/.", "www/..")
   )
   unlink(temps, recursive = TRUE)
 })
