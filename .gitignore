@@ -12,3 +12,4 @@
 /.Rprofile
 /default.nix
 /result
+/docker-images/shiny/rearrVis/man

@@ -1,5 +1,20 @@
-arrangeInsertion <- function(query, insertion, insertionCollapse) {
-  insertionLines <- tagList()
+#' Arrange insertions in mulitple lines.
+#'
+#' Try to put insertion sequences with the upstream end aligned to the insertion position. If the spans of two insertion sequences overlap, then put the downstream one to another line.
+#'
+#' @param query The gapped query line among the two-line alignment representation.
+#' @param insertion A vector containing 1-based insertion start position in query. The insertion lengths are stored as a vector in the match.length attribution.
+#' @return A HTML string tagList containing lines of insertions. Each line starts with ##########.
+#'
+#' @examples
+#' query <- "----------------------------TTGGCCTGGAGTAAAAGCATGAT----------GATCGGAATGATTACAGGTAAA------------------------------------------------------------------------------CAAAAAA"
+#' refLine <- "aGTTGGCTAGTCAATACCTGAAGAGAGATTGGCCTGGAGTAAAAGC-TGAtaAAAGCTGATGATCGGAATGATTACAGGTAAATTAGTAGTTTTTGCCTATTTTCTTTAGAAACGGTTTTACTTAAAGCTATGTTACATATAGATAATGTAACACTCTAGt-------"
+#' insertion <- refLine |> gregexpr(pattern = "-+") |> _[[1]]
+#' insertionLines <- arrangeInsertion(query, insertion)
+arrangeInsertion <- function(query, insertion) {
+  insertionCollapse <- insertion -
+    c(0, head(cumsum(attr(insertion, which = "match.length")), -1))
+  insertionLines <- shiny::tagList()
   for (i in seq_along(insertionCollapse)) {
     insertionAdded <- FALSE
     insertionSeg <- substr(
@@ -25,7 +40,7 @@ arrangeInsertion <- function(query, insertion, insertionCollapse) {
     if (!insertionAdded) {
       insertionLines <- append(
         insertionLines,
-        tagList(
+        shiny::tagList(
           sprintf(
             "%s%s",
             strrep(" ", insertionCollapse[i] - 1),
@@ -37,13 +52,25 @@ arrangeInsertion <- function(query, insertion, insertionCollapse) {
   }
   insertionLines <- insertionLines |>
     lapply(function(x) {
-      HTML(
+      shiny::HTML(
         gsub(" ", "&nbsp;", paste0(strrep("#", 10), x))
       )
     })
   return(insertionLines)
 }
 
+#' Highlight SNP.
+#'
+#' Highlight mismatch between reference and query sequences.
+#'
+#' @param refSeg Reference segment.
+#' @param querySeg Query segment.
+#' @return A tagList with mismatch surrounded in highlight <span> tags.
+#'
+#' @examples
+#' refSeg <- "aGTTGGCTAGTCAATACCTGAAGAGAGATTGGCCTGGAGTAAAAG"
+#' querySeg <- "----------------------------TTGGCCTGGAGTAAAAG"
+#' mdHigh <- snpHighlight(refSeg, querySeg)
 snpHighlight <- function(refSeg, querySeg) {
   refArray <- stringr::str_split_1(toupper(refSeg), "")
   queryArray <- stringr::str_split_1(toupper(querySeg), "")
@@ -51,16 +78,16 @@ snpHighlight <- function(refSeg, querySeg) {
   diffs <- c(0, diffs, 0)
   boundaries <- diffs |> as.logical() |> which()
   if (length(boundaries) == 0) {
-    return(tagList(querySeg))
+    return(shiny::tagList(querySeg))
   }
-  mdStr <- tagList()
+  mdStr <- shiny::tagList()
   start <- 1
   for (i in seq_len(length(boundaries) / 2)) {
     mdStr <- append(
       mdStr,
-      tagList(
+      shiny::tagList(
         substr(querySeg, start, boundaries[2 * i - 1] - 1),
-        tags$span(
+        shiny::tags$span(
           style = "color: red;",
           substr(querySeg, boundaries[2 * i - 1], boundaries[2 * i] - 1)
         )
@@ -68,35 +95,48 @@ snpHighlight <- function(refSeg, querySeg) {
     )
     start <- boundaries[2 * i]
   }
-  return(append(mdStr, tagList(substr(querySeg, start, nchar(querySeg)))))
+  return(append(
+    mdStr,
+    shiny::tagList(substr(querySeg, start, nchar(querySeg)))
+  ))
 }
 
+#' Transform two-line alignments to html details tags.
+#'
+#' Render two-line alignments in html format. Support folding insertions, highlighting snps, coloring extended parts in references and annote reference id and query count.
+#'
+#' @param algTibble A tibble containing information of two-line alignments. algTibble includes reference id and sequence, cleavage site, query count, gapped reference and query sequences.
+#' @return A list alternatively contains reference and query line html raw strings.
+#' @export
+#'
+#' @examples
+#' allMd <- getMarkdownFromAlign(algTibble)
 getMarkdownFromAlign <- function(algTibble) {
   allMd <- rep("", nrow(algTibble) * 2)
   for (i in seq_len(nrow(algTibble))) {
-    refMd <- tags$span(
+    refMd <- shiny::tags$span(
       style = "background-color: lightgrey;",
       sprintf(
         "%010d%s",
         algTibble$refId[i],
         substr(algTibble$refNoGap[i], 1, algTibble$cut1[i] - 1)
       ),
-      tags$span(
+      shiny::tags$span(
         style = "letter-spacing: -0.3em;",
         sprintf(
           "%s|",
           substr(algTibble$refNoGap[i], algTibble$cut1[i], algTibble$cut1[i])
         )
       ),
-      tags$span(
-        style = "color: red;",
+      shiny::tags$span(
+        style = "color: green;",
         substr(
           algTibble$refNoGap[i],
           algTibble$cut1[i] + 1,
           algTibble$ref1Len[i]
         )
       ),
-      tags$span(
+      shiny::tags$span(
         style = "color: blue;",
         substr(
           algTibble$refNoGap[i],
@@ -104,7 +144,7 @@ getMarkdownFromAlign <- function(algTibble) {
           algTibble$ref1Len[i] + algTibble$cut2[i] - 1
         )
       ),
-      tags$span(
+      shiny::tags$span(
         style = "color: blue; letter-spacing: -0.3em;",
         substr(
           algTibble$refNoGap[i],
@@ -112,7 +152,7 @@ getMarkdownFromAlign <- function(algTibble) {
           algTibble$ref1Len[i] + algTibble$cut2[i]
         )
       ),
-      tags$span(style = "letter-spacing: -0.3em;", "|"),
+      shiny::tags$span(style = "letter-spacing: -0.3em;", "|"),
       substr(
         algTibble$refNoGap[i],
         algTibble$ref1Len[i] + algTibble$cut2[i] + 1,
@@ -126,8 +166,8 @@ getMarkdownFromAlign <- function(algTibble) {
     )
     insertion <- algTibble$refLine[i] |> gregexpr(pattern = "-+") |> _[[1]]
     if (insertion[1] == -1) {
-      queryMd <- tags$details(
-        tags$summary(
+      queryMd <- shiny::tags$details(
+        shiny::tags$summary(
           style = "list-style-position: outside;",
           sprintf("%010d%s", algTibble$count[i], algTibble$queryLine[i])
         )
@@ -139,24 +179,22 @@ getMarkdownFromAlign <- function(algTibble) {
       )
       next
     }
-    insertionCollapse <- insertion -
-      c(0, head(cumsum(attr(insertion, which = "match.length")), -1))
+
     insertionLines <- arrangeInsertion(
       algTibble$queryLine[i],
-      insertion,
-      insertionCollapse
+      insertion
     )
 
-    queryMd <- tagList()
+    queryMd <- shiny::tagList()
     if (insertion[1] == 1) {
       countStr <- as.character(algTibble$count[i])
       countLen <- nchar(countStr)
 
       queryMd <- append(
         queryMd,
-        tagList(
+        shiny::tagList(
           sprintf("%09s", substr(countStr, 1, countLen - 1)),
-          tags$span(
+          shiny::tags$span(
             style = "letter-spacing: -0.3em;",
             substr(countStr, countLen, countLen)
           )
@@ -165,12 +203,14 @@ getMarkdownFromAlign <- function(algTibble) {
     } else {
       queryMd <- append(
         queryMd,
-        tagList(sprintf("%010d", algTibble$count[i]))
+        shiny::tagList(sprintf("%010d", algTibble$count[i]))
       )
     }
 
     start <- 1
     refStart <- 1
+    insertionCollapse <- insertion -
+      c(0, head(cumsum(attr(insertion, which = "match.length")), -1))
     for (j in seq_along(insertion)) {
       refEnd <- insertionCollapse[j] - 1
       mdHigh <- snpHighlight(
@@ -188,14 +228,14 @@ getMarkdownFromAlign <- function(algTibble) {
       queryMd <- append(queryMd, mdHigh)
       queryMd <- append(
         queryMd,
-        tagList(
-          tags$span(
+        shiny::tagList(
+          shiny::tags$span(
             style = "letter-spacing: -0.3em;",
             ifelse(
               lastBase !=
                 toupper(substr(algTibble$refNoGap[i], refEnd, refEnd)) &&
                 lastBase != "-",
-              tags$span(style = "color: red;", lastBase),
+              shiny::tags$span(style = "color: red;", lastBase),
               lastBase
             ),
             "|",
@@ -212,11 +252,11 @@ getMarkdownFromAlign <- function(algTibble) {
     queryMd <- append(queryMd, mdHigh)
 
     queryMd <- do.call(
-      tags$details,
+      shiny::tags$details,
       c(
-        tagList(
+        shiny::tagList(
           do.call(
-            tags$summary,
+            shiny::tags$summary,
             c(list(style = "list-style-position: outside;"), queryMd)
           )
         ),
