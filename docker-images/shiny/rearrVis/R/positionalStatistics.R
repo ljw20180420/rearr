@@ -143,13 +143,18 @@ getPositionalReads <- function(mat, counts, resolution, cut) {
     2 -
     1
   resolutionMat |>
-    tibble::as_tibble() |>
-    dplyr::mutate(pos1 = dplyr::row_number()) |>
+    tibble::as_tibble(
+      .name_repair = "universal_quiet",
+      rownames = "pos1"
+    ) |>
     tidyr::pivot_longer(
-      cols = tidyselect::starts_with("V"),
+      cols = tidyselect::starts_with("..."),
       names_to = "pos2"
     ) |>
-    dplyr::mutate(pos2 = as.integer(sub("^V", "", pos2))) |>
+    dplyr::mutate(
+      pos1 = as.integer(pos1),
+      pos2 = as.integer(sub(r"(^\.\.\.)", "", pos2))
+    ) |>
     dplyr::mutate(
       x = pos2 - cut - 0.5,
       y = vertCent[pos1],
@@ -198,8 +203,10 @@ drawPositionalLogo <- function(
       method = method,
       namespace = namespace
     ) +
-    ggplot2::scale_x_continuous(breaks = NULL) +
     ggseqlogo::theme_logo()
+  # Modify scale in existing ggplot object without replacing the scale. https://stackoverflow.com/questions/63691661/modify-scale-in-existing-ggplot-object-without-replacing-the-scale
+  ggFig$scales$scales[[1]]$breaks <- NULL
+
   ggplot2::ggsave(
     posBaseRefTempFile,
     plot = ggFig,

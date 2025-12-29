@@ -2,29 +2,29 @@
 
 ## Conda
 
-```console
+```shell
 $ conda install bioconda::rearr
 ```
 
 ## Container
 
 Each bioconda package has a [biocontainer docker image](https://quay.io/repository/biocontainers/rearr) and a [galaxy singularity image](https://depot.galaxyproject.org/singularity). As far as I know, the easiest way to use these images is `apptainer`. Install `apptainer` by conda.
-```console
+```shell
 conda install conda-forge::apptainer
 ```
 
 To get an interactive shell environment,
-```console
+```shell
 $ apptainer shell docker://quay.io/biocontainers/rearr:tag
 Apptainer> rearrangement -h
 ```
 You should replace `tag` by the latest working image tag found at [biocontainer docker image](https://quay.io/repository/biocontainers/rearr). For example,
-```console
+```shell
 $ apptainer shell docker://quay.io/biocontainers/rearr:1.0.3--h9948957_0
 ```
 
 To run commands non-interactively,
-```
+```shell
 $ apptainer run docker://quay.io/biocontainers/rearr:tag rearrangement -h
 ```
 This is handy when you want to build a pipeline depends on multiple containers.
@@ -43,14 +43,17 @@ This project has a webUI. The webUI contains a visualizing workflow.
 The webUI also contains shiny apps for post process and visualization.
 
 The webUI is too heavy to release as conda package. There is a prebuild [github docker package](https://ghcr.io/ljw20180420/rearr). To launch the webUI locally, either clone the repository
-```console
+```shell
 $ git clone https://github.com/ljw20180420/rearr.git
 ```
 or download the latest working [release](https://github.com/ljw20180420/rearr/releases). Then in the project folder, invoke
-```console
+```shell
 $ ./compose.sh
 ```
-The webUI is served at `http://ocalhost:80`. The visualizing workflow is at `http://ocalhost:80/workflow/`. The shiny apps for post process and visualization is at `http://ocalhost:80/shiny/`. The job history of the visualizing workflow can be checked at `http://ocalhost:80/flower/`.
+The webUI is served at `http://ocalhost:80`.
+  - The visualizing workflow is at `http://ocalhost:80/workflow/`.
+  - The shiny apps for post process and visualization is at `http://ocalhost:80/shiny/`.
+  - The job history of the visualizing workflow can be checked at `http://ocalhost:80/flower/`.
 
 The first running of `./compose.sh` will pull the following images.
 
