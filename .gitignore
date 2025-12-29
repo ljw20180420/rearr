@@ -12,4 +12,15 @@
 /.Rprofile
 /default.nix
 /result
-/docker-images/shiny/rearrVis/man
+
+/docker-images/shiny/apps/downstreamAnalysis/rearrVis/*
+!/docker-images/shiny/apps/downstreamAnalysis/rearrVis/R
+!/docker-images/shiny/apps/downstreamAnalysis/rearrVis/NAMESPACE
+!/docker-images/shiny/apps/downstreamAnalysis/rearrVis/DESCRIPTION
+!/docker-images/shiny/apps/downstreamAnalysis/rearrVis/.Rbuildignore
+!/docker-images/shiny/apps/downstreamAnalysis/rearrVis/LICENSE*
+
+/docker-images/shiny/apps/downstreamAnalysis/ggseqlogo/*
+!/docker-images/shiny/apps/downstreamAnalysis/ggseqlogo/R
+!/docker-images/shiny/apps/downstreamAnalysis/ggseqlogo/NAMESPACE
+!/docker-images/shiny/apps/downstreamAnalysis/ggseqlogo/DESCRIPTION

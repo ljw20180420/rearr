@@ -97,7 +97,7 @@ getPositionalMSDTibble <- function(queryMat, refMat, counts, cut) {
 calInsertionCount <- function(refList, cuts, maxCutDown) {
   maxCut <- max(cuts)
   insertList <- vector("list", length(refList))
-  for (i in seq_len(length(refList))) {
+  for (i in seq_along(refList)) {
     mask <- refList[[i]] != "-"
     insertList[[i]] <- cumsum(mask)[!mask] - cuts[i]
   }
@@ -116,7 +116,7 @@ resolutionMatrix <- function(mat, counts, resolution) {
   resolutionMatrix <- matrix(0, resolution, ncol(mat))
   cumCount <- 0
   j <- 1
-  for (i in seq_len(length(counts))) {
+  for (i in seq_along(counts)) {
     cumCount <- cumCount + counts[i]
     if (cumCount < resolutionCount[j + 1]) {
       resolutionMatrix[j, ] <- resolutionMatrix[j, ] + mat[i, ] * counts[i]

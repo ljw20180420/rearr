@@ -1,3 +1,13 @@
+#' Count base substitution of query in reference.
+#'
+#' Mutation is like "A>C". Insertion is like "->A". Deletion is like "A>-".
+#'
+#' @param algTibble tibble containing gaggped reference and query in the two-line alignment.
+#' @return tibble with sub labels like X>X and corresponding counts.
+#' @export
+#'
+#' @examples
+#' tb <- countBaseSubstitute(algTibble)
 countBaseSubstitute <- function(algTibble) {
   levels <- paste(
     rep(c("-", "A", "C", "G", "T"), times = 5),

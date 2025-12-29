@@ -2,7 +2,8 @@ library(shiny)
 library(bslib)
 library(tidyverse)
 library(scales)
-library(ggseqlogo)
+load_all("rearrVis")
+load_all("ggseqlogo")
 
 Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
 options(shiny.maxRequestSize = 10 * 1024^3)
@@ -440,7 +441,7 @@ server <- function(input, output, session) {
     req(input$algfiles)
     req(input$browserDisplayCount)
     paste(
-      getMarkdownFromAlign(algTibble()[
+      rearrVis::getMarkdownFromAlign(algTibble()[
         seq_len(min(input$browserDisplayCount, nrow(algTibble()))),
       ]),
       collapse = ""
@@ -457,7 +458,7 @@ server <- function(input, output, session) {
   output$baseSubFreqPlot <- renderUI({
     req(input$algfiles)
     ggFig <- algTibble() |>
-      countBaseSubstitute() |>
+      rearrVis::countBaseSubstitute() |>
       ggplot(aes(sub, count)) +
       geom_col() +
       scale_y_continuous(expand = c(0, 0))
@@ -473,12 +474,12 @@ server <- function(input, output, session) {
   # positional statistics
   #################################
   refGapMat <- reactive({
-    algTibble()$refLine |> extendToSameLength()
+    algTibble()$refLine |> rearrVis::extendToSameLength()
   })
   ref1Mat <- reactive({
     algTibble()$refNoGap |>
       substr(1, algTibble()$ref1Len) |>
-      extendToAlignCut(algTibble()$cut1)
+      rearrVis::extendToAlignCut(algTibble()$cut1)
   })
   ref2Mat <- reactive({
     algTibble()$refNoGap |>
@@ -486,14 +487,14 @@ server <- function(input, output, session) {
         algTibble()$ref1Len + 1,
         algTibble()$ref1Len + algTibble()$ref2Len
       ) |>
-      extendToAlignCut(algTibble()$cut2)
+      rearrVis::extendToAlignCut(algTibble()$cut2)
   })
   queryAllSeqs <- reactive({
     tmpMat <- algTibble()$queryLine |>
-      extendToSameLength() |>
+      rearrVis::extendToSameLength() |>
       t() |>
       as.vector()
-    vectorToStringVector(
+    rearrVis::vectorToStringVector(
       tmpMat[(refGapMat() |> t() |> as.vector()) != "-"],
       algTibble()$ref1Len + algTibble()$ref2Len
     )
@@ -501,27 +502,27 @@ server <- function(input, output, session) {
   query1Mat <- reactive({
     queryAllSeqs() |>
       substr(1, algTibble()$ref1Len) |>
-      extendToAlignCut(algTibble()$cut1)
+      rearrVis::extendToAlignCut(algTibble()$cut1)
   })
   query2Mat <- reactive({
     queryAllSeqs() |>
       substr(algTibble()$ref1Len + 1, nchar(queryAllSeqs())) |>
-      extendToAlignCut(algTibble()$cut2)
+      rearrVis::extendToAlignCut(algTibble()$cut2)
   })
   base1Freq <- reactive({
-    getPositionalBaseFreq(query1Mat(), algTibble()$count)
+    rearrVis::getPositionalBaseFreq(query1Mat(), algTibble()$count)
   })
   base2Freq <- reactive({
-    getPositionalBaseFreq(query2Mat(), algTibble()$count)
+    rearrVis::getPositionalBaseFreq(query2Mat(), algTibble()$count)
   })
   base1Tibble <- reactive({
-    base1Freq() |> posMatrixToTibble(algMetaData()$maxCut1)
+    base1Freq() |> rearrVis::posMatrixToTibble(algMetaData()$maxCut1)
   })
   base2Tibble <- reactive({
-    base2Freq() |> posMatrixToTibble(algMetaData()$maxCut2)
+    base2Freq() |> rearrVis::posMatrixToTibble(algMetaData()$maxCut2)
   })
   MSD1Tibble <- reactive({
-    getPositionalMSDTibble(
+    rearrVis::getPositionalMSDTibble(
       query1Mat(),
       ref1Mat(),
       algTibble()$count,
@@ -529,7 +530,7 @@ server <- function(input, output, session) {
     )
   })
   MSD2Tibble <- reactive({
-    getPositionalMSDTibble(
+    rearrVis::getPositionalMSDTibble(
       query2Mat(),
       ref2Mat(),
       algTibble()$count,
@@ -544,7 +545,7 @@ server <- function(input, output, session) {
         USE.NAMES = FALSE
       ) |>
       strsplit("") |>
-      calInsertionCount(
+      rearrVis::calInsertionCount(
         cuts = algTibble()$cut1,
         maxCutDown = algMetaData()$maxCut1down
       )
@@ -557,13 +558,13 @@ server <- function(input, output, session) {
         USE.NAMES = FALSE
       ) |>
       strsplit("") |>
-      calInsertionCount(
+      rearrVis::calInsertionCount(
         cuts = algTibble()$cut2,
         maxCutDown = algMetaData()$maxCut2down
       )
   })
   read1ATibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query1Mat() == "A",
       algTibble()$count,
       200,
@@ -571,7 +572,7 @@ server <- function(input, output, session) {
     )
   })
   read2ATibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query2Mat() == "A",
       algTibble()$count,
       200,
@@ -579,7 +580,7 @@ server <- function(input, output, session) {
     )
   })
   read1CTibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query1Mat() == "C",
       algTibble()$count,
       200,
@@ -587,7 +588,7 @@ server <- function(input, output, session) {
     )
   })
   read2CTibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query2Mat() == "C",
       algTibble()$count,
       200,
@@ -595,7 +596,7 @@ server <- function(input, output, session) {
     )
   })
   read1GTibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query1Mat() == "G",
       algTibble()$count,
       200,
@@ -603,7 +604,7 @@ server <- function(input, output, session) {
     )
   })
   read2GTibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query2Mat() == "G",
       algTibble()$count,
       200,
@@ -611,7 +612,7 @@ server <- function(input, output, session) {
     )
   })
   read1TTibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query1Mat() == "T",
       algTibble()$count,
       200,
@@ -619,7 +620,7 @@ server <- function(input, output, session) {
     )
   })
   read2TTibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query2Mat() == "T",
       algTibble()$count,
       200,
@@ -627,7 +628,7 @@ server <- function(input, output, session) {
     )
   })
   match1Tibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query1Mat() == toupper(ref1Mat()),
       algTibble()$count,
       200,
@@ -635,7 +636,7 @@ server <- function(input, output, session) {
     )
   })
   match2Tibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query2Mat() == toupper(ref2Mat()),
       algTibble()$count,
       200,
@@ -643,7 +644,7 @@ server <- function(input, output, session) {
     )
   })
   snp1Tibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query1Mat() != toupper(ref1Mat()) & query1Mat() != "-",
       algTibble()$count,
       200,
@@ -651,7 +652,7 @@ server <- function(input, output, session) {
     )
   })
   snp2Tibble <- reactive({
-    getPositionalReads(
+    rearrVis::getPositionalReads(
       query2Mat() != toupper(ref2Mat()) & query2Mat() != "-",
       algTibble()$count,
       200,
@@ -671,67 +672,75 @@ server <- function(input, output, session) {
     req(input$algfiles)
     req(input$positionalMode)
     if (input$positionalMode == "histgram base") {
-      drawPositionalStatic(base1Tibble(), insert1Count(), posBaseRef1TempFile)
+      rearrVis::drawPositionalStatic(
+        base1Tibble(),
+        insert1Count(),
+        posBaseRef1TempFile
+      )
     } else if (input$positionalMode == "histgram indel") {
-      drawPositionalStatic(MSD1Tibble(), insert1Count(), posBaseRef1TempFile)
+      rearrVis::drawPositionalStatic(
+        MSD1Tibble(),
+        insert1Count(),
+        posBaseRef1TempFile
+      )
     } else if (input$positionalMode == "read base A") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read1ATibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "read base C") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read1CTibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "read base G") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read1GTibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "read base T") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read1TTibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "read match") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         match1Tibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "read snp") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         snp1Tibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "logo probability") {
-      drawPositionalLogo(
+      rearrVis::drawPositionalLogo(
         base1Freq()[2:5, ],
         "prob",
         "ACGT",
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "logo bits") {
-      drawPositionalLogo(
+      rearrVis::drawPositionalLogo(
         base1Freq()[2:5, ],
         "bits",
         "ACGT",
         posBaseRef1TempFile
       )
     } else if (input$positionalMode == "logo custom") {
-      drawPositionalLogo(
+      rearrVis::drawPositionalLogo(
         base1Freq()[2:5, ],
         "custom",
         "ACGT",
@@ -743,67 +752,75 @@ server <- function(input, output, session) {
     req(input$algfiles)
     req(input$positionalMode)
     if (input$positionalMode == "histgram base") {
-      drawPositionalStatic(base2Tibble(), insert2Count(), posBaseRef2TempFile)
+      rearrVis::drawPositionalStatic(
+        base2Tibble(),
+        insert2Count(),
+        posBaseRef2TempFile
+      )
     } else if (input$positionalMode == "histgram indel") {
-      drawPositionalStatic(MSD2Tibble(), insert2Count(), posBaseRef2TempFile)
+      rearrVis::drawPositionalStatic(
+        MSD2Tibble(),
+        insert2Count(),
+        posBaseRef2TempFile
+      )
     } else if (input$positionalMode == "read base A") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read2ATibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "read base C") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read2CTibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "read base G") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read2GTibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "read base T") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         read2TTibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "read match") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         match2Tibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "read snp") {
-      drawPositionalReads(
+      rearrVis::drawPositionalReads(
         snp2Tibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "logo probability") {
-      drawPositionalLogo(
+      rearrVis::drawPositionalLogo(
         base2Freq()[2:5, ],
         "prob",
         "ACGT",
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "logo bits") {
-      drawPositionalLogo(
+      rearrVis::drawPositionalLogo(
         base2Freq()[2:5, ],
         "bits",
         "ACGT",
         posBaseRef2TempFile
       )
     } else if (input$positionalMode == "logo custom") {
-      drawPositionalLogo(
+      rearrVis::drawPositionalLogo(
         base2Freq()[2:5, ],
         "custom",
         "ACGT",
