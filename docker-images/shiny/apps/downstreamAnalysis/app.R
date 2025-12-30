@@ -267,10 +267,6 @@ ui <- page_sidebar(
       tooltip(
         uiOutput("pairwisePlot"),
         "pairwise relationship of selected property"
-      ),
-      tooltip(
-        textOutput("pairwiseWarning"),
-        "warning message of pairwise plot"
       )
     ),
     tabPanel(
@@ -945,24 +941,16 @@ server <- function(input, output, session) {
   output$pairwisePlot <- renderUI({
     req(input$algfiles)
     req(input$pairwiseX != input$pairwiseY)
-    ggFig <- algTibble() |>
+    algTibble() |>
       mutate(randInsert = nchar(randInsert)) |>
       select(input$pairwiseX, input$pairwiseY) |>
-      pairwisePlot(
+      rearrVis::pairwisePlot(
         input$pairwiseXscale,
         input$pairwiseYscale,
         input$pairwiseMethod,
-        input$pairwiseSpan
+        input$pairwiseSpan,
+        pairwiseTempFile
       )
-    output$pairwiseWarning <- renderText({
-      capture.output(ggFig, type = "message")
-    })
-    ggsave(pairwiseTempFile, plot = ggFig)
-    tags$iframe(
-      src = sub("^www/", "", pairwiseTempFile),
-      height = "1200px",
-      width = "100%"
-    )
   })
 
   ###############################
