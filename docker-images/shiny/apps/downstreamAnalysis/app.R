@@ -1015,7 +1015,7 @@ server <- function(input, output, session) {
   # arc deletion
   ###############################
   arcDelTibble <- reactive({
-    getArcDelTibble(algTibble())
+    rearrVis::getArcDelTibble(algTibble())
   })
   arcDelTibble1 <- reactive({
     arcDelTibble() |>
@@ -1031,6 +1031,12 @@ server <- function(input, output, session) {
       unnest(c(delStart, delEnd)) |>
       summarise(count = sum(count), .by = c(delStart, delEnd))
   })
+  arcDelSegTibble1 <- reactive({
+    rearrVis::getArcSegment(arcDelTibble1(), 100)
+  })
+  arcDelSegTibble2 <- reactive({
+    rearrVis::getArcSegment(arcDelTibble2(), 100)
+  })
 
   arcDelete1TempFile <- tempfile(
     tmpdir = file.path("www", session$token),
@@ -1042,16 +1048,16 @@ server <- function(input, output, session) {
   )
   output$arcDelete1Plot <- renderUI({
     req(input$algfiles)
-    plotArcDelTibble(
-      arcDelTibble1(),
+    rearrVis::plotArcDelTibble(
+      arcDelSegTibble1(),
       c(-algMetaData()$maxCut1, algMetaData()$maxCut1down),
       arcDelete1TempFile
     )
   })
   output$arcDelete2Plot <- renderUI({
     req(input$algfiles)
-    plotArcDelTibble(
-      arcDelTibble2(),
+    rearrVis::plotArcDelTibble(
+      arcDelSegTibble2(),
       c(-algMetaData()$maxCut2, algMetaData()$maxCut2down),
       arcDelete2TempFile
     )
