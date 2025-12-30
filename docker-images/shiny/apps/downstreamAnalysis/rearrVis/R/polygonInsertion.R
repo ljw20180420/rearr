@@ -1,3 +1,13 @@
+#' Get insertion info
+#'
+#' Get the position and length of insertions for each query.
+#'
+#' @param algTibble tibble with alignment info
+#' @return tibble with insertion info
+#' @export
+#'
+#' @examples
+#' polyInsTibble <- getPolyInsTibble(algTibble)
 getPolyInsTibble <- function(algTibble) {
   insRegs <- gregexpr("-+", algTibble$refLine)
   insLens <- lapply(
@@ -16,7 +26,7 @@ getPolyInsTibble <- function(algTibble) {
     insLen1 = vector("list", length(insRegs)),
     insLen2 = vector("list", length(insRegs))
   )
-  for (i in seq_len(length(insRegs))) {
+  for (i in seq_along(insRegs)) {
     if (insRegs[[i]][1] == -1) {
       next
     }
@@ -35,6 +45,17 @@ getPolyInsTibble <- function(algTibble) {
   return(polyInsTibble)
 }
 
+#' Express insertions by triangle
+#'
+#' Infer the axes of triangle vertex from insertion info.
+#'
+#' @param polyInsTibble tibble containing insertion info
+#' @param mode "up" or "down", indicate the triangle direction
+#' @return tibble with axes of triangle vertex
+#' @export
+#'
+#' @examples
+#' polyXY <- getPolyXY(polyInsTibble, mode)
 getPolyXY <- function(polyInsTibble, mode) {
   polyX <- rep(polyInsTibble$insPos, each = 4)
   if (mode == "down") {
@@ -54,6 +75,18 @@ getPolyXY <- function(polyInsTibble, mode) {
   return(tibble::tibble(x = polyX, y = polyY))
 }
 
+#' Plot insertion triangles
+#'
+#' Visualize insertions by triangles. The triangle height is the insertion count. The triangle width is the insertion size.
+#'
+#' @param polyXY tibble with axes of triangle vertex
+#' @param limits the limits of the reference coordinate
+#' @param polyInsertTempFile the pdf temp file
+#' @return the html iframe tag to be displayed in shiny::renderUI
+#' @export
+#'
+#' @examples
+#' iframeTag <- plotPolyInsTibble(polyXY, limits, polyInsertTempFile)
 plotPolyInsTibble <- function(polyXY, limits, polyInsertTempFile) {
   ggFig <- polyXY |>
     ggplot2::ggplot(ggplot2::aes(x, y)) +

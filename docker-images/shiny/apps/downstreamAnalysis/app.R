@@ -957,7 +957,7 @@ server <- function(input, output, session) {
   # polygon insertion
   ###############################
   polyInsTibble <- reactive({
-    getPolyInsTibble(algTibble())
+    rearrVis::getPolyInsTibble(algTibble())
   })
   polyInsTibble1 <- reactive({
     polyInsTibble() |>
@@ -974,10 +974,10 @@ server <- function(input, output, session) {
       summarise(count = sum(count), .by = c(insPos, insLen))
   })
   polyXY1 <- reactive({
-    getPolyXY(polyInsTibble1(), "down")
+    rearrVis::getPolyXY(polyInsTibble1(), "down")
   })
   polyXY2 <- reactive({
-    getPolyXY(polyInsTibble2(), "up")
+    rearrVis::getPolyXY(polyInsTibble2(), "up")
   })
 
   polyInsert1TempFile <- tempfile(
@@ -990,7 +990,7 @@ server <- function(input, output, session) {
   )
   output$polyInsert1Plot <- renderUI({
     req(input$algfiles)
-    plotPolyInsTibble(
+    rearrVis::plotPolyInsTibble(
       polyXY1(),
       c(
         -algMetaData()$maxCut1,
@@ -1001,7 +1001,7 @@ server <- function(input, output, session) {
   })
   output$polyInsert2Plot <- renderUI({
     req(input$algfiles)
-    plotPolyInsTibble(
+    rearrVis::plotPolyInsTibble(
       polyXY2(),
       c(
         -algMetaData()$maxCut2 - algMetaData()$maxRandInsert,
