@@ -1,9 +1,9 @@
 library(shiny)
 library(bslib)
 library(tidyverse)
-library(scales)
 load_all("rearrVis")
 load_all("ggseqlogo")
+load_all("waffle")
 
 Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
 options(shiny.maxRequestSize = 10 * 1024^3)
@@ -849,7 +849,7 @@ server <- function(input, output, session) {
   mhTibble <- reactive({
     refSeq <- algTibble()$refNoGap[uniqTibble()$index]
     ref1Len <- algTibble()$ref1Len[uniqTibble()$index]
-    getMicroHomologyTibble(
+    rearrVis::getMicroHomologyTibble(
       substr(refSeq, 1, ref1Len),
       substr(refSeq, ref1Len + 1, nchar(refSeq)),
       uniqTibble()$cut1,
@@ -860,10 +860,10 @@ server <- function(input, output, session) {
     mhTibble() |> filter(pos1up - pos1low >= input$microThres)
   })
   refEnd1Start2Tibble <- reactive({
-    getRefEnd1Start2Tibble(algTibble(), as.integer(proxy$microRefId))
+    rearrVis::getRefEnd1Start2Tibble(algTibble(), as.integer(proxy$microRefId))
   })
   refEnd1Start2TibbleMicro <- reactive({
-    getRefEnd1Start2TibbleMicro(refEnd1Start2Tibble(), mhTibbleSub())
+    rearrVis::getRefEnd1Start2TibbleMicro(refEnd1Start2Tibble(), mhTibbleSub())
   })
 
   observe({
@@ -882,7 +882,7 @@ server <- function(input, output, session) {
   output$mhMatrixPlot <- renderUI({
     req(input$algfiles)
     req(proxy$microRefId)
-    drawMicroHomologyHeatmap(
+    rearrVis::drawMicroHomologyHeatmap(
       mhTibbleSub(),
       refEnd1Start2TibbleMicro(),
       algMetaData()$maxCut1,
@@ -898,10 +898,10 @@ server <- function(input, output, session) {
   # classic classification
   ##############################
   indelTypeTibble <- reactive({
-    getIndelTypes(algTibble())
+    rearrVis::getIndelTypes(algTibble())
   })
   indelTypeTibbleEx <- reactive({
-    getIndelTypesEx(algTibble())
+    rearrVis::getIndelTypesEx(algTibble())
   })
 
   classifyTempFile <- tempfile(
@@ -911,17 +911,9 @@ server <- function(input, output, session) {
   output$claClaPlot <- renderUI({
     req(input$algfiles)
     if (input$claClaDistinctTemp) {
-      if (input$claClaMode == "pie") {
-        indelTypeTibbleEx() |> indelTypePiePlot(classifyTempFile)
-      } else if (input$claClaMode == "waffle") {
-        indelTypeTibbleEx() |> indelTypeWafflePlot(classifyTempFile)
-      }
+      indelTypeTibbleEx() |> rearrVis::indelTypePiePlot(classifyTempFile)
     } else {
-      if (input$claClaMode == "pie") {
-        indelTypeTibble() |> indelTypePiePlot(classifyTempFile)
-      } else if (input$claClaMode == "waffle") {
-        indelTypeTibble() |> indelTypeWafflePlot(classifyTempFile)
-      }
+      indelTypeTibble() |> rearrVis::indelTypePiePlot(classifyTempFile)
     }
   })
 

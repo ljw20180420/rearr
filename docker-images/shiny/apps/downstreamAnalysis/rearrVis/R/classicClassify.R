@@ -1,3 +1,13 @@
+#' Classify editing output
+#'
+#' Classify the CRISPR editing output based on whether there is deletion and insertion.
+#'
+#' @param algTibble a tibble containing editing information
+#' @return a summary tibble with the column indelType ("WT", "deletion", "insertion", "indel") and count (the count of indelType)
+#' @export
+#'
+#' @examples
+#' indelTypeTibble <- getIndelTypes(algTibble)
 getIndelTypes <- function(algTibble) {
   algTibble |>
     dplyr::mutate(
@@ -18,6 +28,16 @@ getIndelTypes <- function(algTibble) {
     dplyr::summarise(count = sum(count), .by = "indelType")
 }
 
+#' Classify editing output with discrimination of templated and random insertions
+#'
+#' Classify the CRISPR editing output based on whether there is deletion, templated insertion and random insertion.
+#'
+#' @param algTibble a tibble containing editing information
+#' @return a summary tibble with the column indelType ("WT", "deletion", "templated", "random", "temprand", "tempdel", "randdel", "full") and count (the count of indelType)
+#' @export
+#'
+#' @examples
+#' indelTypeTibbleEx <- getIndelTypesEx(algTibble)
 getIndelTypesEx <- function(algTibble) {
   algTibble |>
     dplyr::mutate(
@@ -67,6 +87,17 @@ getIndelTypesEx <- function(algTibble) {
     dplyr::summarise(count = sum(count), .by = "indelType")
 }
 
+#' Pie plot of editing classfication
+#'
+#' Visualize the classification of editing output by pie plot.
+#'
+#' @param indelTypeTibble the tibble with classification and counts
+#' @param classifyTempFile the pdf tempfile
+#' @return the html iframe to be displayed by shiny:renderUI
+#' @export
+#'
+#' @examples
+#' iframeTag <- indelTypePiePlot(indelTypeTibble, classifyTempFile)
 indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
   fillColors <- RColorBrewer::brewer.pal(8, "Set1")
   if (nrow(indelTypeTibble) == 4) {
@@ -108,34 +139,6 @@ indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
     ) +
     ggplot2::scale_fill_manual(values = fillColors) +
     ggplot2::coord_polar(theta = "y") +
-    ggplot2::theme(text = ggplot2::element_text(size = 30))
-  ggplot2::ggsave(classifyTempFile, plot = ggFig)
-  htmltools::tags$iframe(
-    src = sub("^www/", "", classifyTempFile),
-    height = "1200px",
-    width = "100%"
-  )
-}
-
-indelTypeWafflePlot <- function(indelTypeTibble, classifyTempFile) {
-  fillColors <- RColorBrewer::brewer.pal(8, "Set1")
-  if (nrow(indelTypeTibble) == 4) {
-    fillColors <- fillColors[c(1, 2, 3, 6)]
-  }
-  ggFig <- ggplot2::ggplot(
-    indelTypeTibble,
-    ggplot2::aes(fill = indelType, values = count)
-  ) +
-    waffle::geom_waffle(
-      n_rows = 10,
-      color = "white",
-      make_proportional = TRUE
-    ) +
-    ggplot2::scale_fill_manual(
-      limits = indelTypeTibble$indelType |> levels(),
-      values = fillColors
-    ) +
-    ggplot2::coord_equal() +
     ggplot2::theme(text = ggplot2::element_text(size = 30))
   ggplot2::ggsave(classifyTempFile, plot = ggFig)
   htmltools::tags$iframe(
