@@ -1,3 +1,16 @@
+#' Get range tibble of micro-homology
+#'
+#' Record the ramge pf micro-homology in rows of tibble.
+#'
+#' @param ref1 the reference upstream to the cut site
+#' @param ref2 the reference downstream to the cut site
+#' @param cut1 the cut site in ref1
+#' @param cut2 the cut site in ref2
+#' @return a tibble with the four columns: pos1low (the row start position of mh), pos1up (the row end position of mh), shift (pos1up - pos2up), cls (the index of mh)
+#' @export
+#'
+#' @examples
+#' mhTibble <- getMicroHomologyTibble(ref1, ref2, cut1, cut2)
 getMicroHomologyTibble <- function(ref1, ref2, cut1, cut2) {
   ref1vec <- stringr::str_split(toupper(ref1), "")[[1]]
   ref2vec <- stringr::str_split(toupper(ref2), "")[[1]]
@@ -39,14 +52,16 @@ getMicroHomologyTibble <- function(ref1, ref2, cut1, cut2) {
   }
   return(
     mh_matrix |>
-      tibble::as_tibble() |>
-      dplyr::mutate(pos1 = dplyr::row_number()) |>
+      tibble::as_tibble(.name_repair = "universal_quiet", rownames = "pos1") |>
       tidyr::pivot_longer(
-        cols = tidyselect::starts_with("V"),
+        cols = tidyselect::starts_with("..."),
         names_to = "pos2",
         values_to = "cls"
       ) |>
-      dplyr::mutate(pos2 = as.integer(sub("^V", "", pos2))) |>
+      dplyr::mutate(
+        pos1 = as.integer(pos1),
+        pos2 = as.integer(sub(r"(^\.\.\.)", "", pos2))
+      ) |>
       dplyr::filter(cls > 0) |>
       dplyr::summarise(
         pos1low = min(pos1) - 1 - cut1,
@@ -57,6 +72,23 @@ getMicroHomologyTibble <- function(ref1, ref2, cut1, cut2) {
   )
 }
 
+#' Visualize micro-homology
+#'
+#' Visualize the actual counts of editing output by heatmap and micro-homologies by paths passing the whole mhs.
+#'
+#' @param mhTibbleSub the tibble recording micro-homology ranges in rows
+#' @param refEnd1Start2TibbleMicro the tibble containing actual counts of editing output for a certain reference
+#' @param maxCut1 the maximal length of the ref1 part upstream to the cut site
+#' @param maxCut2 the maximal length of the ref2 part upstream to the cut site
+#' @param maxCut1down the maximal length of the ref1 part downstream to the cut site
+#' @param maxCut2down the maximal length of the ref2 part downstream to the cut site
+#' @param mode if set to "separate", then meaningly distribute the actual counts of editing output to the all micro-homology equivalence
+#' @param mhMatrixTempFile the pdf tempfile to save ggplot result
+#' @return the html iframe tag to be displayed by shiny::renderUI
+#' @export
+#'
+#' @examples
+#' iframeTag <- drawMicroHomologyHeatmap(mhTibbleSub, refEnd1Start2TibbleMicro, maxCut1, maxCut2, maxCut1down, maxCut2down, mode, mhMatrixTempFile)
 drawMicroHomologyHeatmap <- function(
   mhTibbleSub,
   refEnd1Start2TibbleMicro,
@@ -78,23 +110,23 @@ drawMicroHomologyHeatmap <- function(
     )
   }
   mhPosTibble <- mhTibbleSub |>
-    dplyr::mutate(nacol = NA) |>
-    tidyr::pivot_longer(
-      cols = c("pos1low", "pos1up", "nacol"),
-      values_to = "mhPos1"
-    ) |>
-    dplyr::mutate(mhPos2 = mhPos1 - shift) |>
-    dplyr::select(mhPos1, mhPos2)
+    dplyr::mutate(pos2low = pos1low - shift, pos2up = pos1up - shift) |>
+    dplyr::select(pos1low, pos1up, pos2low, pos2up)
   ggFig <- ggplot2::ggplot(refEnd1Start2TibbleMicro) +
     ggplot2::geom_tile(
       ggplot2::aes(x = pos2, y = pos1, fill = log10(count + 1)),
       height = 1,
       width = 1
     ) +
-    ggplot2::geom_path(
-      ggplot2::aes(x = mhPos2, y = mhPos1),
-      data = mhPosTibble
-    ) +
+    # ggplot2::geom_segment(
+    #   ggplot2::aes(
+    #     x = pos2low,
+    #     y = pos1low,
+    #     xend = pos2up,
+    #     yend = pos1up
+    #   ),
+    #   data = mhPosTibble
+    # ) +
     ggplot2::scale_x_continuous(
       limits = c(-maxCut2 - 1, maxCut2down + 1),
       expand = c(0, 0)
@@ -109,7 +141,13 @@ drawMicroHomologyHeatmap <- function(
     ) +
     ggplot2::scale_size_area(max_size = 2) +
     ggplot2::coord_equal(ratio = 1)
-  ggplot2::ggsave(mhMatrixTempFile, plot = ggFig)
+  ggplot2::ggsave(
+    mhMatrixTempFile,
+    plot = ggFig,
+    height = 3600,
+    width = 3600,
+    unit = "px"
+  )
   htmltools::tags$iframe(
     src = sub("^www/", "", mhMatrixTempFile),
     height = "1200px",
@@ -117,6 +155,17 @@ drawMicroHomologyHeatmap <- function(
   )
 }
 
+#' Get editing output counts
+#'
+#' Get the actual counts of editing output for a specific reference.
+#'
+#' @param algTibble the tibble with columns ref1End (the reference end position of the first alignment block), cut1 (the cut site in ref1), ref2Start (the reference start position of the second alignment block), cut2 (the cut site in ref2), refId (the reference id), count (the count of the query)
+#' @param microRefId the reference id to harvest
+#' @return the tibble with the columns pos1 (the end position of the upstream alignment block relative to the cut site), pos2 (the end position of the downstream alignment block relative to the cut site), count (the count of the query), shift (pos1 - pos2)
+#' @export
+#'
+#' @examples
+#' refEnd1Start2Tibble <- getRefEnd1Start2Tibble(algTibble, microRefId)
 getRefEnd1Start2Tibble <- function(algTibble, microRefId) {
   algTibble |>
     dplyr::mutate(
@@ -130,6 +179,17 @@ getRefEnd1Start2Tibble <- function(algTibble, microRefId) {
     dplyr::mutate(shift = pos1 - pos2)
 }
 
+#' Duplicate the editing output count upon micro-homology equivalence
+#'
+#' For each editing output, if it is located in a micro-homology, then duplicate its count to all equivalence editing output in the micro-homology range.
+#'
+#' @param refEnd1Start2Tibble the tibble recording the counts of editing outputs
+#' @param mhTibbleSub the tibble recording micro-homology ranges in rows
+#' @return the tibble duplicates the counts of editing outputs upon micro-homology equivalence
+#' @export
+#'
+#' @examples
+#' refEnd1Start2TibbleMicro <- getRefEnd1Start2TibbleMicro(refEnd1Start2Tibble, mhTibbleSub)
 getRefEnd1Start2TibbleMicro <- function(refEnd1Start2Tibble, mhTibbleSub) {
   joinTibble <- refEnd1Start2Tibble |>
     dplyr::left_join(mhTibbleSub, by = "shift", relationship = "many-to-many")

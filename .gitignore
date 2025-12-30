@@ -24,3 +24,8 @@
 !/docker-images/shiny/apps/downstreamAnalysis/ggseqlogo/R
 !/docker-images/shiny/apps/downstreamAnalysis/ggseqlogo/NAMESPACE
 !/docker-images/shiny/apps/downstreamAnalysis/ggseqlogo/DESCRIPTION
+
+/docker-images/shiny/apps/downstreamAnalysis/waffle/*
+!/docker-images/shiny/apps/downstreamAnalysis/waffle/R
+!/docker-images/shiny/apps/downstreamAnalysis/waffle/NAMESPACE
+!/docker-images/shiny/apps/downstreamAnalysis/waffle/DESCRIPTION

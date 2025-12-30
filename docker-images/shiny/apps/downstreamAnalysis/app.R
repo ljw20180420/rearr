@@ -462,7 +462,13 @@ server <- function(input, output, session) {
       ggplot(aes(sub, count)) +
       geom_col() +
       scale_y_continuous(expand = c(0, 0))
-    ggsave(baseSubFreqTempFile, plot = ggFig)
+    ggsave(
+      baseSubFreqTempFile,
+      plot = ggFig,
+      height = 1800,
+      width = 3600,
+      unit = "px"
+    )
     tags$iframe(
       src = sub("^www/", "", baseSubFreqTempFile),
       height = "1200px",
@@ -660,11 +666,11 @@ server <- function(input, output, session) {
     )
   })
 
-  posBaseRef1TempFile <- tempfile(
+  ref1TempFile <- tempfile(
     tmpdir = file.path("www", session$token),
     fileext = ".pdf"
   )
-  posBaseRef2TempFile <- tempfile(
+  ref2TempFile <- tempfile(
     tmpdir = file.path("www", session$token),
     fileext = ".pdf"
   )
@@ -675,76 +681,76 @@ server <- function(input, output, session) {
       rearrVis::drawPositionalStatic(
         base1Tibble(),
         insert1Count(),
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "histgram indel") {
       rearrVis::drawPositionalStatic(
         MSD1Tibble(),
         insert1Count(),
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "read base A") {
       rearrVis::drawPositionalReads(
         read1ATibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "read base C") {
       rearrVis::drawPositionalReads(
         read1CTibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "read base G") {
       rearrVis::drawPositionalReads(
         read1GTibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "read base T") {
       rearrVis::drawPositionalReads(
         read1TTibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "read match") {
       rearrVis::drawPositionalReads(
         match1Tibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "read snp") {
       rearrVis::drawPositionalReads(
         snp1Tibble(),
         algMetaData()$maxCut1,
         algMetaData()$maxCut1down,
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "logo probability") {
       rearrVis::drawPositionalLogo(
         base1Freq()[2:5, ],
         "prob",
         "ACGT",
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "logo bits") {
       rearrVis::drawPositionalLogo(
         base1Freq()[2:5, ],
         "bits",
         "ACGT",
-        posBaseRef1TempFile
+        ref1TempFile
       )
     } else if (input$positionalMode == "logo custom") {
       rearrVis::drawPositionalLogo(
         base1Freq()[2:5, ],
         "custom",
         "ACGT",
-        posBaseRef1TempFile
+        ref1TempFile
       )
     }
   })
@@ -755,76 +761,76 @@ server <- function(input, output, session) {
       rearrVis::drawPositionalStatic(
         base2Tibble(),
         insert2Count(),
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "histgram indel") {
       rearrVis::drawPositionalStatic(
         MSD2Tibble(),
         insert2Count(),
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "read base A") {
       rearrVis::drawPositionalReads(
         read2ATibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "read base C") {
       rearrVis::drawPositionalReads(
         read2CTibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "read base G") {
       rearrVis::drawPositionalReads(
         read2GTibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "read base T") {
       rearrVis::drawPositionalReads(
         read2TTibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "read match") {
       rearrVis::drawPositionalReads(
         match2Tibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "read snp") {
       rearrVis::drawPositionalReads(
         snp2Tibble(),
         algMetaData()$maxCut2,
         algMetaData()$maxCut2down,
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "logo probability") {
       rearrVis::drawPositionalLogo(
         base2Freq()[2:5, ],
         "prob",
         "ACGT",
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "logo bits") {
       rearrVis::drawPositionalLogo(
         base2Freq()[2:5, ],
         "bits",
         "ACGT",
-        posBaseRef2TempFile
+        ref2TempFile
       )
     } else if (input$positionalMode == "logo custom") {
       rearrVis::drawPositionalLogo(
         base2Freq()[2:5, ],
         "custom",
         "ACGT",
-        posBaseRef2TempFile
+        ref2TempFile
       )
     }
   })
@@ -876,7 +882,6 @@ server <- function(input, output, session) {
   output$mhMatrixPlot <- renderUI({
     req(input$algfiles)
     req(proxy$microRefId)
-    cat("render plot")
     drawMicroHomologyHeatmap(
       mhTibbleSub(),
       refEnd1Start2TibbleMicro(),
