@@ -1,8 +1,8 @@
 library(shiny)
 library(bslib)
 library(tidyverse)
-load_all("rearrVis")
-load_all("ggseqlogo")
+library(rearrVis, lib.loc = "./library")
+library(ggseqlogo, lib.loc = "./library")
 
 options(shiny.maxRequestSize = 10 * 1024^3)
 

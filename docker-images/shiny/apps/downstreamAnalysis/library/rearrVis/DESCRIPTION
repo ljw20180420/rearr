@@ -1,0 +1,18 @@
+Package: rearrVis
+Title: Visualize rearr output.
+Version: 0.0.0.9000
+Authors@R: 
+    person("Jingwei", "Li", , "ljw2017@sjtu.edu.cn", role = c("aut", "cre"))
+Description: Apply downstream analysis of rearr. Browser the alignment result. Do simple descriptive statistics. Visualize the results.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: dplyr, ggplot2, htmltools, RColorBrewer, readr, scales,
+        stringr, tibble, tidyr, tidyselect
+NeedsCompilation: no
+Packaged: 2025-12-30 10:03:44 UTC; ljw
+Author: Jingwei Li [aut, cre]
+Maintainer: Jingwei Li <ljw2017@sjtu.edu.cn>
+Depends: R (>= 4.3.0)
+Built: R 4.5.2; ; 2025-12-30 10:03:44 UTC; unix

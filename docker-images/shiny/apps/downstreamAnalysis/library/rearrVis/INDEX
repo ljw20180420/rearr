@@ -1,0 +1,45 @@
+arrangeInsertion        Arrange insertions in mulitple lines.
+calInsertionCount       Get insertion frequencies
+continuousDistribution
+                        Plot weighted distribution of continuous
+                        variable
+countBaseSubstitute     Count base substitution of query in reference.
+discreteDistribution    Plot weighted distribution of discrete variable
+drawMicroHomologyHeatmap
+                        Visualize micro-homology
+drawPositionalLogo      Use ggseqlogo to represent frequency matrix
+drawPositionalReads     Draw resolution tibble
+drawPositionalStatic    Stack bar plot of positional base frequencies
+                        or deletion/snp/match frequencies
+extendToAlignCut        Align sequence by cut site and pad on both
+                        sides
+extendToSameLength      Right pad sequences
+getArcDelTibble         Get deletion info
+getArcSegment           Express deletions by arcs
+getIndelTypes           Classify editing output
+getIndelTypesEx         Classify editing output with discrimination of
+                        templated and random insertions
+getMarkdownFromAlign    Transform two-line alignments to html details
+                        tags.
+getMicroHomologyTibble
+                        Get range tibble of micro-homology
+getPolyInsTibble        Get insertion info
+getPolyXY               Express insertions by triangle
+getPositionalBaseFreq   Get query base frequencies
+getPositionalMSDTibble
+                        Get query mutation frequencies
+getPositionalReads      Display values stored in matrix rows
+getRefEnd1Start2Tibble
+                        Get editing output counts
+getRefEnd1Start2TibbleMicro
+                        Duplicate the editing output count upon
+                        micro-homology equivalence
+indelTypePiePlot        Pie plot of editing classfication
+pairwisePlot            Pairwise plot for two columns
+plotArcDelTibble        Plot deletion arcs
+plotKmerFrequencies     Kmer enrichment of target
+plotPolyInsTibble       Plot insertion triangles
+posMatrixToTibble       Melt matrix
+resolutionMatrix        Adapter matrix to display resolution
+snpHighlight            Highlight SNP.
+vectorToStringVector    Split character vector according to lengths

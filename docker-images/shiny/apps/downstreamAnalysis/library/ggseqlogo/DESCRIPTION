@@ -14,10 +14,11 @@ RoxygenNote: 7.2.3
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2025-12-30 09:12:07 UTC; ljw
+Packaged: 2025-12-30 10:03:50 UTC; ljw
 Repository: CRAN
 Date/Publication: 2025-12-22 06:50:02 UTC
 Authors@R: 
     person("Omar", "Wagih", , "omarwagih@gmail.com", role = c("aut", "cre"))
 Author: Omar Wagih [aut, cre]
 Maintainer: Omar Wagih <omarwagih@gmail.com>
+Built: R 4.5.2; ; 2025-12-30 10:03:50 UTC; unix

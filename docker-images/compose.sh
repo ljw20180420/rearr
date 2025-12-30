@@ -6,14 +6,14 @@ cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # This is the start script for docker compose.
 
 # build jekyll
-cd jekyll
+pushd jekyll
 bundle exec jekyll build
-cd -
+popd
 
 # build vue3
-cd flask_app/vue_project
+pushd flask_app/vue_project
 npm run build
-cd - 
+popd
 
 # shiny
 chmod a+w shiny/logs
