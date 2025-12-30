@@ -3,7 +3,6 @@ library(bslib)
 library(tidyverse)
 load_all("rearrVis")
 load_all("ggseqlogo")
-load_all("waffle")
 
 Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
 options(shiny.maxRequestSize = 10 * 1024^3)
@@ -120,7 +119,7 @@ ui <- page_sidebar(
     tabPanel(
       title = tooltip(
         "classify",
-        r"(plot pie\waffle diagram of mutation types)"
+        r"(plot pie diagram of mutation types)"
       ),
       tooltip(
         checkboxInput(
@@ -130,12 +129,8 @@ ui <- page_sidebar(
         "discriminate templated\random insertion"
       ),
       tooltip(
-        selectInput("claClaMode", "mode", choices = c("pie", "waffle")),
-        r"(plot in pie\waffle diagram)"
-      ),
-      tooltip(
         uiOutput("claClaPlot"),
-        r"(pie\waffle diagram of mutation types)"
+        r"(pie diagram of mutation types)"
       )
     ),
     tabPanel(
@@ -931,12 +926,12 @@ server <- function(input, output, session) {
       algTibble() |>
         mutate(randInsert = nchar(randInsert)) |>
         select(c("count", input$distriTarget)) |>
-        discreteDistribution(distriTempFile)
+        rearrVis::discreteDistribution(distriTempFile)
     } else if (input$distriMode == "continuous") {
       algTibble() |>
         mutate(randInsert = nchar(randInsert)) |>
         select(c("count", input$distriTarget)) |>
-        continuousDistribution(distriTempFile)
+        rearrVis::continuousDistribution(distriTempFile)
     }
   })
 

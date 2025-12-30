@@ -140,7 +140,13 @@ indelTypePiePlot <- function(indelTypeTibble, classifyTempFile) {
     ggplot2::scale_fill_manual(values = fillColors) +
     ggplot2::coord_polar(theta = "y") +
     ggplot2::theme(text = ggplot2::element_text(size = 30))
-  ggplot2::ggsave(classifyTempFile, plot = ggFig)
+  ggplot2::ggsave(
+    classifyTempFile,
+    plot = ggFig,
+    height = 3600,
+    width = 3600,
+    unit = "px"
+  )
   htmltools::tags$iframe(
     src = sub("^www/", "", classifyTempFile),
     height = "1200px",
