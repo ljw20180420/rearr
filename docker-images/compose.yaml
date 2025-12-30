@@ -79,14 +79,8 @@ services:
   shiny:
     restart: always
     container_name: shiny_server
-    image: ghcr.io/ljw20180420/rearr:latest
-    build:
-      context: .
-      dockerfile: ./rearr.df
+    image: ghcr.io/rocker-org/shiny-verse:latest
     volumes:
       - "./shiny/apps:/srv/shiny-server"
       - "./shiny/conf:/etc/shiny-server"
       - "./shiny/logs:/var/log/shiny-server"
-    environment:
-      R: /opt/conda/bin/R
-    command: shiny-server

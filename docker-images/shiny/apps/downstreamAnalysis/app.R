@@ -4,7 +4,6 @@ library(tidyverse)
 load_all("rearrVis")
 load_all("ggseqlogo")
 
-Sys.setenv(PATH = paste0("/opt/conda/bin:", Sys.getenv("PATH")))
 options(shiny.maxRequestSize = 10 * 1024^3)
 
 # Define UI ----
@@ -323,8 +322,12 @@ ui <- page_sidebar(
         "targeted sequences mutation type"
       ),
       tooltip(
-        uiOutput("kmerRangeUI"),
-        "range of sgRNA to count kmer"
+        numericInput("kmerLowBound", "kmer lower bound", value = 18, min = 1),
+        "lower bound range of sgRNA to count kmer"
+      ),
+      tooltip(
+        numericInput("kmerUpBound", "kmer upper bound", value = 20, min = 1),
+        "upper bound range of sgRNA to count kmer"
       ),
       tooltip(
         uiOutput("kmerIframe"),
@@ -1074,7 +1077,7 @@ server <- function(input, output, session) {
     if (input$editTarget == "templated insertion") {
       return(as.logical(algTibble()$templatedInsert))
     } else if (input$editTarget == "random insertion") {
-      return(as.logical(algTibble()$randInsert))
+      return(algTibble()$randInsert != "")
     } else if (input$editTarget == "insertion") {
       return(as.logical(algTibble()$insert))
     } else if (input$editTarget == "deletion") {
@@ -1088,23 +1091,15 @@ server <- function(input, output, session) {
     }
   })
 
-  output$kmerRangeUI <- renderUI({
-    req(input$sgRNAfile)
-    proxy$kmerRange <- NULL
-    sgLen <- nchar(sgRNAs()[1])
-    numericRangeInput(
-      "kmerRange",
-      "kmer range",
-      value = rep(max(1, sgLen - 3), 2),
-      min = 1,
-      max = sgLen,
-      step = 1
-    )
-  })
   kmerTibble <- reactive({
+    req(input$kmerLowBound <= input$kmerUpBound)
     algTibble() |>
       mutate(
-        kmer = substr(sgRNAs()[refId], proxy$kmerRange[1], proxy$kmerRange[2]),
+        kmer = substr(
+          sgRNAs()[refId],
+          input$kmerLowBound,
+          min(input$kmerUpBound, sgRNAs() |> vapply(nchar, integer(1)) |> min())
+        ),
         target = editTarget()
       ) |>
       summarise(count = sum(count), .by = c(kmer, target))
@@ -1117,8 +1112,7 @@ server <- function(input, output, session) {
   output$kmerIframe <- renderUI({
     req(input$algfiles)
     req(input$sgRNAfile)
-    req(proxy$kmerRange)
-    plotKmerFrequencies(kmerTibble(), kmerPdfTempFile)
+    rearrVis::plotKmerFrequencies(kmerTibble(), kmerPdfTempFile)
   })
 }
 
