@@ -10,11 +10,13 @@ docker run --rm -d -p 6379:6379 redis:latest
 #     -b amqp://localhost:5672 \
 #     --result-backend redis://localhost:6379/0 \
 #     worker -D
-docker run --rm -d -v ./flask_app:/app/flask_app ghcr.io/ljw20180420/rearr:latest \
-    celery -A flask_app.tasks \
-        -b amqp://10.0.2.2:5672 \
-        --result-backend redis://10.0.2.2:6379/0 \
-        worker
+docker run --rm -d -v ./docker_mounts/flask_app:/flask_app \
+    -w /flask_app \
+    ghcr.io/ljw20180420/rearr:latest \
+        celery -A tasks \
+            -b amqp://10.0.2.2:5672 \
+            --result-backend redis://10.0.2.2:6379/0 \
+            worker
 
 python -m flask_app \
     -b amqp://localhost:5672 \
