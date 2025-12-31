@@ -343,11 +343,13 @@ rv=${rv:-0}
 qu=${qu:-0}
 qv=${qv:--5}
 
+default_prefix=${CONDA_PREFIX:-"${HOME}/.local"}
+prefix=${prefix:-"${default_prefix}"}
 if [ -f "workFlow.mak" ]
 then
     make_file="workFlow.mak"
 else
-    make_file="$CONDA_PREFIX/share/rearr/workFlow.mak"
+    make_file="${prefix}/share/rearr/workFlow.mak"
 fi
 
 make $@ -f "${make_file}" "${makeTarget}" \
