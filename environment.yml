@@ -9,6 +9,7 @@ dependencies:
   - conda-forge::sed
   - conda-forge::gawk
   - conda-forge::perl
+  - conda-forge::apptainer
   - bioconda::samtools
   - bioconda::bedtools
   - bioconda::bowtie2
