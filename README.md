@@ -8,24 +8,20 @@ $ conda install bioconda::rearr
 
 ## Container
 
-Each bioconda package has a [biocontainer docker image](https://quay.io/repository/biocontainers/rearr) and a [galaxy singularity image](https://depot.galaxyproject.org/singularity). As far as I know, the easiest way to use these images is `apptainer`. Install `apptainer` by conda.
+As far as I know, the easiest way to use these images is `apptainer`. Install `apptainer` by conda.
 ```shell
 conda install conda-forge::apptainer
 ```
 
 To get an interactive shell environment,
 ```shell
-$ apptainer shell docker://quay.io/biocontainers/rearr:tag
+$ apptainer shell docker://ghcr.io/ljw20180420/rearr:latest
 Apptainer> rearrangement -h
-```
-You should replace `tag` by the latest working image tag found at [biocontainer docker image](https://quay.io/repository/biocontainers/rearr). For example,
-```shell
-$ apptainer shell docker://quay.io/biocontainers/rearr:1.0.3--h9948957_0
 ```
 
 To run commands non-interactively,
 ```shell
-$ apptainer run docker://quay.io/biocontainers/rearr:tag rearrangement -h
+$ apptainer run docker://ghcr.io/ljw20180420/rearr:latest rearrangement -h
 ```
 This is handy when you want to build a pipeline depends on multiple containers.
 
@@ -48,15 +44,16 @@ $ git clone https://github.com/ljw20180420/rearr.git
 ```
 or download the latest working [release](https://github.com/ljw20180420/rearr/releases). Then in the project folder, invoke
 ```shell
-$ ./compose.sh
+$ docker-images/compose.sh
 ```
 The webUI is served at `http://ocalhost:80`.
   - The visualizing workflow is at `http://ocalhost:80/workflow/`.
   - The shiny apps for post process and visualization is at `http://ocalhost:80/shiny/`.
   - The job history of the visualizing workflow can be checked at `http://ocalhost:80/flower/`.
 
-The first running of `./compose.sh` will pull the following images.
+The first running of `docker-images/compose.sh` will pull the following images.
 
+- ghcr.io/ljw20180420/flask_app:latest
 - ghcr.io/ljw20180420/rearr:latest
 - rabbitmq:latest
 - redis:latest
