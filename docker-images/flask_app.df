@@ -3,5 +3,6 @@ LABEL maintainer="ljw2017@sjtu.edu.cn"
 LABEL org.opencontainers.image.source=https://github.com/ljw20180420/rearr
 LABEL org.opencontainers.image.description="container runs flask app"
 LABEL org.opencontainers.image.licenses=MIT
-RUN pip install flask waitress celery[redis] && \
+RUN pip install -U pip && \
+    pip install flask waitress celery[redis] && \
     pip cache purge
