@@ -16,6 +16,7 @@ services:
     restart: always
     container_name: celery_beat
     image: mher/flower:latest
+    user: root
     volumes:
       - "./flask_app:/data"
     command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
