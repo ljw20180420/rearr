@@ -15,6 +15,12 @@ pushd flask_app/vue_project
 npm run build
 popd
 
+# shiny
+mkdir -p shiny/docker_apps/downstreamAnalysis
+cp shiny/apps/downstreamAnalysis/app.R shiny/docker_apps/downstreamAnalysis/app.R
+cp -r shiny/apps/downstreamAnalysis/library shiny/docker_apps/downstreamAnalysis/
+chmod a+w shiny/docker_apps/downstreamAnalysis
+
 # Stop and remove previous up
 docker compose down
 # Pull remote images

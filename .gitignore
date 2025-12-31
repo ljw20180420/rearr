@@ -13,5 +13,4 @@
 /default.nix
 /result
 /docker-images/flask_app/www
-/docker-images/shiny/log
-/docker-images/shiny/apps/downstreamAnalysis/www
+/docker-images/shiny/docker_apps

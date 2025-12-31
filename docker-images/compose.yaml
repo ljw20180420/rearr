@@ -18,7 +18,7 @@ services:
     image: mher/flower:latest
     user: root
     volumes:
-      - "./flask_app:/data"
+      - "flask_volume:/data"
     command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
 
   worker:
@@ -32,7 +32,7 @@ services:
       context: ..
       dockerfile: docker-images/rearr.df
     volumes:
-      - "./flask_app:/flask_app"
+      - "flask_volume:/flask_app"
     command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
 
   flask:
@@ -47,7 +47,7 @@ services:
       context: ..
       dockerfile: docker-images/flask_app.df
     volumes:
-      - "./flask_app:/flask_app"
+      - "flask_volume:/flask_app"
     command: python -m flask_app -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0
 
   flower:
@@ -59,7 +59,7 @@ services:
     container_name: celery_flower
     image: mher/flower:latest
     volumes:
-      - "./flask_app:/data"
+      - "flask_volume:/data"
     command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
 
   nginx:
@@ -82,6 +82,4 @@ services:
     container_name: shiny_server
     image: ghcr.io/rocker-org/shiny-verse:latest
     volumes:
-      - "./shiny/apps:/srv/shiny-server"
-      - "./shiny/conf:/etc/shiny-server"
-      - "./shiny/logs:/var/log/shiny-server"
+      - "./shiny/docker_apps:/srv/shiny-server"
