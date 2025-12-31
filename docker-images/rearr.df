@@ -1,32 +1,25 @@
-FROM ghcr.io/ljw20180420/rearr_base:latest
+FROM python:3
 LABEL maintainer="ljw2017@sjtu.edu.cn"
-LABEL org.opencontainers.image.source=https://github.com/ljw20180420/sx_lcy
-LABEL org.opencontainers.image.description="container with rearr installed"
+LABEL org.opencontainers.image.source=https://github.com/ljw20180420/rearr
+LABEL org.opencontainers.image.description="container runs rearr"
 LABEL org.opencontainers.image.licenses=MIT
-COPY ["./core", "/app/core"]
-RUN cd /app && \
-    # install rearrangement
-    core/Rearrangement/build.sh /usr/local && \
-    cd /app && \
-    mkdir -p /usr/share/awk/ && \
-    cp core/Rearrangement/correct_micro_homology.awk /usr/share/awk/ && \
-    # install removeDup
-    cp core/removeDuplicates.sh /usr/local/bin/ && \
-    # install demultiplex
-    cp core/demultiplex/demultiplex.sh /usr/local/bin/ && \
-    cp core/demultiplex/getAlignPos.awk /usr/share/awk/ && \
-    rm -rf core
-COPY ["./sx", "/app/sx"]
-RUN cd /app && \
-    # install getSxPlasmidFileRef
-    cp sx/getSxPlasmidFileRef/getSxPlasmidFileRef.sh /usr/local/bin/ && \
-    cp sx/getSxPlasmidFileRef/getSxPlasmidFileTarget.pl /usr/local/bin/ && \
-    cp sx/getSxPlasmidFileRef/getSxRefFile.pl /usr/local/bin/ && \
-    cp sx/getSxPlasmidFileRef/sxTargetSam2Bed.awk /usr/share/awk/ && \
-    # install cutR2Adapter
-    cp sx/sxCutR2AdapterFilterCumulate/sxCutR2AdapterFilterCumulate.sh /usr/local/bin/ && \
-    cp sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk /usr/share/awk/ && \
-    # install sxInderMarker
-    cp sx/sxExtractMarker.sh /usr/local/bin/ && \
-    rm -rf sx
-COPY ["./runWorkFlow.sh", "./workFlow.mak", "/app/"]
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        gawk \
+        samtools \
+        bedtools \
+        bowtie2 && \
+    apt-get clean
+RUN pip install -U pip && \
+    pip install \
+        cutadapt \
+        numpy \
+        celery[redis] && \
+    pip cache purge
+COPY ["./core", "/source/core"]
+COPY ["./sx", "/source/sx"]
+COPY ["./runWorkFlow.sh", "./workFlow.mak", "./install.sh", "/source/"]
+RUN /source/install.sh && rm -rf /source
+WORKDIR /flask_app

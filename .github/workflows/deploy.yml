@@ -33,3 +33,9 @@ jobs:
 
       - name: Push flask app
         run: docker push ghcr.io/ljw20180420/flask_app:latest
+
+      - name: Build rearr
+        run: docker build -t ghcr.io/ljw20180420/rearr:latest -f docker-images/rearr.df .
+
+      - name: Push rearr
+        run: docker push ghcr.io/ljw20180420/rearr:latest
