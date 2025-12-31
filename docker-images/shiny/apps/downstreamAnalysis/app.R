@@ -6,7 +6,9 @@ library(ggseqlogo, lib.loc = "./library")
 
 options(shiny.maxRequestSize = 10 * 1024^3)
 
-# Define UI ----
+#####################
+# frontend
+#####################
 ui <- page_sidebar(
   sidebar = sidebar(
     tooltip(
@@ -337,12 +339,14 @@ ui <- page_sidebar(
   )
 )
 
-# # Define server logic ----
+#################
+# backend
+#################
 server <- function(input, output, session) {
   ################################
   # session start
   ################################
-  file.path("www", session$token) |> dir.create()
+  file.path("www", session$token) |> dir.create(recursive = TRUE)
   ################################
   # session end
   ################################
@@ -1117,20 +1121,13 @@ server <- function(input, output, session) {
 }
 
 ################################
-# app end
+# end app
 ################################
 onStop(function() {
-  temps <- setdiff(
-    list.files(
-      path = "www",
-      all.files = TRUE,
-      full.names = TRUE,
-      include.dirs = TRUE
-    ),
-    c("www/.gitignore", "www/.", "www/..")
-  )
-  unlink(temps, recursive = TRUE)
+  unlink("www", recursive = TRUE)
 })
 
-# Run the app ----
+################################
+# run app
+################################
 shinyApp(ui = ui, server = server)

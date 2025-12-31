@@ -20,11 +20,11 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 @celeryApp.task
-def celeryClearTmp(tmpPath):
+def celeryClearTmp(tmpPath: os.PathLike) -> str:
     now = time.time()
+    if not os.path.exists(tmpPath):
+        return "SUCCESS"
     for uuid in os.listdir(tmpPath):
-        if uuid == ".gitignore":
-            continue
         sessionDir = os.path.join(tmpPath, uuid)
         # save for a week
         if os.stat(sessionDir).st_mtime < now - 7 * 86400:
