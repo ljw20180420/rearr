@@ -21,4 +21,4 @@ RUN pip install -U pip && \
 COPY ["./core", "/source/core"]
 COPY ["./sx", "/source/sx"]
 COPY ["./runWorkFlow.sh", "./workFlow.mak", "./install.sh", "/source/"]
-RUN /source/install.sh && rm -rf /source
+RUN prefix="/usr/local" /source/install.sh && rm -rf /source
