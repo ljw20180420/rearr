@@ -22,4 +22,3 @@ COPY ["./core", "/source/core"]
 COPY ["./sx", "/source/sx"]
 COPY ["./runWorkFlow.sh", "./workFlow.mak", "./install.sh", "/source/"]
 RUN /source/install.sh && rm -rf /source
-WORKDIR /flask_app

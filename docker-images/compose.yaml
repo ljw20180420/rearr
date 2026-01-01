@@ -18,8 +18,8 @@ services:
     image: mher/flower:latest
     user: root
     volumes:
-      - "./docker_mounts/flask_app:/data"
-    command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
+      - "./docker_mounts/flask_app:/data/flask_app"
+    command: celery -A flask_app.tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 beat
 
   worker:
     depends_on:
@@ -33,7 +33,7 @@ services:
       dockerfile: docker-images/rearr.df
     volumes:
       - "./docker_mounts/flask_app:/flask_app"
-    command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
+    command: celery -A flask_app.tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 worker
 
   flask:
     depends_on:
@@ -59,8 +59,8 @@ services:
     container_name: celery_flower
     image: mher/flower:latest
     volumes:
-      - "./docker_mounts/flask_app:/data"
-    command: celery -A tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
+      - "./docker_mounts/flask_app:/data/flask_app"
+    command: celery -A flask_app.tasks -b amqp://rabbitmq:5672 --result-backend redis://redis:6379/0 flower --url_prefix=/flower
 
   nginx:
     depends_on:
