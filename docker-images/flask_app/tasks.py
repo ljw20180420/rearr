@@ -1,4 +1,5 @@
 import os
+import pathlib
 import shutil
 import subprocess
 import time
@@ -15,17 +16,20 @@ celeryApp = Celery(
 @celeryApp.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
-        86400, celeryClearTmp.s("tmp"), name="clear temporary file"
+        86400,
+        celeryClearTmp.s(pathlib.Path(os.path.dirname(__file__)) / "tmp"),
+        name="clear temporary file",
     )
 
 
 @celeryApp.task
 def celeryClearTmp(tmpPath: os.PathLike) -> str:
+    tmpPath = pathlib.Path(tmpPath)
     now = time.time()
     if not os.path.exists(tmpPath):
         return "SUCCESS"
     for uuid in os.listdir(tmpPath):
-        sessionDir = os.path.join(tmpPath, uuid)
+        sessionDir = tmpPath / uuid
         # save for a week
         if os.stat(sessionDir).st_mtime < now - 7 * 86400:
             shutil.rmtree(sessionDir)
