@@ -7,6 +7,7 @@ cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # build jekyll
 pushd jekyll
+bundle install
 bundle exec jekyll build
 popd
 
