@@ -13,6 +13,7 @@ popd
 
 # build vue3
 pushd flask_app/vue_project
+npm install
 npm run build
 popd
 
