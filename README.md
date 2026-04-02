@@ -8,7 +8,7 @@ $ conda install bioconda::rearr
 
 ## Container
 
-As far as I know, the easiest way to use these images is `apptainer`. Install `apptainer` by conda.
+As far as I know, the easiest way to use docker images is `apptainer`. Install `apptainer` by conda.
 ```shell
 conda install conda-forge::apptainer
 ```
