@@ -49,19 +49,6 @@ const edgeTypes = {
 
 const nodes = ref([
   initDataTankNode(
-    'plasmid', 0, 0,
-    "In-house plasmid file contains sgRNAs used to extract references from genome. See sx/sxExtractMarker.sh.",
-    {
-      '.csv file': {
-        type: 'file'
-      }
-    }
-  ),
-  initRunJobNode(
-    'sxGetReference', 2100, 0,
-    "Extract reference from genome based on in-house plasmid file. See sx/getSxPlasmidFileRef."
-  ),
-  initDataTankNode(
     'reference', 2400, 0,
     'Reads in .post file are aligned to these references. See docs/core.md.',
     {
@@ -97,63 +84,6 @@ const nodes = ref([
     }
   ),
   initDataTankNode(
-    'genome', 1200, 50,
-    'Genome file to extract references from.',
-    {
-      'genome file': {
-        type: 'file'
-      }
-    }
-  ),
-  initRunJobNode(
-    'indexGenome', 1500, 300,
-    'Build bowtie2 index for genome.'
-  ),
-  initDataTankNode(
-    'genomeIndex', 1800, 50,
-    'Bowtie2 index of genome. Extension base numbers are feed to sxGetReference together with genome index to extract references. Rearr need extended reference to catch templated insertion.',
-    {
-      'extensions': {
-        'cut1 upstream': {
-          type: 'value',
-          value: 50
-        },
-        'cut1 downstream': {
-          type: 'value',
-          value: 0
-        },
-        'cut2 upstream': {
-          type: 'value',
-          value: 10
-        },
-        'cut2 downstream': {
-          type: 'value',
-          value: 100
-        }
-      },
-      'genome index': {
-        '1.bt2': {
-          type: 'file'
-        },
-        '2.bt2': {
-          type: 'file'
-        },
-        '3.bt2': {
-          type: 'file'
-        },
-        '4.bt2': {
-          type: 'file'
-        },
-        'rev.1.bt2': {
-          type: 'file'
-        },
-        'rev.2.bt2': {
-          type: 'file'
-        }
-      }
-    }
-  ),
-  initDataTankNode(
     'rawData', 600, 1000,
     'Files containing rawdata. See core/removeDuplicates.sh.',
     {
@@ -179,10 +109,6 @@ const nodes = ref([
         type: 'file'
       }
     }
-  ),
-  initRunJobNode(
-    'sxGetMarkers', 300, 1500,
-    "Extract marker from in-house plasmid file. See sx/sxExtractMarker.sh."
   ),
   initDataTankNode(
     'markers', 600, 1500,
@@ -268,20 +194,16 @@ const nodes = ref([
   ),
   initDataTankNode(
     'noMix', 1800, 1500,
-    "Demultiplexed .noDup reads. Minimal base number is feed to sxPostProcess together with .demultiplex file to filter too short reads after remove 5' marker and 3' adapter. See core/demultiplex.sh.",
+    "Demultiplexed .noDup reads.",
     {
-      'minimal base number': {
-        type: 'value',
-        value: 30
-      },
       '.demultiplex file': {
         type: 'file'
       }
     }
   ),
   initRunJobNode(
-    'sxPostProcess', 2100, 1500,
-    "Remove 5' primer+barcode and 3' RCscaffold, and filter reads which are too short for alignment. sxPostProcess only supports data in the same format as our in-house data. See sx/sxCutR2AdapterFilterCumulate."
+    'postProcess', 2100, 1500,
+    "Extract the first column from .demultiplex file together with count and ref_id."
   ),
   initDataTankNode(
     'toAlign', 2400, 1500,

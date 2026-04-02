@@ -48,7 +48,7 @@ async function recursiveInspect(data) {
                 return false;
             }
             if (response.data != "SUCCESS") {
-                alert(`job: ${param.taskId} is ${response.data}`);
+                alert(`job: ${data.taskId} is ${response.data}`);
                 return false;
             }
         }

@@ -70,14 +70,14 @@ function recursiveNullCopy(data) {
                 <div>{{ data.percentage }}</div>
             </div>
             <select v-else-if="data.type == 'select'" v-model="data.value" @change="update($event, data)">
-                <option v-for="option of data.options">
+                <option v-for="(option, index) of data.options" :key="index">
                     {{ option }}
                 </option>
             </select>
         </div>
     </div>
     <div v-else>
-        <div v-for="(subdata, name) in data">
+        <div v-for="(subdata, name) in data" :key="name">
             <div>{{ name }}</div>
             <div style="padding: 0px 8px;">
                 <recursiveParams v-model="data[name]" />
