@@ -31,4 +31,4 @@ jobs:
         run: ./install.sh
 
       - name: Run unit test
-        run: python -m unittest test.test_suite_no_genome
+        run: python -m unittest test.test_suite_all

@@ -23,8 +23,6 @@
         "PATH": "${workspaceFolder}/.jdk/Oracle_JDK-24/bin:${workspaceFolder}/paper/tools/novocraft:${workspaceFolder}/paper/tools/bam2mpg-1.0.1/scripts:${env:PATH}",
         "JAVA_HOME": "${workspaceFolder}/.jdk/Oracle_JDK-24",
         "CLASSPATH": "${workspaceFolder}/paper/tools/SIQ-1.8/SIQ/libraries/*:${workspaceFolder}/paper/tools/SIQ-1.8/SIQ/src",
-        "GENOME": "/home/ljw/hg19_with_bowtie2_index/hg19.fa",
-        "BOWTIE2INDEX": "/home/ljw/hg19_with_bowtie2_index/hg19"
     },
     "python-envs.defaultEnvManager": "ms-python.python:conda",
     "python-envs.defaultPackageManager": "ms-python.python:conda",
