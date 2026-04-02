@@ -22,11 +22,9 @@ from .tasks import (
     celeryBuildMarker,
     celeryDefaultDirection,
     celeryDemultiplex,
+    celeryPostProcess,
     celeryRearrange,
     celeryRemoveDuplicates,
-    celerySxGetMarkers,
-    celerySxGetReference,
-    celerySxPostProcess,
 )
 
 parser = argparse.ArgumentParser()
@@ -181,16 +179,14 @@ def demultiplex():
     }
 
 
-@flaskApp.put("/runJob/sxPostProcess")
-def sxPostProcess():
+@flaskApp.put("/runJob/postProcess")
+def postProcess():
     json = request.get_json()
     demultiplexFile = os.path.join(
         flaskApp.import_name, "tmp", session["uuid"], json[".demultiplex file"]["value"]
     )
     toMapFile = os.path.splitext(demultiplexFile)[0] + ".post"
-    result = celerySxPostProcess.delay(
-        demultiplexFile, json["minimal base number"]["value"], toMapFile
-    )
+    result = celeryPostProcess.delay(demultiplexFile, toMapFile)
     return {".post file": {"taskId": result.id, "value": os.path.basename(toMapFile)}}
 
 
@@ -249,43 +245,6 @@ def indexGenome():
             ext: {"taskId": result.id, "value": f"{os.path.basename(genomeFile)}.{ext}"}
             for ext in ["1.bt2", "2.bt2", "3.bt2", "4.bt2", "rev.1.bt2", "rev.2.bt2"]
         }
-    }
-
-
-@flaskApp.put("/runJob/sxGetReference")
-def sxGetReference():
-    json = request.get_json()
-    session_path = os.path.join(flaskApp.import_name, "tmp", session["uuid"])
-    plasmid_file = os.path.join(session_path, json[".csv file"]["value"])
-    bowtie2index = os.path.join(
-        session_path, json["genome index"]["1.bt2"]["value"][:-6]
-    )
-    genome = os.path.join(session_path, json["genome file"]["value"])
-    ext1up = json["extensions"]["cut1 upstream"]["value"]
-    ext1down = json["extensions"]["cut1 downstream"]["value"]
-    ext2up = json["extensions"]["cut2 upstream"]["value"]
-    ext2down = json["extensions"]["cut2 downstream"]["value"]
-    refFile = f"{plasmid_file}.ref"
-    result = celerySxGetReference.delay(
-        plasmid_file, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile
-    )
-    return {".ref file": {"taskId": result.id, "value": os.path.basename(refFile)}}
-
-
-@flaskApp.put("/runJob/sxGetMarkers")
-def getSxMarkers():
-    json = request.get_json()
-    plasmid_file = os.path.join(
-        flaskApp.import_name, "tmp", session["uuid"], json[".csv file"]["value"]
-    )
-    targetMarker = f"{plasmid_file}.target.fa"
-    pairMarker = f"{plasmid_file}.pair.fa"
-    result = celerySxGetMarkers.delay(plasmid_file, targetMarker, pairMarker)
-    return {
-        ".fasta files": [
-            {"taskId": result.id, "value": os.path.basename(targetMarker)},
-            {"taskId": result.id, "value": os.path.basename(pairMarker)},
-        ]
     }
 
 

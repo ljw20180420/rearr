@@ -70,12 +70,19 @@ def celeryDemultiplex(rmDupFile, markerIndices, minScores, demultiplexFile):
 
 
 @celeryApp.task
-def celerySxPostProcess(demultiplexFile, minToMapShear, toMapFile):
+def celeryPostProcess(demultiplexFile, toMapFile):
+    with open(demultiplexFile, "r") as fd:
+        fields = fd.readline().strip().split("\t")
+        for nf, field in enumerate(fields):
+            if field.isnumeric():
+                break
+
     subprocess.run(
-        f"""sxCutR2AdapterFilterCumulate.sh {demultiplexFile} {minToMapShear} >{toMapFile}""",
+        f"""cut -f1,{nf + 1}-{nf + 2} {demultiplexFile} > {toMapFile}""",
         shell=True,
         executable="/bin/bash",
     )
+
     return os.path.basename(toMapFile)
 
 
@@ -101,25 +108,3 @@ def celeryDefaultDirection(refFile, directionFile):
         for line in rfd:
             cfd.write("\t".join(["up"] * (len(line.split("\t")) // 3 - 1)) + "\n")
     return os.path.basename(directionFile)
-
-
-@celeryApp.task
-def celerySxGetReference(
-    plasmid_file, genome, bowtie2index, ext1up, ext1down, ext2up, ext2down, refFile
-):
-    subprocess.run(
-        f"""getSxPlasmidFileRef.sh {plasmid_file} {genome} {bowtie2index} {ext1up} {ext1down} {ext2up} {ext2down} >{refFile}""",
-        shell=True,
-        executable="/bin/bash",
-    )
-    return os.path.basename(refFile)
-
-
-@celeryApp.task
-def celerySxGetMarkers(plasmid_file, targetMarker, pairMarker):
-    subprocess.run(
-        f"""sxExtractMarker.sh {plasmid_file} >{targetMarker} 3>{pairMarker}""",
-        shell=True,
-        executable="/bin/bash",
-    )
-    return [os.path.basename(targetMarker), os.path.basename(pairMarker)]
