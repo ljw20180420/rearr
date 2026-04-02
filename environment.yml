@@ -8,10 +8,8 @@ dependencies:
   - conda-forge::file
   - conda-forge::sed
   - conda-forge::gawk
-  - conda-forge::perl
   - conda-forge::apptainer
   - bioconda::samtools
-  - bioconda::bedtools
   - bioconda::bowtie2
   - pip
   - pip:
@@ -19,4 +17,3 @@ dependencies:
     - flask
     - waitress
     - celery[redis]
-    - cutadapt

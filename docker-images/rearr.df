@@ -9,12 +9,10 @@ RUN apt-get update && \
         cmake \
         gawk \
         samtools \
-        bedtools \
         bowtie2 && \
     apt-get clean
 RUN pip install -U pip && \
     pip install \
-        cutadapt \
         numpy \
         celery[redis] && \
     pip cache purge
