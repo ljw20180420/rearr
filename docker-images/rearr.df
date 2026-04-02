@@ -17,7 +17,6 @@ RUN pip install -U pip && \
         celery[redis] && \
     pip cache purge
 COPY ["./core", "/source/core"]
-COPY ["./sx", "/source/sx"]
 COPY ["./runWorkFlow.sh", "./workFlow.mak", "./install.sh", "/source/"]
 RUN prefix="/usr/local" /source/install.sh && rm -rf /source
 ENV AWKPATH="/usr/local/share/awk"
