@@ -10,7 +10,7 @@ class TestWorkFlow(unittest.TestCase):
     def setUp(self):
         self.toTestFiles = [
             *[
-                f"{tp}.fa.{suffix}"
+                f"test/test_work_flow/{tp}.fa.{suffix}"
                 for tp in ["target", "pair"]
                 for suffix in [
                     "1.bt2",

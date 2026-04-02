@@ -7,7 +7,7 @@ markerIndexBts = $(foreach dir,$(subst $(comma), ,$(markerIndices)),$(addprefix 
 # outputDir includes the tail /
 outputDir = $(dir $(word 1, $(subst $(comma), ,$(fastqFiles))))
 
-RN = $(length $(subst $(comma), ,$(fastqFiles)))
+RN = $(words $(subst $(comma), ,$(fastqFiles)))
 
 $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 	removeDuplicates.sh $^ >$@
@@ -25,6 +25,6 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 	gawk '{for (i = 1; i < NF / 3 - 1; ++i) printf("up\t"); printf("up\n");}' $< >$@
 
 %.post: %.demultiplex
-	cut -f1,$(shell expr $(RN) + 1)-$(shell expr $(RN) + 2) $< >$@
+	cut -f1,$$(( $(RN) + 1 ))-$$(( $(RN) + 2 )) $< >$@
 
 .PRECIOUS: $(outputDir)rearr.noDup %.1.bt2 %.demultiplex %.alg %.ref %.direct %.post
