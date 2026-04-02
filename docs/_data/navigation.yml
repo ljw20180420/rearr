@@ -23,21 +23,3 @@
   sub:
     - name: WorkFlow
       link: /runWorkFlow/workFlow.mak.html
-- name: Sx
-  sub:
-    - name: SxExtractMarker
-      link: /sx/sxExtractMarker.sh.html
-    - name: SxCutR2AdapterFilterCumulate
-      link: /sx/sxCutR2AdapterFilterCumulate.sh.html
-      sub:
-        - name: SxCumulateToMapCutAdaptMarker
-          link: /sx/sxCutR2AdapterFilterCumulate/sxCumulateToMapCutAdaptMarker.awk.html
-    - name: GetSxPlasmidFileRef
-      link: /sx/getSxPlasmidFileRef.sh.html
-      sub:
-        - name: GetSxPlasmidFileTarget
-          link: /sx/getSxPlasmidFileRef/getSxPlasmidFileTarget.pl.html
-        - name: SxTargetSam2Bed
-          link: /sx/getSxPlasmidFileRef/sxTargetSam2Bed.awk.html
-        - name: GetSxRefFile
-          link: /sx/getSxPlasmidFileRef/getSxRefFile.pl.html
