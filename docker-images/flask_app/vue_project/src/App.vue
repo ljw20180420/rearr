@@ -49,7 +49,7 @@ const edgeTypes = {
 
 const nodes = ref([
   initDataTankNode(
-    'reference', 2400, 0,
+    'reference', 0, 50,
     'Reads in .post file are aligned to these references. See docs/core.md.',
     {
       '.ref file': {
@@ -58,24 +58,11 @@ const nodes = ref([
     }
   ),
   initRunJobNode(
-    'rearrange', 3300, 500,
-    'Align reads in .post file to references.'
-  ),
-  initDataTankNode(
-    'alignments', 3600, 500,
-    'Chimeric alignment results.',
-    {
-      '.alg file': {
-        type: 'file'
-      }
-    }
-  ),
-  initRunJobNode(
-    'defaultDirection', 2700, 0,
+    'defaultDirection', 300, 25,
     'Generate default .direct file with all up.'
   ),
   initDataTankNode(
-    'direction_file', 3000, 0,
+    'direction_file', 600, 0,
     'Correct chimeric alignments. For each junction between two adjacent references, the alignment try to generate blunt end for either upstream or downstream. A default .direct file with all up can be generated from .ref file for convenience. See core/Rearrangement/correct_micro_homology.awk.',
     {
       '.direct file': {
@@ -84,7 +71,7 @@ const nodes = ref([
     }
   ),
   initDataTankNode(
-    'rawData', 600, 1000,
+    'rawData', 0, 200,
     'Files containing rawdata. See core/removeDuplicates.sh.',
     {
       '.fastq files': [
@@ -98,11 +85,11 @@ const nodes = ref([
     }
   ),
   initRunJobNode(
-    'removeDuplicates', 900, 1000,
+    'removeDuplicates', 300, 273,
     'Remove duplicated reads in rawData fastq files. See core/removeDuplicates.sh.'
   ),
   initDataTankNode(
-    'noDuplicates', 1200, 1000,
+    'noDuplicates', 600, 248,
     'File of side-by-side reads in rawData fastq files without duplicates. See core/removeDuplicates.sh.',
     {
       '.noDup file': {
@@ -111,7 +98,7 @@ const nodes = ref([
     }
   ),
   initDataTankNode(
-    'markers', 600, 1500,
+    'markers', 0, 500,
     'Reads for demultiplexing .noDup file. Markers maps to rawData fastq files bijectively. See core/demultiplex.sh.',
     {
       '.fasta files': [
@@ -125,11 +112,11 @@ const nodes = ref([
     }
   ),
   initRunJobNode(
-    'buildMarker', 900, 1500,
+    'buildMarker', 300, 573,
     'Build bowtie2 index for markers.'
   ),
   initDataTankNode(
-    'demultiplexAuxiliary', 1200, 1500,
+    'demultiplexAuxiliary', 600, 500,
     'Bowtie2 index of markers. minScores are used to filter low-quality maps in demultiplex step. See core/demultiplex.sh.',
     {
       'auxiliaries': [
@@ -189,11 +176,11 @@ const nodes = ref([
     }
   ),
   initRunJobNode(
-    'demultiplex', 1500, 1500,
+    'demultiplex', 900, 600,
     'Demultiplex .noDup reads by markers. See core/demultiplex.sh.'
   ),
   initDataTankNode(
-    'noMix', 1800, 1500,
+    'noMix', 1200, 575,
     "Demultiplexed .noDup reads.",
     {
       '.demultiplex file': {
@@ -202,11 +189,11 @@ const nodes = ref([
     }
   ),
   initRunJobNode(
-    'postProcess', 2100, 1500,
+    'postProcess', 1500, 600,
     "Extract the first column from .demultiplex file together with count and ref_id."
   ),
   initDataTankNode(
-    'toAlign', 2400, 1500,
+    'toAlign', 1800, 500,
     'Clean target reads ready for alignment. Alignment score settings are based on affine gap penalty. See rearrangment --help for details about s0, s1, s2, u, v, ru, rv, qu, qv. See docs/core.md.',
     {
       'align scores': {
@@ -248,6 +235,19 @@ const nodes = ref([
         }
       },
       '.post file': {
+        type: 'file'
+      }
+    }
+  ),
+  initRunJobNode(
+    'rearrange', 2100, 400,
+    'Align reads in .post file to references.'
+  ),
+  initDataTankNode(
+    'alignments', 2400, 375,
+    'Chimeric alignment results.',
+    {
+      '.alg file': {
         type: 'file'
       }
     }

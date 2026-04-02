@@ -16,13 +16,6 @@ celery -A flask_app.tasks \
     -b amqp://localhost:5672 \
     --result-backend redis://localhost:6379/0 \
     worker --loglevel=INFO --detach --concurrency 1
-# docker run --rm -d \
-#     -v ./flask_app:/flask_app \
-#     ghcr.io/ljw20180420/rearr:latest \
-#         celery -A flask_app.tasks \
-#             -b amqp://10.0.2.2:5672 \
-#             --result-backend redis://10.0.2.2:6379/0 \
-#             worker --loglevel=INFO --concurrency 1
 
 # port is 8080
 python -m flask_app \
