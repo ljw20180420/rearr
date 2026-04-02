@@ -1,31 +1,27 @@
 #!/usr/bin/env python
 
-import unittest
-import subprocess
 import filecmp
 import os
+import subprocess
+import unittest
 
 
 class TestWorkFlow(unittest.TestCase):
     def setUp(self):
         self.toTestFiles = [
             *[
-                f"test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv{ext}"
-                for ext in [".ref", ".ref.direct"]
-            ],
-            *[
-                f"test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.{tp}.fa{ext}"
+                f"{tp}.fa.{suffix}"
                 for tp in ["target", "pair"]
-                for ext in [
-                    "",
-                    ".1.bt2",
-                    ".2.bt2",
-                    ".3.bt2",
-                    ".4.bt2",
-                    ".rev.1.bt2",
-                    ".rev.2.bt2",
+                for suffix in [
+                    "1.bt2",
+                    "2.bt2",
+                    "3.bt2",
+                    "4.bt2",
+                    "rev.1.bt2",
+                    "rev.2.bt2",
                 ]
             ],
+            "test/test_work_flow/ref.direct",
             "test/test_work_flow/rearr.noDup",
             "test/test_work_flow/rearr.demultiplex",
             "test/test_work_flow/rearr.post",

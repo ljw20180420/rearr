@@ -1,13 +1,6 @@
 {
     "configurations": [
         {
-            "type": "java",
-            "name": "my_SIQ",
-            "request": "launch",
-            "mainClass": "my.my_SIQ",
-            "projectName": "SIQ"
-        },
-        {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",

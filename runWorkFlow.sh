@@ -17,31 +17,7 @@ param1=value1 param2=value2 ... runWorkFlow.sh [options]
 title: runWorkflow.sh
 ---
 flowchart TD
-    PF[(
-        <h1>plasmid_file</h1>
-        <table>
-            <tr>
-                <th>adapter#0040;20bp#0041; + sgRNA#0040;20bp#0041; + scaffold#0040;83/93bp#0041; + query#0040;44bp#0041; + 3bp + RCbarcode#0040;18bp#0041; + RCprimer#0040;21bp#0041;</th>
-            </tr>
-            <tr>
-                <td>...</td>
-            </tr>
-        </table>
-    )] --> GSPFR[getSxPlasmidFileRef.sh]
-    GF[(<h1>genome_file</h1>)] --> GSPFR
-    BI[(<h1>bowtie2index</h1>)] --> GSPFR
-    EXT[(
-        <h1>extentions</h1>
-        <table>
-            <tr>
-                <td>ext1up</td>
-                <td>ext1down</td>
-                <td>ext2up</td>
-                <td>ext2down</td>
-            </tr>
-        </table>
-    )] --> GSPFR
-    GSPFR --> REF[(
+    REF[(
         <h1>reference_file</h1>
         <table>
             <tr>
@@ -63,29 +39,8 @@ flowchart TD
         </table>
     )]
 
-    PF --> SEM[sxExtractMarker.sh]
-    SEM --> MK1[(
-        <h1>stdout</h1>
-        <table>
-            <tr>
-                <th>primer#0040;21bp#0041; + barcode#0040;18bp#0041;</th>
-            </tr>
-            <tr>
-                <td>...</td>
-            </tr>
-        </table>
-    )]
-    SEM --> MK2[(
-        <h1>fd3</h1>
-        <table>
-            <tr>
-                <th>adapter#0040;20bp#0041; + sgRNA#0040;20bp#0041; + scaffold#0040;83/93bp#0041;</th>
-            </tr>
-            <tr>
-                <td>...</td>
-            </tr>
-        </table>
-    )]
+    MK1[(marker1)] --> DM
+    MK2[(marker2)] --> DM
 
     R1[(fastqR1)] --> RD[removeDuplicates.sh]
     R2[(faqstR2)] --> RD
@@ -119,8 +74,6 @@ flowchart TD
             </tr>
         </table>
     )]
-    MK1 --> DM
-    MK2 --> DM
     SCORE --> DM
     DM --> ONTARGET[(
         <h1>demultiplex_file</h1>
@@ -156,7 +109,7 @@ flowchart TD
         </table>
     )]
 
-    ONTARGET --> sxCRAFC[sxCutR2AdapterFilterCumulate.sh] --> QUERY[(
+    ONTARGET --> QUERY[(
         <h1>input_file</h1>
         <table>
             <tr>
@@ -273,33 +226,12 @@ qu=0
 qv=-5
 ```
 For more details, see [core part of rearr][core.md]. If only `refFile` is provided, a default `directionFile=${refFile}.direct` will be created with all `up`. For more details, see [`workFlow.mak`][workFlow.mak.md].
-- The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [core part of rearr][core.md]. The transformation between them is highly dependent on the design of experiment and changes from now and that. For out in-house data, this is done by [`sxCutR2AdapterFilterCumulate.sh`][sxCutR2AdapterFilterCumulate.sh.md] as follows.
-```shell
-makeTarget=query.post \
-minToMapShear=30 \
-./runWorkFlow.sh
-```
-- Our in-house data use plasmids in a `plasmid_file`. We extract demultiplex markers from those plasmids by [`sxExtractMarker.sh`][sxExtractMarker.sh.md].
-```shell
-makeTarget=plasmid_file.target.fa \
-./runWorkFlow.sh
-```
-Besides `plasmid_file.target.fa` used as demutiplex marker for `R2`, another file `plasmid_file.pair.fa` will be generated as well used as demutiplex marker for `R1`.
-- The `plasmid_file` also contain reference sequences (sgRNAs). These references are extract by [`getSxPlasmidFileRef.sh`][getSxPlasmidFileRef.sh.md].
-```shell
-makeTarget=plasmid_file.ref \
-genome=genome_file \
-bowtie2index=bowtie2index_prefix \
-./runWorkFlow.sh
-```
-Our in-house data use hg19.
-- To run the full workflow for our in-house data (our in-house data put fastqR2 before fastqR1),
+- The output of [`demultiplex.sh`][demultiplex.sh.md] does not fit the input of [core part of rearr][core.md]. The transformation between them is highly dependent on the design of experiment and changes from now and that. By default, [`workFlow.mak`][workFlow.mak.md] use the first column of the output of [`demultiplex.sh`][demultiplex.sh.md] as query.
+- To run the full workflow for the test data (the test data put fastqR2 before fastqR1),
 ```shell
 makeTarget=correct_micro_homology_file.alg \
 fastqFiles=fastqR2,fastqR1 \
 markerIndices=pasmid_file.target.fa,pasmid_file.pair.fa \
-genome=genome_file \
-bowtie2index=bowtie2index_prefix \
 refFile=plasmid_file.ref \
 ./runWorkFlow.sh
 ```
@@ -310,29 +242,19 @@ refFile=plasmid_file.ref \
 [removeDuplicates.sh.md]: ./auxilary/removeDuplicates.sh.html
 [demultiplex.sh.md]: ./auxilary/demultiplex.sh.html
 [workFlow.mak.md]: ./runWorkFlow/workFlow.mak.html
-[sxCutR2AdapterFilterCumulate.sh.md]: ./sx/sxCutR2AdapterFilterCumulate.sh.html
-[sxExtractMarker.sh.md]: ./sx/sxExtractMarker.sh.html
-[getSxPlasmidFileRef.sh.md]: ./sx/getSxPlasmidFileRef.sh.html
 
 # Source
 ~~~bash
 # The following parameters should be replaced.
 makeTarget=${makeTarget:-test/test_work_flow/rearr.alg}
 fastqFiles=${fastqFiles:-test/test_work_flow/A2-g1n-3.R2.fq.gz,test/test_work_flow/A2-g1n-3.fq.gz}
-markerIndices=${markerIndices:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.target.fa,test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.pair.fa}
+markerIndices=${markerIndices:-test/test_work_flow/target.fa,test/test_work_flow/pair.fa}
 minScores=${minScores:-30,100}
 
-minToMapShear=${minToMapShear:-30}
-refFile=${refFile:-test/test_work_flow/final_hgsgrna_libb_all_0811_NGG_scaffold_nor_G1.csv.ref}
+refFile=${refFile:-test/test_work_flow/ref}
 directionFile=${directionFile:-"${refFile}.direct"}
-ext1up=${ext1up:-50}
-ext1down=${ext1down:-0}
-ext2up=${ext2up:-10}
-ext2down=${ext2down:-100}
 
 # The following parameters are default in most cases.
-genome=${genome:-"${GENOME}"}
-bowtie2index=${bowtie2index:-"${BOWTIE2INDEX}"}
 s0=${s0:--6}
 s1=${s1:-4}
 s2=${s2:-2}
@@ -356,8 +278,6 @@ make $@ -f "${make_file}" "${makeTarget}" \
     fastqFiles="${fastqFiles}" \
     markerIndices="${markerIndices}" \
     minScores="${minScores}" \
-    genome="${genome}" \
-    bowtie2index="${bowtie2index}" \
     refFile="${refFile}" \
     directionFile="${directionFile}" \
     s0="${s0}" \
@@ -368,8 +288,7 @@ make $@ -f "${make_file}" "${makeTarget}" \
     ru="${ru}" \
     rv="${rv}" \
     qu="${qu}" \
-    qv="${qv}" \
-    minToMapShear="${minToMapShear}"
+    qv="${qv}"
 ~~~
 
 ~~~bash
