@@ -94,9 +94,11 @@ add_header "WorkFlow"
 # update and build docs
 ##########################
 
-pushd docs
-bundle update --bundler
-bundle lock --update
-bundle install
-bundle exec jekyll build
-popd
+build_local() {
+    pushd docs
+    bundle update --bundler
+    bundle lock --update
+    bundle install
+    bundle exec jekyll build
+    popd    
+}
