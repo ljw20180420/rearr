@@ -107,26 +107,28 @@ release_bioconda() {
     popd
 }
 
-# action: github (create new release on github and test\deploy the new release to bioconda), bioconda (test\deploy the least github release to bioconda)
+# action: github (create new release on github), test (test the latest github release for bioconda), deploy (deploy the latest github release to bioconda)
 action=$1
 
-if [ "${action}" = "github" ]
+if [[ "${action}" =~ "github" ]]
 then
     version="$(increase_patch)"
-elif [ "${action}" = "bioconda" ]
-then
-    version="$(git describe --tags --abbrev=0)"
 else
-    echo "unknown action"
-    exit 0
+    version="$(git describe --tags --abbrev=0)"
 fi
-
 pkg="rearr"
 url="https://github.com/ljw20180420/${pkg}/archive/refs/tags/${version}.tar.gz"
 
 unittest
-if [ "${action}" = "github" ]
+if [[ "${action}" =~ "github" ]]
 then
     release_github
 fi
-test_bioconda
+if [[ "${action}" =~ "test" ]]
+then
+    test_bioconda
+fi
+if [[ "${action}" =~ "deploy" ]]
+then
+    release_bioconda
+fi
