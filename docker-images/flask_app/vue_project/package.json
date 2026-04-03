@@ -11,23 +11,23 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@vue-flow/background": "^1.3.2",
-    "@vue-flow/controls": "^1.1.2",
-    "@vue-flow/core": "^1.33.7",
-    "@vue-flow/minimap": "^1.5.0",
-    "axios": "^1.6.8",
-    "build": "^0.1.4",
-    "vue": "^3.4.27",
-    "vue-flow": "^0.3.0",
-    "vue-vite": "^0.0.2"
+    "@vue-flow/background": "*",
+    "@vue-flow/controls": "*",
+    "@vue-flow/core": "*",
+    "@vue-flow/minimap": "*",
+    "axios": "*",
+    "build": "*",
+    "vue": "*",
+    "vue-flow": "*",
+    "vue-vite": "*"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.3.3",
-    "@vitejs/plugin-vue": "^5.0.4",
-    "@vue/eslint-config-prettier": "^8.0.0",
-    "eslint": "^8.49.0",
-    "eslint-plugin-vue": "^9.17.0",
-    "prettier": "^3.0.3",
-    "vite": "^5.2.12"
+    "@rushstack/eslint-patch": "*",
+    "@vitejs/plugin-vue": "*",
+    "@vue/eslint-config-prettier": "*",
+    "eslint": "*",
+    "eslint-plugin-vue": "*",
+    "prettier": "*",
+    "vite": "*"
   }
 }

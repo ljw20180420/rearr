@@ -2,6 +2,8 @@
 
 build_jekyll() {
     pushd jekyll
+    bundle update --bundler
+    bundle lock --update
     bundle install
     bundle exec jekyll build
     popd
@@ -17,6 +19,7 @@ build_shiny() {
 build_vue() {
     pushd flask_app/vue_project
     npm install
+    npm update
     npm run build
     popd
 }
