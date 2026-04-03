@@ -17,9 +17,7 @@
     "@vue-flow/core": "*",
     "@vue-flow/minimap": "*",
     "axios": "*",
-    "build": "*",
-    "vue": "*",
-    "vue-vite": "*"
+    "vue": "*"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "*",
