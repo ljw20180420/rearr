@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "test": "vitest"
   },
   "dependencies": {
     "@vue-flow/background": "*",
@@ -18,7 +19,6 @@
     "axios": "*",
     "build": "*",
     "vue": "*",
-    "vue-flow": "*",
     "vue-vite": "*"
   },
   "devDependencies": {
@@ -28,6 +28,7 @@
     "eslint": "*",
     "eslint-plugin-vue": "*",
     "prettier": "*",
-    "vite": "*"
+    "vite": "*",
+    "vitest": "*"
   }
 }
