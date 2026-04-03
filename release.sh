@@ -73,7 +73,7 @@ test_bioconda() {
 release_bioconda() {
     pushd ${BIOCONDA_RECIPES}
 
-    git checkout -force master
+    git checkout --force master
     # Delete local branch
     git branch -D "update_${pkg}"
     # Delete branch in your fork via the remote named "origin"
