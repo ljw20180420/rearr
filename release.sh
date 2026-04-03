@@ -43,16 +43,17 @@ release_github() {
 
 update_bioconda_meta() {
     local tarball=${url##*/}
-    local escaped_version=$(sed -r 's/\./\\\./g' <<<${version})
+    local num_version=$(sed -r 's/^v//' <<<${version})
+    local escaped_version=$(sed -r 's/\./\\\./g' <<<${num_version})
     local url_with_dynamic_version=$(sed -r 's/'${escaped_version}'/{{ version }}/' <<<${url})
-    if ! [ -f "v${version}.tar.gz" ]
+    if ! [ -f "${version}.tar.gz" ]
     then
         wget $url
     fi
     local sha256=$(sha256sum ${tarball} | cut -d' ' -f1)
 
     sed -r \
-        -e '/^\{% set version = ".*" %\}$/ s/"(.*)"/"'"${version}"'"/' \
+        -e '/^\{% set version = ".*" %\}$/ s/"(.*)"/"'"${num_version}"'"/' \
         -e '/^  url: / s|^(  url: )(.*)$|\1'"${url_with_dynamic_version}"'|' \
         -e '/^  sha256: / s|^(  sha256: )(.*)$|\1'"${sha256}"'|' \
         "deploy/bioconda/meta.yaml.template"
@@ -106,10 +107,26 @@ release_bioconda() {
     popd
 }
 
-version=$(increase_patch)
+# action: github (create new release on github and test\deploy the new release to bioconda), bioconda (test\deploy the least github release to bioconda)
+action=$1
+
+if [ "${action}" = "github" ]
+then
+    version="$(increase_patch)"
+elif [ "${action}" = "bioconda" ]
+then
+    version="$(git describe --tags --abbrev=0)"
+else
+    echo "unknown action"
+    exit 0
+fi
+
 pkg="rearr"
 url="https://github.com/ljw20180420/${pkg}/archive/refs/tags/${version}.tar.gz"
 
 unittest
-release_github
+if [ "${action}" = "github" ]
+then
+    release_github
+fi
 test_bioconda

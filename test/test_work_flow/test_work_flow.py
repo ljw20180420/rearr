@@ -29,7 +29,7 @@ class TestWorkFlow(unittest.TestCase):
         ]
 
     def test_work_flow(self):
-        subprocess.run(f"""./runWorkFlow.sh -s""", shell=True, executable="/bin/bash")
+        subprocess.run(f"""runWorkFlow.sh -s""", shell=True, executable="/bin/bash")
 
         for toTestFile in self.toTestFiles:
             self.assertTrue(filecmp.cmp(toTestFile, f"{toTestFile}.bak", shallow=False))
