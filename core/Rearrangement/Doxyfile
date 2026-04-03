@@ -63,12 +63,6 @@ PROJECT_BRIEF          = "Chimeric sequence aligner"
 
 PROJECT_LOGO           =
 
-# With the PROJECT_ICON tag one can specify an icon that is included in the tabs
-# when the HTML document is shown. Doxygen will copy the logo to the output
-# directory.
-
-PROJECT_ICON           =
-
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
 # entered, it will be relative to the location where Doxygen was started. If
@@ -833,22 +827,6 @@ LAYOUT_FILE            =
 
 CITE_BIB_FILES         =
 
-# The EXTERNAL_TOOL_PATH tag can be used to extend the search path (PATH
-# environment variable) so that external tools such as latex and gs can be
-# found.
-# Note: Directories specified with EXTERNAL_TOOL_PATH are added in front of the
-# path already specified by the PATH variable, and are added in the order
-# specified.
-# Note: This option is particularly useful for macOS version 14 (Sonoma) and
-# higher, when running Doxygen from Doxywizard, because in this case any user-
-# defined changes to the PATH are ignored. A typical example on macOS is to set
-# EXTERNAL_TOOL_PATH = /Library/TeX/texbin /usr/local/bin
-# together with the standard path, the full search path used by doxygen when
-# launching external tools will then become
-# PATH=/Library/TeX/texbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-
-EXTERNAL_TOOL_PATH     =
-
 #---------------------------------------------------------------------------
 # Configuration options related to warning and progress messages
 #---------------------------------------------------------------------------
@@ -1278,46 +1256,6 @@ USE_HTAGS              = NO
 # The default value is: YES.
 
 VERBATIM_HEADERS       = YES
-
-# If the CLANG_ASSISTED_PARSING tag is set to YES then Doxygen will use the
-# clang parser (see:
-# http://clang.llvm.org/) for more accurate parsing at the cost of reduced
-# performance. This can be particularly helpful with template rich C++ code for
-# which Doxygen's built-in parser lacks the necessary type information.
-# Note: The availability of this option depends on whether or not Doxygen was
-# generated with the -Duse_libclang=ON option for CMake.
-# The default value is: NO.
-
-CLANG_ASSISTED_PARSING = NO
-
-# If the CLANG_ASSISTED_PARSING tag is set to YES and the CLANG_ADD_INC_PATHS
-# tag is set to YES then Doxygen will add the directory of each input to the
-# include path.
-# The default value is: YES.
-# This tag requires that the tag CLANG_ASSISTED_PARSING is set to YES.
-
-CLANG_ADD_INC_PATHS    = YES
-
-# If clang assisted parsing is enabled you can provide the compiler with command
-# line options that you would normally use when invoking the compiler. Note that
-# the include paths will already be set by Doxygen for the files and directories
-# specified with INPUT and INCLUDE_PATH.
-# This tag requires that the tag CLANG_ASSISTED_PARSING is set to YES.
-
-CLANG_OPTIONS          =
-
-# If clang assisted parsing is enabled you can provide the clang parser with the
-# path to the directory containing a file called compile_commands.json. This
-# file is the compilation database (see:
-# http://clang.llvm.org/docs/HowToSetupToolingForLLVM.html) containing the
-# options used when the source files were built. This is equivalent to
-# specifying the -p option to a clang tool, such as clang-check. These options
-# will then be passed to the parser. Any options specified with CLANG_OPTIONS
-# will be added as well.
-# Note: The availability of this option depends on whether or not Doxygen was
-# generated with the -Duse_libclang=ON option for CMake.
-
-CLANG_DATABASE_PATH    =
 
 #---------------------------------------------------------------------------
 # Configuration options related to the alphabetical class index
