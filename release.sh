@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# change to the dir of the script
+cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+unittest() {
+    python -m unittest test.test_suite_all
+}
+
 increase_patch() {
     git describe --tags --abbrev=0 |
     awk -F "." '
@@ -27,8 +34,82 @@ increase_major() {
     '
 }
 
+release_github() {
+    git commit -am "release ${version}"
+    git push
+    gh release create "${version}" --notes "release ${version}"
+    git pull
+}
+
+update_bioconda_meta() {
+    local tarball=${url##*/}
+    local escaped_version=$(sed -r 's/\./\\\./g' <<<${version})
+    local url_with_dynamic_version=$(sed -r 's/'${escaped_version}'/{{ version }}/' <<<${url})
+    if ! [ -f "v${version}.tar.gz" ]
+    then
+        wget $url
+    fi
+    local sha256=$(sha256sum ${tarball} | cut -d' ' -f1)
+
+    sed -r \
+        -e '/^\{% set version = ".*" %\}$/ s/"(.*)"/"'"${version}"'"/' \
+        -e '/^  url: / s|^(  url: )(.*)$|\1'"${url_with_dynamic_version}"'|' \
+        -e '/^  sha256: / s|^(  sha256: )(.*)$|\1'"${sha256}"'|' \
+        "deploy/bioconda/meta.yaml.template"
+}
+
+test_bioconda() {
+    mkdir -p ${BIOCONDA_RECIPES}/recipes/${pkg}
+    # Update files
+    cp LICENSE.md ${BIOCONDA_RECIPES}/recipes/${pkg}/
+    update_bioconda_meta \
+        > ${BIOCONDA_RECIPES}/recipes/${pkg}/meta.yaml
+    pushd ${BIOCONDA_RECIPES}
+    conda build recipes/${pkg}
+    popd
+}
+
+release_bioconda() {
+    pushd ${BIOCONDA_RECIPES}
+
+    git checkout -force master
+    # Delete local branch
+    git branch -D "update_${pkg}"
+    # Delete branch in your fork via the remote named "origin"
+    git push origin -d "update_${pkg}"
+
+    # exit on error
+    set -e
+
+    # Make sure our master is up to date with Bioconda
+    git pull upstream master
+    git push origin master
+
+    # Create and checkout a new branch
+    git checkout -b "update_${pkg}"
+
+    popd
+
+    # Update files
+    cp LICENSE.md ${BIOCONDA_RECIPES}/recipes/${pkg}/
+    update_bioconda_meta \
+        > ${BIOCONDA_RECIPES}/recipes/${pkg}/meta.yaml
+    rm ${BIOCONDA_RECIPES}/recipes/${pkg}/run_test.sh
+
+    pushd ${BIOCONDA_RECIPES}
+
+    git commit -am "Update ${pkg}"
+
+    git push --set-upstream origin "update_${pkg}"
+
+    gh pr create --repo bioconda/bioconda-recipes --fill --template PULL_REQUEST_TEMPLATE.md
+    popd
+}
+
 version=$(increase_patch)
-git commit -am "release ${version}"
-git push
-gh release create "${version}" --notes "release ${version}"
-git pull
+pkg="rearr"
+url="https://github.com/ljw20180420/${pkg}/archive/refs/tags/${version}.tar.gz"
+
+unittest
+release_github
+test_bioconda

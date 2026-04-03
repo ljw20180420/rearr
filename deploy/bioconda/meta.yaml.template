@@ -1,0 +1,54 @@
+{% set name = "rearr" %}
+{% set version = "place_holder" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: place_holder
+  sha256: place_holder
+
+build:
+  run_exports:
+    - {{ pin_subpackage(name, max_pin="x") }}
+  script:
+    - prefix=${PREFIX} ./install.sh
+  number: 0
+  skip: True # [not linux]
+
+requirements:
+  build:
+    - make
+    - cmake
+    - {{ compiler('cxx') }}
+  run:
+    - make
+    - file
+    - sed
+    - gawk
+    - python
+    - numpy
+    - samtools
+    - bowtie2
+
+test:
+  commands:
+    - python -m unittest test.test_suite_all
+  source_files:
+    - test
+
+about:
+  home: https://github.com/ljw20180420/rearr
+  summary: 'Chimeric alignment of CRISPR-seq'
+  description: |
+    rearr is a package to demultiplex and align CRISPR-seq data.
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE.md
+  doc_url: https://ljw20180420.github.io/rearr
+  dev_url: https://github.com/ljw20180420/rearr
+
+extra:
+  recipe-maintainers:
+    - ljw20180420

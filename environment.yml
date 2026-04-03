@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - conda-forge::conda-build
   - conda-forge::make
   - conda-forge::cmake
   - conda-forge::file
