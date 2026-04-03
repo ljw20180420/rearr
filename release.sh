@@ -95,7 +95,6 @@ release_bioconda() {
     cp LICENSE.md ${BIOCONDA_RECIPES}/recipes/${pkg}/
     update_bioconda_meta \
         > ${BIOCONDA_RECIPES}/recipes/${pkg}/meta.yaml
-    rm ${BIOCONDA_RECIPES}/recipes/${pkg}/run_test.sh
 
     pushd ${BIOCONDA_RECIPES}
 
