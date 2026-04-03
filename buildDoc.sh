@@ -89,3 +89,14 @@ add_header "RunWorkFlow" \
 wrap_script make \
     < workFlow.mak |
 add_header "WorkFlow"
+
+##########################
+# update and build docs
+##########################
+
+pushd docs
+bundle update --bundler
+bundle lock --update
+bundle install
+bundle exec jekyll build
+popd
