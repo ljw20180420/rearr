@@ -85,7 +85,8 @@ A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 
 # TODO
 ```[tasklist]
-- [ ] Add homepage for qiangwulab.sjtu.edu.cn.
+- [ ] deploy to 交我算生信平台
+- [ ] deploy to galaxy
 - [ ] improve BWT-SW and apply it to the sgRNA library demultiplex and genome-wide CRISPR
     - [ ] regex DFA and NFA
     - [ ] SIMD
