@@ -8,6 +8,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
   build-and-push-image:
@@ -16,26 +19,62 @@ jobs:
     permissions:
       contents: read
       packages: write
+      attestations: write
+      id-token: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
       - name: Log in to the Container registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Build flask app
-        run: docker build -t ghcr.io/ljw20180420/flask_app:latest -f docker-images/flask_app.df .
+      - name: Extract flask_app metadata (tags, labels) for Docker
+        id: flask_app_meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/flask_app
+            
+      - name: Build and push flask_app Docker image
+        id: push_flask_app
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker-images/flask_app.df
+          push: true
+          tags: ${{ steps.flask_app_meta.outputs.tags }}
+          labels: ${{ steps.flask_app_meta.outputs.labels }}
 
-      - name: Push flask app
-        run: docker push ghcr.io/ljw20180420/flask_app:latest
+      - name: Generate artifact attestation for flask_app
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ github.repository_owner }}/flask_app
+          subject-digest: ${{ steps.push_flask_app.outputs.digest }}
+          push-to-registry: true
 
-      - name: Build rearr
-        run: docker build -t ghcr.io/ljw20180420/rearr:latest -f docker-images/rearr.df .
+      - name: Extract rearr metadata (tags, labels) for Docker
+        id: rearr_meta
+        uses: docker/metadata-action@v6
+        with:
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/rearr
 
-      - name: Push rearr
-        run: docker push ghcr.io/ljw20180420/rearr:latest
+      - name: Build and push rearr Docker image
+        id: push_rearr
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker-images/rearr.df
+          push: true
+          tags: ${{ steps.rearr_meta.outputs.tags }}
+          labels: ${{ steps.rearr_meta.outputs.labels }}
+
+      - name: Generate artifact attestation for rearr
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ github.repository_owner }}/rearr
+          subject-digest: ${{ steps.push_rearr.outputs.digest }}
+          push-to-registry: true
