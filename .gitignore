@@ -13,3 +13,6 @@
 /default.nix
 /result
 /docker-images/docker_mounts
+/test/get_started/*
+!/test/get_started/lib.sh
+!/test/get_started/test.sh
