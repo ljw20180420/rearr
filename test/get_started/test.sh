@@ -5,7 +5,7 @@ cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 . lib.sh
 
-# generate_seq_groupby_marker 3> test.fa 4> test.ref | make_fastq > test.fq
+generate_seq_groupby_marker 3> test.fa 4> test.ref | make_fastq > test.fq
 
 makeTarget="test.alg" \
 fastqFiles="test.fq" \
