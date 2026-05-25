@@ -53,6 +53,15 @@ declare -A name2link
 name_to_link
 
 ########################
+# example
+########################
+
+mkdir -p docs/assets/example
+cp example/example.fa docs/assets/example/example.fa
+cp example/example.ref docs/assets/example/example.ref
+cp example/example.fq docs/assets/example/example.fq
+
+########################
 # core
 ########################
 

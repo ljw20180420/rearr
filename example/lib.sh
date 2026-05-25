@@ -44,3 +44,8 @@ generate_seq_groupby_marker() {
         done
     done
 }
+
+# 切换运行路径到脚本路径
+cd $( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+generate_seq_groupby_marker 3> example.fa 4> example.ref | make_fastq > example.fq

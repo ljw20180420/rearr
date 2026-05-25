@@ -13,6 +13,9 @@
 /default.nix
 /result
 /docker-images/docker_mounts
-/test/get_started/*
-!/test/get_started/lib.sh
-!/test/get_started/test.sh
+/example/*
+!/example/lib.sh
+!/example/test.sh
+!/example/example.fa
+!/example/example.ref
+!/example/example.fq
