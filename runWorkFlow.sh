@@ -274,7 +274,7 @@ else
     make_file="${prefix}/share/rearr/workFlow.mak"
 fi
 
-make $@ -f "${make_file}" "${makeTarget}" \
+make $@ -d -f "${make_file}" "${makeTarget}" \
     fastqFiles="${fastqFiles}" \
     markerIndices="${markerIndices}" \
     minScores="${minScores}" \

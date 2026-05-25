@@ -9,7 +9,7 @@ outputDir = $(dir $(word 1, $(subst $(comma), ,$(fastqFiles))))
 
 RN = $(words $(subst $(comma), ,$(fastqFiles)))
 
-$(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
+%.noDup: $(subst $(comma), ,$(fastqFiles))
 	removeDuplicates.sh $^ >$@
 
 %.1.bt2 %.2.bt2 %.3.bt2 %.4.bt2 %.rev.1.bt2 %.rev.2.bt2: %
@@ -27,4 +27,4 @@ $(outputDir)rearr.noDup: $(subst $(comma), ,$(fastqFiles))
 %.post: %.demultiplex
 	cut -f1,$$(( $(RN) + 1 ))-$$(( $(RN) + 2 )) $< >$@
 
-.PRECIOUS: $(outputDir)rearr.noDup %.1.bt2 %.demultiplex %.alg %.ref %.direct %.post
+.PRECIOUS: %.noDup %.1.bt2 %.demultiplex %.alg %.direct %.post
