@@ -109,5 +109,5 @@ build_local() {
     bundle lock --update
     bundle install
     bundle exec jekyll build
-    popd    
+    popd
 }
