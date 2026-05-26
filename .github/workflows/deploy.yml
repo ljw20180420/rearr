@@ -60,7 +60,7 @@ jobs:
         id: rearr_meta
         uses: docker/metadata-action@v6
         with:
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/rearr
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/rearr
 
       - name: Build and push rearr Docker image
         id: push_rearr
