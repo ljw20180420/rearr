@@ -59,18 +59,7 @@ update_bioconda_meta() {
         "deploy/bioconda/meta.yaml.template"
 }
 
-test_bioconda() {
-    mkdir -p ${BIOCONDA_RECIPES}/recipes/${pkg}
-    # Update files
-    cp LICENSE.md ${BIOCONDA_RECIPES}/recipes/${pkg}/
-    update_bioconda_meta \
-        > ${BIOCONDA_RECIPES}/recipes/${pkg}/meta.yaml
-    pushd ${BIOCONDA_RECIPES}
-    conda build recipes/${pkg}
-    popd
-}
-
-release_bioconda() {
+sync_bioconda() {
     pushd ${BIOCONDA_RECIPES}
 
     git checkout --force master
@@ -90,23 +79,49 @@ release_bioconda() {
     git checkout -b "update_${pkg}"
 
     popd
+}
+
+update_branch() {
+    pushd ${BIOCONDA_RECIPES}
+    git switch "update_${pkg}"
+    popd
 
     # Update files
+    mkdir -p ${BIOCONDA_RECIPES}/recipes/${pkg}
     cp LICENSE.md ${BIOCONDA_RECIPES}/recipes/${pkg}/
     update_bioconda_meta \
         > ${BIOCONDA_RECIPES}/recipes/${pkg}/meta.yaml
+}
+
+test_bioconda() {
+    update_branch
 
     pushd ${BIOCONDA_RECIPES}
+    conda run -p ${BIOCONDA_RECIPES}/.conda bioconda-utils lint \
+        --packages rearr \
+        --cache zcache \
+        --loglevel debug \
+        --full-report
+    conda run -p ${BIOCONDA_RECIPES}/.conda bioconda-utils build \
+        --packages rearr \
+        --loglevel debug
+    popd
+}
 
+release_bioconda() {
+    update_branch
+
+    pushd ${BIOCONDA_RECIPES}
     git commit -am "Update ${pkg}"
-
     git push --set-upstream origin "update_${pkg}"
-
     gh pr create --repo bioconda/bioconda-recipes --fill --template PULL_REQUEST_TEMPLATE.md
     popd
 }
 
-# action: github (create new release on github), test (test the latest github release for bioconda), deploy (deploy the latest github release to bioconda)
+# action: github (create new release on github)
+# action: sync (sync the bioconda upstream to origin)
+# action: test (test the latest github release for bioconda)
+# action: deploy (deploy the latest github release to bioconda)
 action=$1
 
 if [[ "${action}" =~ "github" ]]
@@ -122,6 +137,10 @@ unittest
 if [[ "${action}" =~ "github" ]]
 then
     release_github
+fi
+if [[ "${action}" =~ "github" ]]
+then
+    sync_bioconda
 fi
 if [[ "${action}" =~ "test" ]]
 then
