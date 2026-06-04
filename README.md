@@ -1,3 +1,7 @@
+# Documentation
+
+A complete [doc](https://ljw20180420.github.io/rearr/) is available. See the [Get started](https://ljw20180420.github.io/rearr/get_started.html) part of the [doc](https://ljw20180420.github.io/rearr/) to be familiar with `rearr` quickly.
+
 # Accessibility
 
 ## Conda
@@ -78,10 +82,6 @@ flowchart TD
 ```
 
 A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
-
-# Documentation
-
-[Here](https://ljw20180420.github.io/rearr/).
 
 # TODO
 ```[tasklist]
