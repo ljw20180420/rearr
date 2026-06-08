@@ -48,7 +48,7 @@ This simple example of double cleavage protocols is actually the large-deletion 
 
 To run the example, install rearr from conda.
 ```shell
-$ conda install conda-forge::rearr
+$ conda install bioconda::rearr
 ```
 
 Then execute
