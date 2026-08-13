@@ -5,6 +5,7 @@
 /paper/bench.tsv
 /paper/complexity.tsv
 /paper/tools
+/paper/old_bench
 /core/Rearrangement/build/
 **/__pycache__/
 /manim/media
