@@ -1,0 +1,22 @@
+[project]
+name = "rearr"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ljw", email = "ljw2017@sjtu.edu.cn" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "celery[redis]>=5.6.3",
+    "flask>=3.1.3",
+    "numpy>=2.5.4",
+    "waitress>=3.0.2",
+]
+
+[project.scripts]
+rearr = "rearr:main"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
