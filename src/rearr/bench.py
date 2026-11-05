@@ -1,5 +1,6 @@
 import os
 import pathlib
+import re
 import tempfile
 
 import Bio
@@ -83,11 +84,33 @@ def cigar2coor(cigar):
     return refcoor, seqcoor
 
 
+class RearrRQposParser:
+    def __init__(self) -> None:
+        self.lower_pattern = re.compile(r"[acgtn]")
+        self.upper_pattern = re.compile(r"[ACGTN]")
+        self.mid1_pattern = re.compile(r"[acgtn]-*[acgtn]")
+        self.qend1_pattern = re.compile(r"[ACGTN]-*$")
+
+    def __call__(self, refline: str, queryline: str) -> tuple[int, int, int, int]:
+        upos = self.lower_pattern.search(refline).start()
+        mid1 = self.mid1_pattern.search(refline, pos=upos + 1).start() + 1
+        qstart1 = self.upper_pattern.search(queryline, pos=upos).start()
+        qend1 = self.qend1_pattern.search(queryline[:mid1], pos=qstart1 + 1).start() + 1
+        mid2 = self.lower_pattern.search(refline, pos=mid1).start()
+        qstart2 = self.upper_pattern.search(queryline, pos=mid2).start()
+        rpos1 = len(refline[:qend1].replace("-", ""))
+        qpos1 = len(queryline[:qend1].replace("-", ""))
+        rpos2 = len(refline[mid2:qstart2].replace("-", ""))
+        qpos2 = len(queryline[:qstart2].replace("-", ""))
+
+        return rpos1, rpos2, qpos1, qpos2
+
+
 def bench_rearr(
     ref_file: os.PathLike,
     edit_file: os.PathLike,
     query_ratio: float,
-    alg_file: os.PathLike,
+    predict_file: os.PathLike,
 ) -> tuple[float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
@@ -106,8 +129,37 @@ def bench_rearr(
             os.fspath(td / "temp.time"),
             os.fspath(td / "temp.ref"),
             os.fspath(td / "temp.query"),
-            os.fspath(alg_file),
+            os.fspath(td / "temp.alg"),
         )
+
+        alg_df = pd.DataFrame(
+            pd.read_csv(td / "temp.alg", header=None).values.reshape(-1, 3),
+            columns=["header", "refline", "queryline"],
+        )
+        alg_df = alg_df.assign(
+            idx=lambda df: (
+                df["header"].str.split("\t", expand=True)[0].astype({0: int}) - 1
+            )
+        )
+        rearr_rqpos_parser = RearrRQposParser()
+        rpos1s = []
+        rpos2s = []
+        qpos1s = []
+        qpos2s = []
+        for refline, queryline in zip(alg_df["refline"], alg_df["queryline"]):
+            rpos1, rpos2, qpos1, qpos2 = rearr_rqpos_parser(refline, queryline)
+            rpos1s.append(rpos1)
+            rpos2s.append(rpos2)
+            qpos1s.append(qpos1)
+            qpos2s.append(qpos2)
+
+        alg_df.assign(
+            rpos1=rpos1s,
+            rpos2=rpos2s,
+            qpos1=qpos1s,
+            qpos2=qpos2s,
+        )[["idx", "rpos1", "rpos2", "qpos1", "qpos2"]].to_csv(predict_file, index=False)
+
         linux_df = pd.read_csv(
             td / "temp.linux", names=["real time", "user time", "system time", "RSS"]
         )

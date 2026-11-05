@@ -70,7 +70,7 @@ def generate_complexity_edit(cfg: dict) -> None:
 
 
 def bench_complexity_rearr(cfg: dict) -> None:
-    (cfg["output_dir"] / "alg").mkdir(exist_ok=True, parents=True)
+    (cfg["output_dir"] / "predict").mkdir(exist_ok=True, parents=True)
     with open(cfg["output_dir"] / "bench.csv", "w") as fd:
         fd.write(
             "mode,ref_len,error_rate,total_time,preprocess_time,align_time,DP_time,backtrack_time,real_time,user_time,system_time,RSS\n"
@@ -96,9 +96,9 @@ def bench_complexity_rearr(cfg: dict) -> None:
                         / "edit"
                         / f"{mode}_{ref_len}_{error_rate}.csv",
                         query_ratio=cfg["query_ratio"],
-                        alg_file=cfg["output_dir"]
-                        / "alg"
-                        / f"{mode}_{ref_len}_{error_rate}.alg",
+                        predict_file=cfg["output_dir"]
+                        / "predict"
+                        / f"{mode}_{ref_len}_{error_rate}.predict",
                     )
                     fd.write(
                         f"{mode},{ref_len},{error_rate},{total_time},{preprocess_time},{align_time},{DP_time},{backtrack_time},{real_time},{user_time},{system_time},{RSS}\n"

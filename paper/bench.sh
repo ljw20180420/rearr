@@ -137,33 +137,52 @@ printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" mo
 for mode in single; do
 	for ref_len in 100; do
 		for probability in 0.01; do
-			title "RESSO"
-			mkdir -p bench/RESSO
-			to_fastq \
+			title "rearr"
+			mkdir -p bench/rearr
+			# time is a shell keyword, explicitly specify /bin/time to use the time executable
+			/bin/time -f '%e\t%U\t%S\t%M' -o bench/rearr/time.linux \
+				../core/Rearrangement/build/rearrangement \
 				<bench/query.post \
-				>bench/RESSO/query.fq
-			/bin/time -f '%e\t%U\t%S\t%M' -o bench/RESSO/time.linux \
-				CRISPResso \
-				-r1 bench/RESSO/query.fq \
-				-a $(get_ref <bench/ref.ref) \
-				-g $(get_sgRNA <bench/ref.ref) \
-				-o bench/RESSO \
-				-amas 0
-			unzip -q -o \
-				$(find bench/RESSO -name "*.zip") \
-				-d bench/RESSO
-			seq -f "seq%g" $query_per_ref |
-				paste - <(cut -f1 bench/query.post) \
-					>bench/RESSO/sq_file
-			utils/ARRANGE_RESULTS.py < \
-			bench/RESSO/Alleles_frequency_table.txt \
-				CRISPResso \
-				$(cut -f3 bench/ref.ref) \
-				$(cut -f4 bench/ref.ref) |
-				query_to_seq bench/RESSO/sq_file |
-				opt_indel |
-				row_print RESSO $(cat bench/RESSO/time.linux) \
+				3<bench/ref.ref \
+				>bench/rearr/query.alg \
+				2>/dev/null
+			paste \
+				<(seq -f "seq%g" $query_per_ref) \
+				bench/truth.tsv \
+				<(parse_rqpos <bench/rearr/query.alg) |
+				utils/compare_indel.py \
+					$(cut -f2 bench/ref.ref) \
+					$(cut -f5 bench/ref.ref) |
+				row_print rearr $(cat bench/rearr/time.linux) \
 					>>bench.tsv
+
+			# title "RESSO"
+			# mkdir -p bench/RESSO
+			# to_fastq \
+			#     < bench/query.post \
+			#     > bench/RESSO/query.fq
+			# /bin/time -f '%e\t%U\t%S\t%M' -o bench/RESSO/time.linux \
+			#     CRISPResso \
+			#         -r1 bench/RESSO/query.fq \
+			#         -a $(get_ref < bench/ref.ref) \
+			#         -g $(get_sgRNA < bench/ref.ref) \
+			#         -o bench/RESSO \
+			#         -amas 0
+			# unzip -q -o \
+			#     $(find bench/RESSO -name "*.zip") \
+			#     -d bench/RESSO
+			# seq -f "seq%g" $query_per_ref |
+			# paste - <(cut -f1 bench/query.post) \
+			#     > bench/RESSO/sq_file
+			# utils/ARRANGE_RESULTS.py \
+			#     < bench/RESSO/Alleles_frequency_table.txt \
+			#     CRISPResso \
+			#     $(cut -f3 bench/ref.ref) \
+			#     $(cut -f4 bench/ref.ref) |
+			#     query_to_seq bench/RESSO/sq_file |
+			#     opt_indel |
+			#     row_print RESSO $(cat bench/RESSO/time.linux) \
+			#         >> bench.tsv
 
 			# title "AMP"
 			# mkdir -p bench/AMP
