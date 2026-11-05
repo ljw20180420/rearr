@@ -70,55 +70,62 @@ def generate_complexity_edit(cfg: dict) -> None:
 
 
 def bench_complexity_rearr(cfg: dict) -> None:
-    for mode in cfg["modes"]:
-        for ref_len in cfg["ref_lens"]:
-            for error_rate in cfg["error_rates"]:
-                (cfg["output_dir"] / "complexity" / "result").mkdir(
-                    exist_ok=True, parents=True
-                )
-                bench_rearr(
-                    ref_file=cfg["output_dir"] / "ref" / f"{mode}_{ref_len}.csv",
-                    edit_file=cfg["output_dir"]
-                    / "edit"
-                    / f"{mode}_{ref_len}_{error_rate}.csv",
-                    query_ratio=cfg["query_ratio"],
-                    linux_file=cfg["output_dir"]
-                    / "complexity"
-                    / "result"
-                    / f"{mode}_{ref_len}_{error_rate}.linux",
-                    time_file=cfg["output_dir"]
-                    / "complexity"
-                    / "result"
-                    / f"{mode}_{ref_len}_{error_rate}.time",
-                    alg_file=cfg["output_dir"]
-                    / "complexity"
-                    / "result"
-                    / f"{mode}_{ref_len}_{error_rate}.alg",
-                )
-
-
-def collect_complexity_rearr(cfg: dict) -> None:
-    pass
+    (cfg["output_dir"] / "alg").mkdir(exist_ok=True, parents=True)
+    with open(cfg["output_dir"] / "bench.csv", "w") as fd:
+        fd.write(
+            "mode,ref_len,error_rate,total_time,preprocess_time,align_time,DP_time,backtrack_time,real_time,user_time,system_time,RSS\n"
+        )
+        fd.flush()
+        for mode in cfg["modes"]:
+            for ref_len in cfg["ref_lens"]:
+                for error_rate in cfg["error_rates"]:
+                    print(mode, ref_len, error_rate)
+                    (
+                        total_time,
+                        preprocess_time,
+                        align_time,
+                        DP_time,
+                        backtrack_time,
+                        real_time,
+                        user_time,
+                        system_time,
+                        RSS,
+                    ) = bench_rearr(
+                        ref_file=cfg["output_dir"] / "ref" / f"{mode}_{ref_len}.csv",
+                        edit_file=cfg["output_dir"]
+                        / "edit"
+                        / f"{mode}_{ref_len}_{error_rate}.csv",
+                        query_ratio=cfg["query_ratio"],
+                        alg_file=cfg["output_dir"]
+                        / "alg"
+                        / f"{mode}_{ref_len}_{error_rate}.alg",
+                    )
+                    fd.write(
+                        f"{mode},{ref_len},{error_rate},{total_time},{preprocess_time},{align_time},{DP_time},{backtrack_time},{real_time},{user_time},{system_time},{RSS}\n"
+                    )
+                    fd.flush()
 
 
 def draw_complexity_rearr(cfg: dict) -> None:
-    (cfg["output_dir"] / "draw").mkdir(exist_os=True, parents=True)
-    df = pd.read_csv(cfg["output_dir"] / "draw" / "collect.csv", header=0)
-    for y in [
-        "preprocess time",
-        "total time",
-        "align time",
-        "DP time",
-        "backtrack time",
-    ]:
-        fig = px.scatter(
-            df,
-            x="reference length",
-            y=y,
-            color="error_rate",
-            mode="line",
-            log_x=True,
-            log_y=True,
-        )
-        fig.update_yaxes(scaleanchor="x", scaleratio=1)
-        fig.write_image(cfg["output_dir"] / "draw" / f"{y}.pdf")
+    (cfg["output_dir"] / "draw").mkdir(exist_ok=True, parents=True)
+    df = pd.read_csv(cfg["output_dir"] / "bench.csv", header=0)
+    for mode in cfg["modes"]:
+        df_slice = df.query("mode == @mode").reset_index(drop=True)
+        for y in [
+            "total_time",
+            "preprocess_time",
+            "align_time",
+            "DP_time",
+            "backtrack_time",
+        ]:
+            fig = px.line(
+                df_slice,
+                x="ref_len",
+                y=y,
+                color="error_rate",
+                log_x=True,
+                log_y=True,
+            )
+            fig.update_yaxes(scaleanchor="x", scaleratio=1)
+            fig.update_traces(line={"width": 0.5})
+            fig.write_image(cfg["output_dir"] / "draw" / f"{mode}_{y}.pdf")

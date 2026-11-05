@@ -21,4 +21,14 @@ def complexity_config():
 
 
 def sim_config():
-    pass
+    return {
+        "output_dir": pathlib.Path(os.environ["HOME"]) / "sde1" / "rearr" / "sim",
+        "modes": ["single", "double"],
+        "ref_lens": [100, 200, 300, 400, 500],
+        "error_rates": [0.01, 0.02, 0.03, 0.04, 0.05],
+        "query_ratio": 0.5,
+        "query_per_ref": 100,
+        "max_align_pos_shift_ratio": 0.05,
+        "max_random_insertion_length": 10,
+        "seed": 63036,
+    }
