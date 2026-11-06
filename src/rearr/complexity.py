@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
-from .bench import bench_rearr
+from .bench import bench_rearr_full
 from .random import generate_edit, generate_ref
 
 
@@ -73,7 +73,7 @@ def bench_complexity_rearr(cfg: dict) -> None:
     (cfg["output_dir"] / "predict").mkdir(exist_ok=True, parents=True)
     with open(cfg["output_dir"] / "bench.csv", "w") as fd:
         fd.write(
-            "mode,ref_len,error_rate,total_time,preprocess_time,align_time,DP_time,backtrack_time,real_time,user_time,system_time,RSS\n"
+            "mode,ref_len,error_rate,total_time,preprocess_time,align_time,DP_time,backtrack_time,wall_time,memory\n"
         )
         fd.flush()
         for mode in cfg["modes"]:
@@ -86,11 +86,9 @@ def bench_complexity_rearr(cfg: dict) -> None:
                         align_time,
                         DP_time,
                         backtrack_time,
-                        real_time,
-                        user_time,
-                        system_time,
-                        RSS,
-                    ) = bench_rearr(
+                        wall_time,
+                        memory,
+                    ) = bench_rearr_full(
                         ref_file=cfg["output_dir"] / "ref" / f"{mode}_{ref_len}.csv",
                         edit_file=cfg["output_dir"]
                         / "edit"
@@ -101,7 +99,7 @@ def bench_complexity_rearr(cfg: dict) -> None:
                         / f"{mode}_{ref_len}_{error_rate}.predict",
                     )
                     fd.write(
-                        f"{mode},{ref_len},{error_rate},{total_time},{preprocess_time},{align_time},{DP_time},{backtrack_time},{real_time},{user_time},{system_time},{RSS}\n"
+                        f"{mode},{ref_len},{error_rate},{total_time},{preprocess_time},{align_time},{DP_time},{backtrack_time},{wall_time},{memory}\n"
                     )
                     fd.flush()
 

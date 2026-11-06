@@ -137,95 +137,48 @@ printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" mo
 for mode in single; do
 	for ref_len in 100; do
 		for probability in 0.01; do
-			title "rearr"
-			mkdir -p bench/rearr
-			# time is a shell keyword, explicitly specify /bin/time to use the time executable
-			/bin/time -f '%e\t%U\t%S\t%M' -o bench/rearr/time.linux \
-				../core/Rearrangement/build/rearrangement \
-				<bench/query.post \
-				3<bench/ref.ref \
-				>bench/rearr/query.alg \
-				2>/dev/null
-			paste \
-				<(seq -f "seq%g" $query_per_ref) \
-				bench/truth.tsv \
-				<(parse_rqpos <bench/rearr/query.alg) |
-				utils/compare_indel.py \
-					$(cut -f2 bench/ref.ref) \
-					$(cut -f5 bench/ref.ref) |
-				row_print rearr $(cat bench/rearr/time.linux) \
+			title "AMP"
+			mkdir -p bench/AMP
+			amplicon=$(get_amplicon <bench/ref.ref)
+			primer=$(head -c6 <<<$amplicon | tr 'acgtn' 'ACGTN')
+			to_fastq \
+				<bench/query.post |
+				sed "2~4{s/^/$primer/}; 4~4{s/^/~~~~~~/}" \
+					>bench/AMP/query.fq
+			printf "ID,Barcode,Forward_Reads,Reverse_Reads,Group,Control,guideRNA,Forward_Primer,Reverse_Primer,Direction,Amplicon,Donor\n" \
+				>bench/AMP/config.csv
+			printf "ID_1,barcode_1,query.fq,,group_1,0,%s,%s,,0,%s," \
+				$(get_sgRNA <bench/ref.ref) \
+				$primer \
+				$amplicon \
+				>>bench/AMP/config.csv
+			/bin/time -f '%e\t%U\t%S\t%M' -o bench/AMP/time.linux \
+				utils/AMP.r \
+				bench/AMP/config.csv \
+				bench/AMP/ \
+				bench/AMP/
+			sed -nr '1~4s/^@//; N; s/\n/\t/p' \
+				<bench/AMP/query.fq \
+				>bench/AMP/sq_file
+			utils/ARRANGE_RESULTS.py < \
+			bench/AMP/alignments/alignments.txt \
+				amplican \
+				$(cut -f3 bench/ref.ref) \
+				$(cut -f4 bench/ref.ref) \
+				$(expr $(cut -f1 bench/ref.ref) - 6) \
+				${#primer} |
+				paste \
+					<(
+						sed -n '2~4p' bench/AMP/query.fq |
+							sort |
+							uniq -c |
+							sort -s -k1,1nr |
+							awk '{print $2}'
+					) - |
+				query_to_seq bench/AMP/sq_file |
+				opt_indel |
+				row_print AMP $(cat bench/AMP/time.linux) \
 					>>bench.tsv
-
-			# title "RESSO"
-			# mkdir -p bench/RESSO
-			# to_fastq \
-			#     < bench/query.post \
-			#     > bench/RESSO/query.fq
-			# /bin/time -f '%e\t%U\t%S\t%M' -o bench/RESSO/time.linux \
-			#     CRISPResso \
-			#         -r1 bench/RESSO/query.fq \
-			#         -a $(get_ref < bench/ref.ref) \
-			#         -g $(get_sgRNA < bench/ref.ref) \
-			#         -o bench/RESSO \
-			#         -amas 0
-			# unzip -q -o \
-			#     $(find bench/RESSO -name "*.zip") \
-			#     -d bench/RESSO
-			# seq -f "seq%g" $query_per_ref |
-			# paste - <(cut -f1 bench/query.post) \
-			#     > bench/RESSO/sq_file
-			# utils/ARRANGE_RESULTS.py \
-			#     < bench/RESSO/Alleles_frequency_table.txt \
-			#     CRISPResso \
-			#     $(cut -f3 bench/ref.ref) \
-			#     $(cut -f4 bench/ref.ref) |
-			#     query_to_seq bench/RESSO/sq_file |
-			#     opt_indel |
-			#     row_print RESSO $(cat bench/RESSO/time.linux) \
-			#         >> bench.tsv
-
-			# title "AMP"
-			# mkdir -p bench/AMP
-			# amplicon=$(get_amplicon < bench/ref.ref)
-			# primer=$(head -c6 <<<$amplicon | tr 'acgtn' 'ACGTN')
-			# to_fastq \
-			#     < bench/query.post |
-			# sed "2~4{s/^/$primer/}; 4~4{s/^/~~~~~~/}" \
-			#     > bench/AMP/query.fq
-			# printf "ID,Barcode,Forward_Reads,Reverse_Reads,Group,Control,guideRNA,Forward_Primer,Reverse_Primer,Direction,Amplicon,Donor\n" \
-			#     > bench/AMP/config.csv
-			# printf "ID_1,barcode_1,query.fq,,group_1,0,%s,%s,,0,%s," \
-			#     $(get_sgRNA < bench/ref.ref) \
-			#     $primer \
-			#     $amplicon \
-			#     >> bench/AMP/config.csv
-			# /bin/time -f '%e\t%U\t%S\t%M' -o bench/AMP/time.linux \
-			#     utils/AMP.r \
-			#         bench/AMP/config.csv \
-			#         bench/AMP/ \
-			#         bench/AMP/
-			# sed -nr '1~4s/^@//; N; s/\n/\t/p' \
-			#     < bench/AMP/query.fq \
-			#     > bench/AMP/sq_file
-			# utils/ARRANGE_RESULTS.py \
-			#     < bench/AMP/alignments/alignments.txt \
-			#     amplican \
-			#     $(cut -f3 bench/ref.ref) \
-			#     $(cut -f4 bench/ref.ref) \
-			#     $(expr $(cut -f1 bench/ref.ref) - 6) \
-			#     ${#primer} |
-			#     paste \
-			#         <(
-			#             sed -n '2~4p' bench/AMP/query.fq |
-			#             sort |
-			#             uniq -c |
-			#             sort -s -k1,1nr |
-			#             awk '{print $2}'
-			#         ) - |
-			#     query_to_seq bench/AMP/sq_file |
-			#     opt_indel |
-			#     row_print AMP $(cat bench/AMP/time.linux) \
-			#         >> bench.tsv
 
 			# title "CRVS"
 			# mkdir -p bench/CRVS

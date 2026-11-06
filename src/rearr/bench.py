@@ -2,15 +2,12 @@ import os
 import pathlib
 import re
 import tempfile
+import textwrap
 
-import Bio
 import pandas as pd
 import pysam
 import sh
-
-
-def call_bash_func(bash_lib: str, *args):
-    sh.bash(c=" ".join([".", bash_lib, "&&"] + [*args]))
+from Bio.Align import Alignment
 
 
 def read_ref(ref_file: os.PathLike, query_ratio: float) -> pd.DataFrame:
@@ -106,7 +103,25 @@ class RearrRQposParser:
         return rpos1, rpos2, qpos1, qpos2
 
 
-def bench_rearr(
+def bake_hyperfine(td: os.PathLike, output: os.PathLike, command_name: str):
+    td = pathlib.Path(os.fspath(td))
+    return sh.hyperfine.bake(
+        "--metrics",
+        "time_wall_clock:s,memory_peak_resident:kB",
+        "--runs",
+        1,
+        "--shell",
+        "/bin/bash",
+        "--export-csv",
+        td / "export.csv",
+        "--output",
+        output,
+        "--command-name",
+        command_name,
+    )
+
+
+def bench_rearr_full(
     ref_file: os.PathLike,
     edit_file: os.PathLike,
     query_ratio: float,
@@ -122,14 +137,14 @@ def bench_rearr(
         )[["query", "count", "ref_id"]].to_csv(
             td / "temp.query", sep="\t", index=False, header=False
         )
-        call_bash_func(
-            "src/rearr/bash_lib.sh",
-            "bench_rearr",
-            os.fspath(td / "temp.linux"),
-            os.fspath(td / "temp.time"),
-            os.fspath(td / "temp.ref"),
-            os.fspath(td / "temp.query"),
-            os.fspath(td / "temp.alg"),
+        bake_hyperfine(td, td / "temp.alg", "rearr")(
+            textwrap.dedent(
+                f"""\
+                    core/Rearrangement/build/rearrangement \
+                        <{td / "temp.query"} \
+                        3<{td / "temp.ref"} \
+                        4>{td / "temp.time"}"""
+            ),
         )
 
         alg_df = pd.DataFrame(
@@ -160,9 +175,7 @@ def bench_rearr(
             qpos2=qpos2s,
         )[["idx", "rpos1", "rpos2", "qpos1", "qpos2"]].to_csv(predict_file, index=False)
 
-        linux_df = pd.read_csv(
-            td / "temp.linux", names=["real time", "user time", "system time", "RSS"]
-        )
+        export_df = pd.read_csv(td / "export.csv", header=0)
         time_df = pd.read_csv(
             td / "temp.time", sep=": ", names=["name", "time"], engine="python"
         ).set_index("name")
@@ -173,11 +186,28 @@ def bench_rearr(
             time_df.loc["align time", "time"].item(),
             time_df.loc["DP time", "time"].item(),
             time_df.loc["backtrack time", "time"].item(),
-            linux_df.loc[0, "real time"].item(),
-            linux_df.loc[0, "user time"].item(),
-            linux_df.loc[0, "system time"].item(),
-            linux_df.loc[0, "RSS"].item(),
+            export_df.loc[0, "time_wall_clock_mean"].item(),
+            export_df.loc[0, "memory_peak_resident_mean"].item(),
         )
+
+
+def bench_rearr(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float]:
+    (
+        _,
+        _,
+        _,
+        _,
+        _,
+        wall_time,
+        memory,
+    ) = bench_rearr_full(ref_file, edit_file, query_ratio, predict_file)
+
+    return wall_time, memory
 
 
 def bench_resso(
@@ -206,22 +236,28 @@ def bench_resso(
             td / "temp.query", index=False, header=False
         )
         (td / "output").mkdir(exist_ok=True, parents=True)
-        call_bash_func(
-            "src/rearr/bash_lib.sh",
-            "bench_resso",
-            os.fspath(td / "temp.linux"),
-            ref,
-            sgRNA,
-            os.fspath(td / "temp.query"),
-            os.fspath(td / "output"),
+        bake_hyperfine(td, "null", "resso")(
+            textwrap.dedent(
+                f"""\
+                    CRISPResso \
+		            -r1 {td / "temp.query"} \
+		            -a {ref} \
+		            -amas 0 \
+		            --default_min_aln_score 0 \
+		            -g {sgRNA} \
+		            -o {td / "output"} \
+		            --suppress_report \
+		            --suppress_plots"""
+            ),
         )
-        zip_file = sh.find(td / "output", "-name", "*.zip")
+        zip_file = sh.find(td / "output", "-name", "*.zip").rstrip("\n")
         sh.unzip("-q", "-o", zip_file, d=td / "output")
         predict_df_slices = []
         with open(td / "output" / "Alleles_frequency_table.txt", "r") as fd:
+            next(fd)
             for line in fd:
                 align_seq, align_ref, _ = line.split("\t", 2)
-                refcoor, seqcoor = Bio.Align.Alignment.parse_printed_alignment([
+                refcoor, seqcoor = Alignment.parse_printed_alignment([
                     align_ref.encode(),
                     align_seq.encode(),
                 ])[1]
@@ -235,7 +271,7 @@ def bench_resso(
             pd
             .concat(predict_df_slices, ignore_index=True)
             .merge(
-                right=edit_df["seqname", "query"],
+                right=edit_df[["seqname", "query"]],
                 on="query",
                 how="left",
                 validate="many_to_one",
@@ -243,7 +279,7 @@ def bench_resso(
             .assign(idx=lambda df: df["seqname"].str.removeprefix("@seq").astype(int))[
                 ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
             ]
-            .sort_values(by="idx", ascending=True)
+            .sort_values(by="idx", ascending=True, ignore_index=True)
         )
         predict_df.to_csv(predict_file, index=False)
 
