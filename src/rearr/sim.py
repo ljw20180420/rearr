@@ -1,9 +1,7 @@
-from collections.abc import Callable
-
 import numpy as np
 import pandas as pd
 
-from .bench import bench_rearr, bench_resso
+from .bench import get_bench_func
 from .random import generate_edit, generate_ref
 
 
@@ -66,15 +64,6 @@ def generate_sim_edit(cfg: dict) -> None:
                     cfg["output_dir"] / "edit" / f"{mode}_{ref_len}_{error_rate}.csv",
                     index=False,
                 )
-
-
-def get_bench_func(lib: str) -> Callable:
-    bench_funcs = {
-        "rearr": bench_rearr,
-        "resso": bench_resso,
-    }
-
-    return bench_funcs[lib]
 
 
 def bench_sim(cfg: dict, lib: str) -> None:

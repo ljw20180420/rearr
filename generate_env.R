@@ -2,7 +2,13 @@ library(rix)
 
 rix(
   r_ver = "frozen-edge",
-  r_pkgs = c("languageserver", "devtools", "tidyverse"),
+  r_pkgs = c(
+    "languageserver",
+    "devtools",
+    "tidyverse",
+    "amplican",
+    "CrispRVariants"
+  ),
   system_pkgs = NULL,
   git_pkgs = NULL,
   ide = "none",

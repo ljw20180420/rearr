@@ -7,5 +7,5 @@ if __name__ == "__main__":
 
     # complexity.generate_complexity_ref(cfg)
     # complexity.generate_complexity_edit(cfg)
-    complexity.bench_complexity_rearr(cfg)
-    # complexity.draw_complexity_rearr(cfg)
+    # complexity.bench_complexity_rearr(cfg)
+    complexity.draw_complexity_rearr(cfg)
