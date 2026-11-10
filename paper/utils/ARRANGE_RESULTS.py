@@ -12,20 +12,6 @@ if __name__ == "__main__":
     cut1 = int(sys.argv[2])
     cut2 = int(sys.argv[3])
 
-    if program.lower() == "amplicondivider":
-        for line, _ in more_itertools.batched(sys.stdin, 2):
-            query, _, ref, pos, _, cigar, _ = line.split("\t", 6)
-            if cigar == "*":
-                continue
-            refcoor, seqcoor = cigar2coor(cigar)
-            indels = coor2indel(refcoor, seqcoor, cut1 - int(pos), cut2)
-            sys.stdout.write(f"{query}")
-            for indel in indels:
-                sys.stdout.write(
-                    f"\t{indel[0] + int(pos)}\t{indel[1]}\t{indel[2]}\t{indel[3]}"
-                )
-            sys.stdout.write("\n")
-
     if program.lower() == "crispr-grant":
         gquery, fc = "", ""
         for line in sys.stdin:

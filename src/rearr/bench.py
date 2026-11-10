@@ -10,6 +10,7 @@ import pandas as pd
 import pysam
 import sh
 from Bio.Align import Alignment
+from Bio.Seq import Seq
 
 
 def read_ref(ref_file: os.PathLike, query_ratio: float) -> pd.DataFrame:
@@ -121,6 +122,14 @@ def bake_hyperfine(td: os.PathLike, command_name: str):
     )
 
 
+def parse_export(td: os.PathLike) -> tuple[float, float]:
+    export_df = pd.read_csv(td / "export.csv", header=0)
+    wall_time = export_df.loc[0, "time_wall_clock_mean"].item()
+    memory = export_df.loc[0, "memory_peak_resident_mean"].item()
+
+    return wall_time, memory
+
+
 def bench_rearr_full(
     ref_file: os.PathLike,
     edit_file: os.PathLike,
@@ -176,7 +185,7 @@ def bench_rearr_full(
             qpos2=qpos2s,
         )[["idx", "rpos1", "rpos2", "qpos1", "qpos2"]].to_csv(predict_file, index=False)
 
-        export_df = pd.read_csv(td / "export.csv", header=0)
+        wall_time, memory = parse_export(td)
         time_df = pd.read_csv(
             td / "temp.time", sep=": ", names=["name", "time"], engine="python"
         ).set_index("name")
@@ -187,8 +196,8 @@ def bench_rearr_full(
             time_df.loc["align time", "time"].item(),
             time_df.loc["DP time", "time"].item(),
             time_df.loc["backtrack time", "time"].item(),
-            export_df.loc[0, "time_wall_clock_mean"].item(),
-            export_df.loc[0, "memory_peak_resident_mean"].item(),
+            wall_time,
+            memory,
         )
 
 
@@ -284,9 +293,7 @@ def bench_resso(
         )
         predict_df.to_csv(predict_file, index=False)
 
-        export_df = pd.read_csv(td / "export.csv", header=0)
-        wall_time = export_df.loc[0, "time_wall_clock_mean"].item()
-        memory = export_df.loc[0, "memory_peak_resident_mean"].item()
+        wall_time, memory = parse_export(td)
 
         return wall_time, memory
 
@@ -306,7 +313,6 @@ def bench_amplicon(
         rstart1 = ref_df.loc[0, "rstart1"]
         rend1 = ref_df.loc[0, "rend1"]
         rstart2 = ref_df.loc[0, "rstart2"]
-
         amplicon = (
             ref1[rstart1 - 6 : rend1].lower()
             + ref2[rstart2].upper()
@@ -314,6 +320,8 @@ def bench_amplicon(
         )
         primer = amplicon[:6].upper()
         sgRNA = ref1[rend1 - 17 : rend1] + ref2[rstart2 : rstart2 + 3]
+        cut1 = rend1 - rstart1 + 6
+        cut2 = rstart2
 
         edit_df = read_edit(edit_file).assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
@@ -336,7 +344,7 @@ def bench_amplicon(
         bake_hyperfine(td, "amplicon")(
             textwrap.dedent(
                 f"""\
-                    src/rearr/AMP.r \
+                    src/rearr/amplicon.r \
 				    {td / "config.csv"} \
 				    {td / "fastq"} \
                     {td / "alignment.txt"}"""
@@ -354,9 +362,7 @@ def bench_amplicon(
                 by=["count", "primer_query"], ascending=[False, True], ignore_index=True
             )
         )
-        amplicon_start = rstart1 - 6
-        cut1 = rend1 - amplicon_start
-        cut2 = rstart2
+
         predict_df_slices = []
         with open(td / "alignment.txt", "r") as fd:
             for (_, align_ref, align_seq, _), primer_query in zip(
@@ -368,7 +374,7 @@ def bench_amplicon(
                 ])[1]
                 predict_df_slice = coor2predict(refcoor, seqcoor, cut1, cut2)
                 predict_df_slice = predict_df_slice.assign(
-                    rpos1=lambda df: df["rpos1"] + amplicon_start,
+                    rpos1=lambda df: df["rpos1"] - cut1 + rend1,
                     qpos1=lambda df: df["qpos1"] - len(primer),
                     qpos2=lambda df: df["qpos2"] - len(primer),
                     primer_query=primer_query,
@@ -391,9 +397,7 @@ def bench_amplicon(
         )
         predict_df.to_csv(predict_file, index=False)
 
-        export_df = pd.read_csv(td / "export.csv", header=0)
-        wall_time = export_df.loc[0, "time_wall_clock_mean"].item()
-        memory = export_df.loc[0, "memory_peak_resident_mean"].item()
+        wall_time, memory = parse_export(td)
 
         return wall_time, memory
 
@@ -416,19 +420,17 @@ def bench_crisprvariants(
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
 
-        edit_df = (
-            read_edit(edit_file)
-            .assign(
-                seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
-                quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
-                plus="+",
-            )[["seqname", "query", "plus", "quality"]]
-            .stack()
-            .to_csv(td / "query.fq", index=False, header=False)
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
+            plus="+",
+        )
+        edit_df[["seqname", "query", "plus", "quality"]].stack().to_csv(
+            td / "query.fq", index=False, header=False
         )
 
         sgRNA = ref[cut1 - 17 : cut1 + 3]
-        bake_hyperfine(td, "amplicon")(
+        bake_hyperfine(td, "crisprvariants")(
             textwrap.dedent(
                 f"""\
                     bwa index -p {td / "ref"} {td / "ref.fa"}
@@ -470,9 +472,101 @@ def bench_crisprvariants(
         ].sort_values(by="idx", ascending=True, ignore_index=True)
         predict_df.to_csv(predict_file, index=False)
 
-        export_df = pd.read_csv(td / "export.csv", header=0)
-        wall_time = export_df.loc[0, "time_wall_clock_mean"].item()
-        memory = export_df.loc[0, "memory_peak_resident_mean"].item()
+        wall_time, memory = parse_export(td)
+
+        return wall_time, memory
+
+
+def bench_ampliconDIVider(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref_df = read_ref(ref_file, query_ratio)
+        assert len(ref_df) == 1, "only single reference is supported"
+        prefix = "AAAAAATGTAAAACGACGGCCAGT"
+        suffix = "aagacac"
+        ref1 = ref_df.loc[0, "ref1"]
+        ref2 = ref_df.loc[0, "ref2"]
+        rstart1 = ref_df.loc[0, "rstart1"]
+        rend1 = ref_df.loc[0, "rend1"]
+        rstart2 = ref_df.loc[0, "rstart2"]
+        rend2 = ref_df.loc[0, "rend2"]
+        ref = (prefix + ref1[rstart1:rend1] + ref2[rstart2:rend2] + suffix).upper()
+        with open(td / "ref.fa", "w") as fd:
+            fd.write(f">ref\n{ref}\n")
+        cut1 = rend1 - rstart1 + len(prefix)
+        cut2 = rstart2
+
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            padded_query=lambda df: df["query"].map(
+                lambda query: f"{prefix}{query}{suffix}"
+            ),
+            rc_padded_query=lambda df: df["padded_query"].map(
+                lambda padded_query: str(Seq(padded_query).reverse_complement()).upper()
+            ),
+            quality=lambda df: df["padded_query"].map(
+                lambda padded_query: "~" * len(padded_query)
+            ),
+            plus="+",
+        )
+        edit_df[["seqname", "padded_query", "plus", "quality"]].stack().to_csv(
+            td / "query.for.fq", index=False, header=False
+        )
+        edit_df[["seqname", "rc_padded_query", "plus", "quality"]].stack().to_csv(
+            td / "query.rev.fq", index=False, header=False
+        )
+
+        with open(td / "query.bar", "w") as fd:
+            fd.write(f"plate0\tA0\trefin_ref_{0}-{len(ref)}\tM\t0\tAAAAAA\n")
+
+        bake_hyperfine(td, "ampliconDIVider")(
+            textwrap.dedent(
+                f"""\
+                    novoindex -k 6 -s 1 {td / "ref.nix"} {td / "ref.fa"}
+			        novoalign -t 0,6 -g 10 -o SAM -d {td / "ref.nix"} -f {td / "query.for.fq"} {td / "query.rev.fq"} |
+			        samtools view -o {td / "query.bam"}
+			        cd {td}
+			        ampliconDIVider_driver.sh -b query.bar -f ref.fa -x ref.nix query.bam"""
+            ),
+        )
+
+        pysam.sort(
+            "-o", os.fspath(td / "query.sorted.bam"), os.fspath(td / "query.bam")
+        )
+        pysam.index("-b", os.fspath(td / "query.sorted.bam"))
+        predict_df_slices = []
+        with pysam.AlignmentFile(td / "query.sorted.bam") as bam:
+            for read in bam.fetch():
+                if (
+                    read.is_unmapped
+                    or read.is_secondary
+                    or read.is_supplementary
+                    or read.is_reverse
+                ):
+                    continue
+
+                refcoor, seqcoor = sam2coor(read)
+                predict_df_slice = coor2predict(
+                    refcoor, seqcoor, cut1 - read.reference_start, cut2
+                ).assign(
+                    idx=int(read.query_name.removeprefix("seq")),
+                    rpos1=lambda df, reference_start=read.reference_start: (
+                        df["rpos1"] + reference_start - cut1 + rend1
+                    ),
+                )
+                predict_df_slices.append(predict_df_slice)
+
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
 
         return wall_time, memory
 
@@ -483,6 +577,7 @@ def get_bench_func(lib: str) -> Callable:
         "resso": bench_resso,
         "amplicon": bench_amplicon,
         "crisprvariants": bench_crisprvariants,
+        "ampliconDIVider": bench_ampliconDIVider,
     }
 
     return bench_funcs[lib]

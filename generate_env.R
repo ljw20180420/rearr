@@ -4,12 +4,14 @@ rix(
   r_ver = "frozen-edge",
   r_pkgs = c(
     "languageserver",
+    "lintr",
+    "jgd",
     "devtools",
     "tidyverse",
     "amplican",
     "CrispRVariants"
   ),
-  system_pkgs = NULL,
+  system_pkgs = c("arf", "quarto"),
   git_pkgs = NULL,
   ide = "none",
   project_path = ".",

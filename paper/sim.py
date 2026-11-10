@@ -14,4 +14,5 @@ if __name__ == "__main__":
     # sim.bench_sim(cfg, lib="rearr")
     # sim.bench_sim(cfg, lib="resso")
     # sim.bench_sim(cfg, lib="amplicon")
-    sim.bench_sim(cfg, lib="crisprvariants")
+    # sim.bench_sim(cfg, lib="crisprvariants")
+    sim.bench_sim(cfg, lib="ampliconDIVider")
