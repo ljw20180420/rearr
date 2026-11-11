@@ -85,6 +85,7 @@ A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 
 # TODO
 ```[tasklist]
+- [ ] Fix unittest
 - [ ] Clarify why bioconda meta.yaml not work after using inline test commands instead of run_test.sh
 - [ ] deploy to 交我算生信平台
 - [ ] deploy to galaxy

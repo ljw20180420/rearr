@@ -16,3 +16,6 @@ if __name__ == "__main__":
     # sim.bench_sim(cfg, lib="amplicon")
     # sim.bench_sim(cfg, lib="crisprvariants")
     sim.bench_sim(cfg, lib="ampliconDIVider")
+    # sim.bench_sim(cfg, lib="crispr_grant")
+    # sim.bench_sim(cfg, lib="calculate_indel")
+    # sim.bench_sim(cfg, lib="SelfTarget")

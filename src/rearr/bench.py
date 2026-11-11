@@ -122,6 +122,20 @@ def bake_hyperfine(td: os.PathLike, command_name: str):
     )
 
 
+def parse_ref(ref_file: os.PathLike, query_ratio: float) -> tuple:
+    ref_df = read_ref(ref_file, query_ratio)
+    assert len(ref_df) == 1, "only single reference is supported"
+
+    return (
+        ref_df.loc[0, "ref1"],
+        ref_df.loc[0, "ref2"],
+        ref_df.loc[0, "rstart1"],
+        ref_df.loc[0, "rend1"],
+        ref_df.loc[0, "rstart2"],
+        ref_df.loc[0, "rend2"],
+    )
+
+
 def parse_export(td: os.PathLike) -> tuple[float, float]:
     export_df = pd.read_csv(td / "export.csv", header=0)
     wall_time = export_df.loc[0, "time_wall_clock_mean"].item()
@@ -228,14 +242,11 @@ def bench_resso(
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref_df = read_ref(ref_file, query_ratio)
-        assert len(ref_df) == 1, "only single reference is supported"
-        ref1 = ref_df.loc[0, "ref1"]
-        cut1 = ref_df.loc[0, "rend1"]
-        ref2 = ref_df.loc[0, "ref2"]
-        cut2 = ref_df.loc[0, "rstart2"]
-        ref = ref1[:cut1] + ref2[cut2:]
-        sgRNA = ref[cut1 - 17 : cut1 + 3]
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref = ref1[:rend1] + ref2[rstart2:]
+        sgRNA = ref[rend1 - 17 : rend1 + 3]
+        cut1 = rend1
+        cut2 = rstart2
 
         edit_df = read_edit(edit_file).assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
@@ -306,13 +317,7 @@ def bench_amplicon(
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref_df = read_ref(ref_file, query_ratio)
-        assert len(ref_df) == 1, "only single reference is supported"
-        ref1 = ref_df.loc[0, "ref1"]
-        ref2 = ref_df.loc[0, "ref2"]
-        rstart1 = ref_df.loc[0, "rstart1"]
-        rend1 = ref_df.loc[0, "rend1"]
-        rstart2 = ref_df.loc[0, "rstart2"]
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
         amplicon = (
             ref1[rstart1 - 6 : rend1].lower()
             + ref2[rstart2].upper()
@@ -410,15 +415,12 @@ def bench_crisprvariants(
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref_df = read_ref(ref_file, query_ratio)
-        assert len(ref_df) == 1, "only single reference is supported"
-        ref1 = ref_df.loc[0, "ref1"]
-        ref2 = ref_df.loc[0, "ref2"]
-        cut1 = ref_df.loc[0, "rend1"]
-        cut2 = ref_df.loc[0, "rstart2"]
-        ref = ref1[:cut1] + ref2[cut2:]
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref = ref1[:rend1] + ref2[rstart2:]
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
+        cut1 = rend1
+        cut2 = rstart2
 
         edit_df = read_edit(edit_file).assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
@@ -435,8 +437,7 @@ def bench_crisprvariants(
                 f"""\
                     bwa index -p {td / "ref"} {td / "ref.fa"}
 			        bwa mem -T -9999 {td / "ref"} {td / "query.fq"} |
-			        samtools sort -o {td / "query.bam"}
-			        samtools index -b {td / "query.bam"}
+			        samtools view -bo {td / "query.bam"} -
 			        src/rearr/crisprvariants.r \
                     {sgRNA} \
                     {td / "query.bam"} \
@@ -447,7 +448,7 @@ def bench_crisprvariants(
 
         predict_df_slices = []
         with pysam.AlignmentFile(td / "query.bam") as bam:
-            for read in bam.fetch():
+            for read in bam:
                 if (
                     read.is_unmapped
                     or read.is_secondary
@@ -485,16 +486,9 @@ def bench_ampliconDIVider(
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref_df = read_ref(ref_file, query_ratio)
-        assert len(ref_df) == 1, "only single reference is supported"
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
         prefix = "AAAAAATGTAAAACGACGGCCAGT"
         suffix = "aagacac"
-        ref1 = ref_df.loc[0, "ref1"]
-        ref2 = ref_df.loc[0, "ref2"]
-        rstart1 = ref_df.loc[0, "rstart1"]
-        rend1 = ref_df.loc[0, "rend1"]
-        rstart2 = ref_df.loc[0, "rstart2"]
-        rend2 = ref_df.loc[0, "rend2"]
         ref = (prefix + ref1[rstart1:rend1] + ref2[rstart2:rend2] + suffix).upper()
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
@@ -524,6 +518,9 @@ def bench_ampliconDIVider(
         with open(td / "query.bar", "w") as fd:
             fd.write(f"plate0\tA0\trefin_ref_{0}-{len(ref)}\tM\t0\tAAAAAA\n")
 
+        ampliconDIVider_driver = pathlib.Path(
+            "paper/tools/ampliconDIVider/ampliconDIVider_driver.sh"
+        ).resolve()
         bake_hyperfine(td, "ampliconDIVider")(
             textwrap.dedent(
                 f"""\
@@ -531,17 +528,13 @@ def bench_ampliconDIVider(
 			        novoalign -t 0,6 -g 10 -o SAM -d {td / "ref.nix"} -f {td / "query.for.fq"} {td / "query.rev.fq"} |
 			        samtools view -o {td / "query.bam"}
 			        cd {td}
-			        ampliconDIVider_driver.sh -b query.bar -f ref.fa -x ref.nix query.bam"""
+			        {ampliconDIVider_driver} -b query.bar -f ref.fa -x ref.nix query.bam"""
             ),
         )
 
-        pysam.sort(
-            "-o", os.fspath(td / "query.sorted.bam"), os.fspath(td / "query.bam")
-        )
-        pysam.index("-b", os.fspath(td / "query.sorted.bam"))
         predict_df_slices = []
-        with pysam.AlignmentFile(td / "query.sorted.bam") as bam:
-            for read in bam.fetch():
+        with pysam.AlignmentFile(td / "query.bam") as bam:
+            for read in bam:
                 if (
                     read.is_unmapped
                     or read.is_secondary
@@ -571,6 +564,219 @@ def bench_ampliconDIVider(
         return wall_time, memory
 
 
+def bench_crispr_grant(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref = ref1[:rend1] + ref2[rstart2:]
+        with open(td / "ref.fa", "w") as fd:
+            fd.write(f">ref\n{ref}\n")
+        cut1 = rend1
+        cut2 = rstart2
+
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            rc_query=lambda df: df["query"].map(
+                lambda query: str(Seq(query).reverse_complement())
+            ),
+            quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
+            plus="+",
+        )
+        edit_df[["seqname", "query", "plus", "quality"]].stack().to_csv(
+            td / "query.for.fq", index=False, header=False
+        )
+        edit_df[["seqname", "rc_query", "plus", "quality"]].stack().to_csv(
+            td / "query.rev.fq", index=False, header=False
+        )
+
+        bake_hyperfine(td, "crispr_grant")(
+            textwrap.dedent(
+                f"""\
+                    paper/tools/CRISPR-GRANT/bin/indel_analysis \
+				        -1:{td / "query.for.fq"} \
+				        -2:{td / "query.rev.fq"} \
+				        -r:{td / "ref.fa"} \
+				        -o:{td / "output"}"""
+            ),
+        )
+
+        predict_df_slices = []
+        with pysam.AlignmentFile(td / "output" / "4.Mapping_sorted.bam") as bam:
+            for read in bam:
+                if (
+                    read.is_unmapped
+                    or read.is_secondary
+                    or read.is_supplementary
+                    or read.is_reverse
+                ):
+                    continue
+
+                refcoor, seqcoor = sam2coor(read)
+                predict_df_slice = coor2predict(
+                    refcoor, seqcoor, cut1 - read.reference_start, cut2
+                ).assign(
+                    idx=int(read.query_name.removeprefix("seq")),
+                    rpos1=lambda df, reference_start=read.reference_start: (
+                        df["rpos1"] + reference_start
+                    ),
+                )
+                predict_df_slices.append(predict_df_slice)
+
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
+
+        return wall_time, memory
+
+
+def bench_calculate_indel(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        sgRNA = ref1[rend1 - 17 : rend1] + ref2[rstart2 : rstart2 + 3]
+        ref = ref1[rstart1:rend1] + ref2[rstart2:rend2]
+        cut1 = rend1 - rstart1
+        cut2 = rstart2
+
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
+            plus="+",
+        )
+        edit_df[["seqname", "query", "plus", "quality"]].stack().to_csv(
+            td / "query.fq", index=False, header=False
+        )
+
+        with open(td / "samplefile", "w") as fd:
+            fd.write(f"query,{td / 'query.fq'},{sgRNA},{ref}\n")
+
+        bake_hyperfine(td, "calculate_indel")(
+            textwrap.dedent(
+                f"""\
+                    paper/tools/Screening_Protocols_manuscript/my_calculate_indel.py \
+                        -i {td / "samplefile"} \
+                        -no-m \
+                        -o {td / "calc_indel_out.csv"} \
+                        > {td / "result"}"""
+            ),
+        )
+
+        predict_df_slices = []
+        with open(td / "result", "r") as fd:
+            next(fd)
+            for line in fd:
+                fields = line.rstrip().split()
+                query = fields[0]
+                ref_seq_coor = [int(s) for s in fields[1:]]
+                predict_df_slice = coor2predict(
+                    ref_seq_coor[: len(ref_seq_coor) // 2],
+                    ref_seq_coor[len(ref_seq_coor) // 2 :],
+                    cut1,
+                    cut2,
+                ).assign(
+                    idx=int(query.removeprefix("seq")),
+                    rpos1=lambda df: df["rpos1"] - cut1 + rend1,
+                )
+                predict_df_slices.append(predict_df_slice)
+
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
+
+        return wall_time, memory
+
+
+def bench_SelfTarget(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref = ref1[:rend1] + ref2[rstart2:]
+        with open(td / "oligo.fa", "w") as fd:
+            fd.write(f">ref {rend1 + 3} FORWARD\n{ref}\n")
+        cut1 = rend1
+        cut2 = rstart2
+
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
+            plus="+",
+        )
+        edit_df[["seqname", "query", "plus", "quality"]].stack().to_csv(
+            td / "query.fq", index=False, header=False
+        )
+
+        bake_hyperfine(td, "SelfTarget")(
+            textwrap.dedent(
+                f"""\
+                    tools/SelfTarget-master/indel_analysis/indelmap/indelmap \
+                        {td / "query.fq"} \
+                        {td / "oligo.fa"} \
+                        {td / "outputfile"} \
+                        0"""
+            ),
+        )
+
+        predict_df_slices = []
+        with open(td / "outputfile", "r") as fd:
+            next(fd)
+            for line in fd:
+                query, _, identifier, _ = line.split("\t", 3)
+                if identifier == "-":
+                    continue
+                try:
+                    (
+                        _,
+                        rpos1min,
+                        rpos1max,
+                        rpos2min,
+                        rpos2max,
+                        qpos1min,
+                        qpos1max,
+                        qpos2min,
+                        qpos2max,
+                    ) = identifier.split("|")
+                except ValueError:
+                    continue
+                predict_df_slice = pd.DataFrame({
+                    "idx": int(query.removeprefix("seq")),
+                    "rpos1": [int(rpos1min), int(rpos1max)],
+                    "rpos2": [int(rpos2min) - cut1 + cut2, int(rpos2max) - cut1 + cut2],
+                    "qpos1": [int(qpos1min), int(qpos1max)],
+                    "qpos2": [int(qpos2min), int(qpos2max)],
+                })
+                predict_df_slices.append(predict_df_slice)
+
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
+
+        return wall_time, memory
+
+
 def get_bench_func(lib: str) -> Callable:
     bench_funcs = {
         "rearr": bench_rearr,
@@ -578,6 +784,9 @@ def get_bench_func(lib: str) -> Callable:
         "amplicon": bench_amplicon,
         "crisprvariants": bench_crisprvariants,
         "ampliconDIVider": bench_ampliconDIVider,
+        "crispr_grant": bench_crispr_grant,
+        "calculate_indel": bench_calculate_indel,
+        "SelfTarget": bench_SelfTarget,
     }
 
     return bench_funcs[lib]

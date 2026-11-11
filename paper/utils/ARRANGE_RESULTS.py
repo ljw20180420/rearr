@@ -1,74 +1,13 @@
 #!/usr/bin/env python
 
-import re
 import sys
 
 import Bio.Align
-import more_itertools
-import pysam
 
 if __name__ == "__main__":
     program = sys.argv[1]
     cut1 = int(sys.argv[2])
     cut2 = int(sys.argv[3])
-
-    if program.lower() == "crispr-grant":
-        gquery, fc = "", ""
-        for line in sys.stdin:
-            query, flag, _, pos, _, cigar, _ = line.split("\t", 6)
-            if (int(flag) / 4) % 2 or (int(flag) / 16) % 2:
-                continue
-            if query != gquery:
-                sys.stdout.write(f"{fc}{query}")
-                gquery, fc = query, "\n"
-            refcoor, seqcoor = cigar2coor(cigar)
-            indels = coor2indel(refcoor, seqcoor, cut1 - int(pos), cut2)
-            for indel in indels:
-                sys.stdout.write(
-                    f"\t{indel[0] + int(pos)}\t{indel[1]}\t{indel[2]}\t{indel[3]}"
-                )
-
-    if program.lower() == "zhangfeng":
-        refstart = int(sys.argv[4])
-        for line in sys.stdin:
-            fields = line.rstrip().split()
-            query = fields[0]
-            ref_seq_coor = [int(s) for s in fields[1:]]
-            indels = coor2indel(
-                ref_seq_coor[: len(ref_seq_coor) // 2],
-                ref_seq_coor[len(ref_seq_coor) // 2 :],
-                cut1 - refstart,
-                cut2,
-            )
-            sys.stdout.write(f"{query}")
-            for indel in indels:
-                sys.stdout.write(
-                    f"\t{indel[0] + refstart}\t{indel[1]}\t{indel[2]}\t{indel[3]}"
-                )
-            sys.stdout.write("\n")
-
-    if program.lower() == "selftarget":
-        for line in sys.stdin:
-            query, _, identifier, _ = line.split("\t", 3)
-            try:
-                (
-                    _,
-                    rpos1min,
-                    rpos1max,
-                    rpos2min,
-                    rpos2max,
-                    qpos1min,
-                    qpos1max,
-                    qpos2min,
-                    qpos2max,
-                ) = identifier.split("|")
-            except Exception:
-                continue
-            if identifier == "-":
-                continue
-            sys.stdout.write(
-                f"{query}\t{rpos1min}\t{int(rpos2min) - cut1 + cut2}\t{qpos1min}\t{qpos2min}\t{rpos1max}\t{int(rpos2max) - cut1 + cut2}\t{qpos1max}\t{qpos2max}\n"
-            )
 
     if program.lower() == "indel_searcher_2":
         refstart = int(sys.argv[4])

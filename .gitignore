@@ -4,7 +4,8 @@
 /paper/references
 /paper/bench.tsv
 /paper/complexity.tsv
-/paper/tools
+/paper/tools/*
+!/paper/tools/ampliconDIVider
 /paper/old_bench
 /core/Rearrangement/build/
 **/__pycache__/
