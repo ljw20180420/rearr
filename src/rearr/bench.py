@@ -729,7 +729,7 @@ def bench_SelfTarget(
         bake_hyperfine(td, "SelfTarget")(
             textwrap.dedent(
                 f"""\
-                    tools/SelfTarget-master/indel_analysis/indelmap/indelmap \
+                    paper/tools/SelfTarget-master/indel_analysis/indelmap/indelmap \
                         {td / "query.fq"} \
                         {td / "oligo.fa"} \
                         {td / "outputfile"} \
@@ -767,6 +767,8 @@ def bench_SelfTarget(
                 })
                 predict_df_slices.append(predict_df_slice)
 
+        if not predict_df_slices:
+            breakpoint()
         predict_df = pd.concat(predict_df_slices, ignore_index=True)[
             ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
         ].sort_values(by="idx", ascending=True, ignore_index=True)
