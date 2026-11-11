@@ -1,19 +1,18 @@
-#!/usr/bin/env python
-
-import os, sys, math, logging
-
+import logging
+import math
+import os
 import pickle
 import subprocess as sp
-
+import sys
 from optparse import OptionParser
 
 sys.path.insert(0, os.path.dirname(os.getcwd()))
 from Core.my_CoreSystem import (
-    InitialFolder,
-    UserFolderAdmin,
-    Helper,
-    RunMulticore,
     CheckProcessedFiles,
+    Helper,
+    InitialFolder,
+    RunMulticore,
+    UserFolderAdmin,
 )
 
 
@@ -37,9 +36,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         self.strPamType = (
             options.pam_type
         )  # CRISPR type : Cpf1(2 cleavages), Cas9(1 cleavage)
-        self.strPamPos = (
-            options.pam_pos
-        )  # Barcode target position : Forward (barcode + target), Reverse (target + barcode)
+        self.strPamPos = options.pam_pos  # Barcode target position : Forward (barcode + target), Reverse (target + barcode)
         self.strPickle = options.pickle
         self.strClassFASTQ = options.class_fastq
         self.strSplit = options.split
@@ -109,7 +106,8 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         ### Defensive : original fastq wc == split fastq wc
         # intTotalLines = len(open(self.strInputFile).readlines())
         intTotalLines = int(
-            sp.check_output(
+            sp
+            .check_output(
                 "wc -l {input_file}".format(input_file=self.strInputFile), shell=True
             )
             .decode()
@@ -127,9 +125,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         )
 
         with open(self.strInputFile) as fq, open(self.strInputList, "w") as OutList:
-
             for intNum in range(1, intSplitNum + 1):
-
                 strSplitFile = self.strSplitPath + "/{sample}_{num}.fq".format(
                     sample=os.path.basename(self.strInputFile), num=intNum
                 )
@@ -165,20 +161,20 @@ class clsIndelSearcherRunner(UserFolderAdmin):
     def MakeReference(self):
 
         if not os.path.isfile(self.strRefFile):
-            with open(self.strBarcodeFile) as Barcode, open(
-                self.strTargetSeqFile
-            ) as Target, open(self.strReferenceSeqFile) as Ref, open(
-                self.strRefFile, "w"
-            ) as Output:
-
+            with (
+                open(self.strBarcodeFile) as Barcode,
+                open(self.strTargetSeqFile) as Target,
+                open(self.strReferenceSeqFile) as Ref,
+                open(self.strRefFile, "w") as Output,
+            ):
                 listBarcode = Helper.RemoveNullAndBadKeyword(Barcode)
                 listTarget = Helper.RemoveNullAndBadKeyword(Target)
                 listRef = Helper.RemoveNullAndBadKeyword(Ref)
 
                 ## defensive
-                assert (
-                    len(listBarcode) == len(listTarget) == len(listRef)
-                ), "Barcode, Target and Reference must be a same row number."
+                assert len(listBarcode) == len(listTarget) == len(listRef), (
+                    "Barcode, Target and Reference must be a same row number."
+                )
 
                 listName = []
                 for strBar, strTar in zip(listBarcode, listTarget):
@@ -290,23 +286,26 @@ class clsIndelSearcherRunner(UserFolderAdmin):
         intComFastq = 7
         intIndelInfo = 8
 
-        with open(
-            "{outdir}/Tmp/{sample}_Summary.txt".format(
-                outdir=self.strOutSampleDir, sample=self.strSample
-            ),
-            "w",
-        ) as Summary, open(
-            "{outdir}/Tmp/{sample}_Classified_Indel_barcode.fastq".format(
-                outdir=self.strOutSampleDir, sample=self.strSample
-            ),
-            "w",
-        ) as FastqOut, open(
-            "{outdir}/Tmp/{sample}_Indel_freq.txt".format(
-                outdir=self.strOutSampleDir, sample=self.strSample
-            ),
-            "w",
-        ) as FreqOut:
-
+        with (
+            open(
+                "{outdir}/Tmp/{sample}_Summary.txt".format(
+                    outdir=self.strOutSampleDir, sample=self.strSample
+                ),
+                "w",
+            ) as Summary,
+            open(
+                "{outdir}/Tmp/{sample}_Classified_Indel_barcode.fastq".format(
+                    outdir=self.strOutSampleDir, sample=self.strSample
+                ),
+                "w",
+            ) as FastqOut,
+            open(
+                "{outdir}/Tmp/{sample}_Indel_freq.txt".format(
+                    outdir=self.strOutSampleDir, sample=self.strSample
+                ),
+                "w",
+            ) as FreqOut,
+        ):
             for binPickle in os.listdir(
                 "{outdir}/Tmp/Pickle".format(outdir=self.strOutSampleDir)
             ):
@@ -316,7 +315,6 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                     ),
                     "rb",
                 ) as PickleResult:
-
                     dictPickleResult = pickle.load(PickleResult)
                     dictResult = dictPickleResult["dictResult"]
                     dictResultIndelFreq = dictPickleResult["dictResultIndelFreq"]
@@ -353,12 +351,7 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                                         + "\n"
                                     )
 
-                    for (
-                        strBarcode
-                    ) in (
-                        dictResultIndelFreq
-                    ):  # dictResultIndelFreq [sRef_seq, lQuery, float(iFreq)/iTotal, sTarget_region]
-
+                    for strBarcode in dictResultIndelFreq:  # dictResultIndelFreq [sRef_seq, lQuery, float(iFreq)/iTotal, sTarget_region]
                         if strBarcodePamPos == "Reverse":
                             strBarcode = strBarcode[::-1]
 
@@ -378,23 +371,20 @@ class clsIndelSearcherRunner(UserFolderAdmin):
                             for strQuery, strRefNeedle, strQueryNeedle in zip(
                                 listQuery, listRefNeedle, listQueryNeedle
                             ):
-
                                 if strBarcodePamPos == "Reverse":
                                     strQuery = strQuery[::-1]
                                     strRefNeedle = strRefNeedle[::-1]
                                     strQueryNeedle = strQueryNeedle[::-1]
 
                                 FreqOut.write(
-                                    "\t".join(
-                                        [
-                                            strBarcode,
-                                            strQuery,
-                                            strINDEL,
-                                            str(round(floFreq, 4)),
-                                            strRefNeedle,
-                                            strQueryNeedle,
-                                        ]
-                                    )
+                                    "\t".join([
+                                        strBarcode,
+                                        strQuery,
+                                        strINDEL,
+                                        str(round(floFreq, 4)),
+                                        strRefNeedle,
+                                        strQueryNeedle,
+                                    ])
                                     + "\n"
                                 )
                     # END:for
@@ -539,7 +529,6 @@ def Main():
     logging.info(str(options))
 
     with open(InstInitFolder.strProjectFile) as Sample_list:
-
         listSamples = Helper.RemoveNullAndBadKeyword(Sample_list)
         intProjectNumInTxt = len(listSamples)
 
@@ -552,7 +541,6 @@ def Main():
 
             setGroup = set()
             for strSample in listSamples:
-
                 tupSampleInfo = Helper.SplitSampleInfo(strSample)
                 if not tupSampleInfo:
                     continue

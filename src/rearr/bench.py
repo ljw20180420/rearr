@@ -767,8 +767,154 @@ def bench_SelfTarget(
                 })
                 predict_df_slices.append(predict_df_slice)
 
-        if not predict_df_slices:
-            breakpoint()
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
+
+        return wall_time, memory
+
+
+def bench_CRISPR_toolkit(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        user = "ljw"
+        project = "rearr"
+        barcode = ref1[rstart1 - 19 : rstart1]
+        ref = barcode + ref1[rstart1:rend1] + ref2[rstart2:]
+        (
+            td / "Indel_searcher_2" / "Input" / user / "Reference" / project / "ref"
+        ).mkdir(exist_ok=True, parents=True)
+        with open(
+            td
+            / "Indel_searcher_2"
+            / "Input"
+            / user
+            / "Reference"
+            / project
+            / "ref"
+            / "Barcode.txt",
+            "w",
+        ) as fd:
+            fd.write(f"{barcode}\n")
+        with open(
+            td
+            / "Indel_searcher_2"
+            / "Input"
+            / user
+            / "Reference"
+            / project
+            / "ref"
+            / "Reference_sequence.txt",
+            "w",
+        ) as fd:
+            fd.write(f"{ref}\n")
+        with open(
+            td
+            / "Indel_searcher_2"
+            / "Input"
+            / user
+            / "Reference"
+            / project
+            / "ref"
+            / "Target_region.txt",
+            "w",
+        ) as fd:
+            fd.write(f"{ref[len(barcode) :]}\n")
+        cut1 = rend1 - rstart1 + len(barcode)
+        cut2 = rstart2
+
+        (td / "Indel_searcher_2" / "Input" / user / "FASTQ" / project / "query").mkdir(
+            exist_ok=True, parents=True
+        )
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            barcode_query=lambda df: df["query"].map(lambda query: f"{barcode}{query}"),
+            quality=lambda df: df["barcode_query"].map(
+                lambda barcode_query: "~" * len(barcode_query)
+            ),
+            plus="+",
+        )
+        edit_df[["seqname", "barcode_query", "plus", "quality"]].stack().to_csv(
+            td
+            / "Indel_searcher_2"
+            / "Input"
+            / user
+            / "FASTQ"
+            / project
+            / "query"
+            / "query.fastq",
+            index=False,
+            header=False,
+        )
+
+        (td / "Indel_searcher_2" / "Core").mkdir(exist_ok=True, parents=True)
+        sh.cp("paper/tools/CRISPR_toolkit/EDNAFULL", td)
+        sh.cp(
+            "paper/tools/CRISPR_toolkit/Indel_searcher_2/my_Run_indel_searcher.py",
+            "paper/tools/CRISPR_toolkit/Indel_searcher_2/my_Indel_searcher_crispresso_hash.py",
+            td / "Indel_searcher_2",
+        )
+        sh.cp(
+            "paper/tools/CRISPR_toolkit/Core/__init__.py",
+            "paper/tools/CRISPR_toolkit/Core/my_CoreSystem.py",
+            td / "Indel_searcher_2" / "Core",
+        )
+
+        (td / "Indel_searcher_2" / "User" / user).mkdir(exist_ok=True, parents=True)
+        with open(
+            td / "Indel_searcher_2" / "User" / user / f"{project}.txt", "w"
+        ) as fd:
+            fd.write("query\tref\n")
+
+        resso_python = (
+            pathlib.Path(os.environ["HOME"])
+            / ".pixi"
+            / "envs"
+            / "crispresso2"
+            / "bin"
+            / "python"
+        )
+
+        breakpoint()
+        bake_hyperfine(td, "SelfTarget")(
+            textwrap.dedent(
+                f"""\
+                    {resso_python} \
+                    {td / "Indel_searcher_2" / "my_Run_indel_searcher.py"} \
+				    --python {resso_python} \
+				    --user {user} \
+				    --project {project} \
+				    --pam_type Cas9 \
+				    --pam_pos Forward \
+				    -t 15"""
+            ),
+        )
+
+        predict_df_slices = []
+        with open(td / "Indel_searcher_2" / "result", "r") as fd:
+            for line in fd:
+                seq_name, align_ref, align_seq = line.split("\t")
+                refcoor, seqcoor = Alignment.parse_printed_alignment([
+                    align_ref.encode(),
+                    align_seq.encode(),
+                ])[1]
+                predict_df_slice = coor2predict(
+                    refcoor, seqcoor, cut1 - len(barcode), cut2
+                ).assign(
+                    idx=int(seq_name.removeprefix("seq")),
+                    rpos1=lambda df: df["rpos1"] + len(barcode) - cut1 + rend1,
+                )
+                predict_df_slices.append(predict_df_slice)
+
         predict_df = pd.concat(predict_df_slices, ignore_index=True)[
             ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
         ].sort_values(by="idx", ascending=True, ignore_index=True)
@@ -789,6 +935,7 @@ def get_bench_func(lib: str) -> Callable:
         "crispr_grant": bench_crispr_grant,
         "calculate_indel": bench_calculate_indel,
         "SelfTarget": bench_SelfTarget,
+        "CRISPR_toolkit": bench_CRISPR_toolkit,
     }
 
     return bench_funcs[lib]
