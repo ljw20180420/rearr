@@ -2,6 +2,8 @@
 /paper/bench.tsv
 /paper/tools/*
 !/paper/tools/ampliconDIVider
+!/paper/tools/Screening_Protocols_manuscript
+
 !/paper/tools/SelfTarget-master
 /paper/tools/SelfTarget-master/indel_analysis/indelmap/*
 !/paper/tools/SelfTarget-master/indel_analysis/indelmap/CMakeLists.txt
@@ -9,6 +11,7 @@
 !/paper/tools/SelfTarget-master/indel_analysis/indelmap/*.h
 !/paper/tools/SelfTarget-master/indel_analysis/indelmap/version.h.in
 !/paper/tools/SelfTarget-master/indel_analysis/indelmap/Makefile
+
 /paper/old_bench
 /core/Rearrangement/build/
 **/__pycache__/
