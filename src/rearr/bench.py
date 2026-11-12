@@ -1023,6 +1023,7 @@ def bench_SIQ(
             td / "query.fq", index=False, header=False
         )
 
+        breakpoint()
         bake_hyperfine(td, "CRISPR_toolkit")(
             textwrap.dedent(
                 f"""\
