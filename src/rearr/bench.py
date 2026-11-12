@@ -884,8 +884,7 @@ def bench_CRISPR_toolkit(
             / "python"
         )
 
-        breakpoint()
-        bake_hyperfine(td, "SelfTarget")(
+        bake_hyperfine(td, "CRISPR_toolkit")(
             textwrap.dedent(
                 f"""\
                     {resso_python} \
@@ -925,6 +924,140 @@ def bench_CRISPR_toolkit(
         return wall_time, memory
 
 
+def bench_CRISPR_Analytics(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref = ref1[:rend1] + ref2[rstart2:]
+        sgRNA = ref[rend1 - 17 : rend1 + 3]
+        with open(td / "ref.fa", "w") as fd:
+            fd.write(f">ref\n{ref}\n")
+        cut1 = rend1
+        cut2 = rstart2
+
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
+            plus="+",
+        )
+        edit_df[["seqname", "query", "plus", "quality"]].stack().to_csv(
+            td / "query.fq", index=False, header=False
+        )
+
+        bake_hyperfine(td, "CRISPR_toolkit")(
+            textwrap.dedent(
+                f"""\
+                    paper/tools/crispr-a_nextflow/bin/revComp-fasta.R \
+                        {td / "ref.fa"} \
+                        {td / "ref.correctOrient.fa"} \
+                        {sgRNA}
+                    minimap2 \
+                        -d {td / "ref.correctOrient.mmi"} \
+                        {td / "ref.correctOrient.fa"}
+                    minimap2 -a -A 29 -B 17 -O 25 -E 2 \
+                        {td / "ref.correctOrient.mmi"} \
+                        {td / "query.fq"} \
+                        > {td / "query.sam"}"""
+            ),
+        )
+
+        predict_df_slices = []
+        with pysam.AlignmentFile(td / "query.sam") as sam:
+            for read in sam:
+                if (
+                    read.is_unmapped
+                    or read.is_secondary
+                    or read.is_supplementary
+                    or read.is_reverse
+                ):
+                    continue
+                refcoor, seqcoor = sam2coor(read)
+                predict_df_slice = coor2predict(
+                    refcoor, seqcoor, cut1 - read.reference_start, cut2
+                ).assign(
+                    idx=int(read.query_name.removeprefix("seq")),
+                    rpos1=lambda df, reference_start=read.reference_start: (
+                        df["rpos1"] + reference_start
+                    ),
+                )
+                predict_df_slices.append(predict_df_slice)
+
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
+
+        return wall_time, memory
+
+
+def bench_SIQ(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref = ref1[:rend1] + ref2[rstart2:]
+        with open(td / "ref.fa", "w") as fd:
+            fd.write(f">ref\n{ref}\n")
+        left_flank = ref1[rstart1 - 15 : rstart1]
+        right_flank = ref2[rend2 : rend2 + 15]
+        cut1 = rend1
+        cut2 = rstart2
+
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
+            plus="+",
+        )
+        edit_df[["seqname", "query", "plus", "quality"]].stack().to_csv(
+            td / "query.fq", index=False, header=False
+        )
+
+        bake_hyperfine(td, "CRISPR_toolkit")(
+            textwrap.dedent(
+                f"""\
+                    java my.my_SIQ \
+                        {td / "query.fq"} \
+                        {td / "ref.fa"} \
+                        {left_flank} \
+                        {right_flank} \
+                        {td / "output.tsv"}"""
+            ),
+        )
+
+        predict_df_slices = []
+        with open(td / "output.tsv", "r") as fd:
+            for line in fd:
+                seq_name, rpos1, rpos2, qpos1, qpos2 = line.split("\t")
+                predict_df_slice = pd.DataFrame({
+                    "idx": [int(seq_name.removeprefix("seq"))],
+                    "rpos1": [int(rpos1)],
+                    "rpos2": [int(rpos2) - cut1 + cut2],
+                    "qpos1": [int(qpos1)],
+                    "qpos2": [int(qpos2)],
+                })
+                predict_df_slices.append(predict_df_slice)
+
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
+
+        return wall_time, memory
+
+
 def get_bench_func(lib: str) -> Callable:
     bench_funcs = {
         "rearr": bench_rearr,
@@ -936,6 +1069,8 @@ def get_bench_func(lib: str) -> Callable:
         "calculate_indel": bench_calculate_indel,
         "SelfTarget": bench_SelfTarget,
         "CRISPR_toolkit": bench_CRISPR_toolkit,
+        "CRISPR-Analytics": bench_CRISPR_Analytics,
+        "SIQ": bench_SIQ,
     }
 
     return bench_funcs[lib]

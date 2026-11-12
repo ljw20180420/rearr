@@ -13,6 +13,7 @@
 !/paper/tools/SelfTarget-master/indel_analysis/indelmap/Makefile
 
 !/paper/tools/CRISPR_toolkit
+!/paper/tools/crispr-a_nextflow
 
 /paper/old_bench
 /core/Rearrangement/build/

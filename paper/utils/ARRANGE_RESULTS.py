@@ -9,22 +9,6 @@ if __name__ == "__main__":
     cut1 = int(sys.argv[2])
     cut2 = int(sys.argv[3])
 
-    if program.lower() == "indel_searcher_2":
-        refstart = int(sys.argv[4])
-        for line in sys.stdin:
-            seq_name, align_ref, align_seq = line.split("\t")
-            refcoor, seqcoor = Bio.Align.Alignment.parse_printed_alignment([
-                align_ref.encode(),
-                align_seq.encode(),
-            ])[1]
-            indels = coor2indel(refcoor, seqcoor, cut1 - refstart, cut2)
-            sys.stdout.write(seq_name)
-            for indel in indels:
-                sys.stdout.write(
-                    f"\t{indel[0] + refstart}\t{indel[1]}\t{indel[2]}\t{indel[3]}"
-                )
-            sys.stdout.write("\n")
-
     if program.lower() == "crispr-a":
         gquery, fc = "", ""
         for line in sys.stdin:

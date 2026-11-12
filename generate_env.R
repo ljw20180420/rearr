@@ -1,6 +1,4 @@
-library(rix)
-
-rix(
+rix::rix(
   r_ver = "frozen-edge",
   r_pkgs = c(
     "languageserver",
@@ -9,7 +7,8 @@ rix(
     "devtools",
     "tidyverse",
     "amplican",
-    "CrispRVariants"
+    "CrispRVariants",
+    "seqinr"
   ),
   system_pkgs = c("arf", "quarto"),
   git_pkgs = NULL,
