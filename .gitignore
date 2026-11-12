@@ -1,5 +1,4 @@
 /paper/bench
-/paper/bench.tsv
 /paper/tools/*
 !/paper/tools/ampliconDIVider
 !/paper/tools/Screening_Protocols_manuscript
@@ -18,7 +17,7 @@
 
 /paper/old_bench
 /core/Rearrangement/build/
-**/__pycache__/
+__pycache__
 /manim/media
 /manim_NHEJ/media
 /.Rprofile
@@ -32,4 +31,3 @@
 !/example/example.ref
 !/example/example.fq
 /docs/assets/example
-/.vscode/settings.json
