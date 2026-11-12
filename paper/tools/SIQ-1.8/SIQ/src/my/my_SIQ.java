@@ -64,7 +64,7 @@ public class my_SIQ {
                         leftCorrect = cs.isCorrectPositionLeft();
                         rightCorrect = cs.isCorrectPositionRight();
                         //only correctly found ones
-                        if(leftCorrect && rightCorrect){
+                        if(cs.leftFlank != null && leftCorrect && rightCorrect){
                             int rpos1 = cs.leftFlank.getSubjectEnd();
                             int rpos2 = cs.subjectObject.subject.indexOf(cs.rightFlank, rpos1);
                             int qpos1 = cs.leftFlank.getQueryEnd();

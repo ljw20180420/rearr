@@ -14,6 +14,7 @@
 
 !/paper/tools/CRISPR_toolkit
 !/paper/tools/crispr-a_nextflow
+!/paper/tools/SIQ-1.8
 
 /paper/old_bench
 /core/Rearrangement/build/

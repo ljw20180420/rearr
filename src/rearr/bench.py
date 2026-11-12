@@ -1023,11 +1023,10 @@ def bench_SIQ(
             td / "query.fq", index=False, header=False
         )
 
-        breakpoint()
         bake_hyperfine(td, "CRISPR_toolkit")(
             textwrap.dedent(
                 f"""\
-                    java my.my_SIQ \
+                    java -classpath paper/tools/SIQ-1.8/SIQ/libraries/*:paper/tools/SIQ-1.8/SIQ/bin my.my_SIQ \
                         {td / "query.fq"} \
                         {td / "ref.fa"} \
                         {left_flank} \
