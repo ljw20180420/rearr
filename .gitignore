@@ -20,8 +20,6 @@
 __pycache__
 /manim/media
 /manim_NHEJ/media
-/.Rprofile
-/default.nix
 /result
 /docker-images/docker_mounts
 /example/*
