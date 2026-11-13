@@ -31,4 +31,18 @@ def sim_config():
         "max_align_pos_shift_ratio": 0.05,
         "max_random_insertion_length": 10,
         "seed": 63036,
+        "libs": [
+            "rearr",
+            "resso",
+            "amplicon",
+            "crisprvariants",
+            "ampliconDIVider",
+            "crispr_grant",
+            "calculate_indel",
+            "SelfTarget",
+            "CRISPR_toolkit",
+            "CRISPR-Analytics",
+            "SIQ",
+            "PEM-Q",
+        ],
     }

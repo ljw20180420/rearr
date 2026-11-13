@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 from .bench import get_bench_func
+from .metric import select_best_indel
 from .random import generate_edit, generate_ref
 
 
@@ -84,8 +85,29 @@ def bench_sim(cfg: dict, lib: str) -> None:
                         predict_file=cfg["output_dir"]
                         / lib
                         / "predict"
-                        / f"{mode}_{ref_len}_{error_rate}.predict",
+                        / f"{mode}_{ref_len}_{error_rate}.csv",
                     )
 
                     fd.write(f"{mode},{ref_len},{error_rate},{wall_time},{memory}\n")
                     fd.flush()
+
+
+def metric_sim(cfg: dict, lib: str) -> None:
+    (cfg["output_dir"] / lib / "metric").mkdir(exist_ok=True, parents=True)
+    for mode in cfg["modes"]:
+        for ref_len in cfg["ref_lens"]:
+            for error_rate in cfg["error_rates"]:
+                print(lib, mode, ref_len, error_rate)
+                select_best_indel(
+                    predict_file=cfg["output_dir"]
+                    / lib
+                    / "predict"
+                    / f"{mode}_{ref_len}_{error_rate}.csv",
+                    edit_file=cfg["output_dir"]
+                    / "edit"
+                    / f"{mode}_{ref_len}_{error_rate}.csv",
+                    metric_file=cfg["output_dir"]
+                    / lib
+                    / "metric"
+                    / f"{mode}_{ref_len}_{error_rate}.csv",
+                )
