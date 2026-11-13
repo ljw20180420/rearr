@@ -85,6 +85,16 @@ A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 
 # TODO
 ```[tasklist]
+- pip -> bioconda
+
+- R
+  - arf
+  - vscode R extension
+    - jdg
+  - quarto (vscode)
+  - shiny extension
+  - shiny ui design
+
 - [ ] Fix unittest
 - [ ] Clarify why bioconda meta.yaml not work after using inline test commands instead of run_test.sh
 - [ ] deploy to 交我算生信平台

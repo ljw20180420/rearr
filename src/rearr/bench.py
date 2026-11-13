@@ -203,16 +203,21 @@ def bench_rearr_full(
         time_df = pd.read_csv(
             td / "temp.time", sep=": ", names=["name", "time"], engine="python"
         ).set_index("name")
+        total_time = time_df.loc["total time", "time"].item()
+        preprocess_time = time_df.loc["preprocess time", "time"].item()
+        align_time = time_df.loc["align time", "time"].item()
+        DP_time = time_df.loc["DP time", "time"].item()
+        backtrack_time = time_df.loc["backtrack time", "time"].item()
 
-        return (
-            time_df.loc["total time", "time"].item(),
-            time_df.loc["preprocess time", "time"].item(),
-            time_df.loc["align time", "time"].item(),
-            time_df.loc["DP time", "time"].item(),
-            time_df.loc["backtrack time", "time"].item(),
-            wall_time,
-            memory,
-        )
+    return (
+        total_time,
+        preprocess_time,
+        align_time,
+        DP_time,
+        backtrack_time,
+        wall_time,
+        memory,
+    )
 
 
 def bench_rearr(
@@ -306,7 +311,7 @@ def bench_resso(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_amplicon(
@@ -404,7 +409,7 @@ def bench_amplicon(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_crisprvariants(
@@ -475,7 +480,7 @@ def bench_crisprvariants(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_ampliconDIVider(
@@ -561,7 +566,7 @@ def bench_ampliconDIVider(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_crispr_grant(
@@ -634,7 +639,7 @@ def bench_crispr_grant(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_calculate_indel(
@@ -699,7 +704,7 @@ def bench_calculate_indel(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_SelfTarget(
@@ -774,7 +779,7 @@ def bench_SelfTarget(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_CRISPR_toolkit(
@@ -921,7 +926,7 @@ def bench_CRISPR_toolkit(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_CRISPR_Analytics(
@@ -949,7 +954,7 @@ def bench_CRISPR_Analytics(
             td / "query.fq", index=False, header=False
         )
 
-        bake_hyperfine(td, "CRISPR_toolkit")(
+        bake_hyperfine(td, "CRISPR_Analytics")(
             textwrap.dedent(
                 f"""\
                     paper/tools/crispr-a_nextflow/bin/revComp-fasta.R \
@@ -994,7 +999,7 @@ def bench_CRISPR_Analytics(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
 
 
 def bench_SIQ(
@@ -1023,7 +1028,7 @@ def bench_SIQ(
             td / "query.fq", index=False, header=False
         )
 
-        bake_hyperfine(td, "CRISPR_toolkit")(
+        bake_hyperfine(td, "SIQ")(
             textwrap.dedent(
                 f"""\
                     java -classpath paper/tools/SIQ-1.8/SIQ/libraries/*:paper/tools/SIQ-1.8/SIQ/bin my.my_SIQ \
@@ -1055,7 +1060,165 @@ def bench_SIQ(
 
         wall_time, memory = parse_export(td)
 
-        return wall_time, memory
+    return wall_time, memory
+
+
+def bench_PEM_Q(
+    ref_file: os.PathLike,
+    edit_file: os.PathLike,
+    query_ratio: float,
+    predict_file: os.PathLike,
+) -> tuple[float, float]:
+    with tempfile.TemporaryDirectory() as td:
+        td = pathlib.Path(td)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref = ref1[:rend1] + ref2[rstart2:]
+        with open(td / "ref.fa", "w") as fd:
+            fd.write(f">ref\n{ref}\n")
+        cut1 = rend1
+        cut2 = rstart2
+
+        edit_df = read_edit(edit_file).assign(
+            seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
+            quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
+            plus="+",
+        )
+        edit_df[["seqname", "query", "plus", "quality"]].stack().to_csv(
+            td / "query.fq", index=False, header=False
+        )
+
+        (td / "ref").mkdir(exist_ok=True, parents=True)
+        sh.bwa.index("-p", td / "ref" / "ref", td / "ref.fa")
+        bake_hyperfine(td, "PEM_Q")(
+            textwrap.dedent(
+                f"""\
+                    BWA_INDEX={td} SAM_DIR={td} python paper/tools/PEM-Q-1.0.0/main/align_make_v5.1.py ref {td / "query.fq"}
+                    SAM_DIR={td} python paper/tools/PEM-Q-1.0.0/main/define_indel_v5.1_mpf.py "_s" {cut1} +"""
+            ),
+        )
+
+        idxs = []
+        rpos1s = []
+        rpos2s = []
+        qpos1s = []
+        qpos2s = []
+
+        index_df = pd.read_csv(
+            td / "raw" / "_s_indel_cutoff.tab",
+            sep="\t",
+            header=0,
+            keep_default_na=False,
+        )
+        for (
+            qname,
+            rpos1,
+            rpos2,
+            strand,
+            qpos1,
+            qpos2,
+            microhomology,
+        ) in index_df[
+            [
+                "Qname",
+                "Bait_end",
+                "Prey_start",
+                "Strand",
+                "B_Qend",
+                "Qstart",
+                "Microhomolog",
+            ]
+        ].itertuples(index=False):
+            if strand == "-":
+                continue
+            idx = int(qname.removeprefix("seq"))
+            rpos2 = rpos2 - cut1 + cut2
+            rpos1 -= len(microhomology)
+            qpos1 -= len(microhomology)
+            for shift in range(len(microhomology) + 1):
+                idxs.append(idx)
+                rpos1s.append(rpos1 + shift)
+                rpos2s.append(rpos2 + shift)
+                qpos1s.append(qpos1 + shift)
+                qpos2s.append(qpos2 + shift)
+
+        germline_addup_df = pd.read_csv(
+            td / "raw" / "_s_Germline_addup_indel.tab",
+            sep="\t",
+            header=0,
+            keep_default_na=False,
+        )
+        for (
+            qname,
+            rpos1,
+            rpos2,
+            strand,
+            qpos1,
+            qpos2,
+            microhomology,
+        ) in germline_addup_df[
+            [
+                "Qname",
+                "Bait_end",
+                "Prey_start",
+                "Strand",
+                "B_Qend",
+                "Qstart",
+                "Microhomolog",
+            ]
+        ].itertuples(index=False):
+            if strand == "-":
+                continue
+            idx = int(qname.removeprefix("seq"))
+            rpos2 = rpos2 - cut1 + cut2
+            rpos1 -= len(microhomology)
+            qpos1 -= len(microhomology)
+            qpos1 += cut1 - rpos1
+            qpos2 += cut2 - rpos2
+            rpos1 = cut1
+            rpos2 = cut2
+            idxs.append(idx)
+            rpos1s.append(rpos1 + shift)
+            rpos2s.append(rpos2 + shift)
+            qpos1s.append(qpos1 + shift)
+            qpos2s.append(qpos2 + shift)
+
+        predict_df_slices = [
+            pd.DataFrame({
+                "idx": idxs,
+                "rpos1": rpos1s,
+                "rpos2": rpos2s,
+                "qpos1": qpos1s,
+                "qpos2": qpos2s,
+            })
+        ]
+        for pem_q_out_file in ["_s_Germline.tab", "_s_Substitution.tab"]:
+            pem_q_df = pd.read_csv(td / "raw" / pem_q_out_file, sep="\t", header=0)
+            for qname, cigar, reference_start in zip(
+                pem_q_df["Qname"], pem_q_df["Cigar"], pem_q_df["Position"]
+            ):
+                reference_start -= 1
+                read = pysam.AlignedSegment()
+                read.cigarstring = cigar
+                refcoor, seqcoor = sam2coor(read)
+                predict_df_slice = coor2predict(
+                    refcoor, seqcoor, cut1 - reference_start, cut2
+                ).assign(
+                    idx=int(qname.removeprefix("seq")),
+                    rpos1=lambda df, reference_start=reference_start: (
+                        df["rpos1"] + reference_start
+                    ),
+                )
+
+                predict_df_slices.append(predict_df_slice)
+
+        predict_df = pd.concat(predict_df_slices, ignore_index=True)[
+            ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
+        ].sort_values(by="idx", ascending=True, ignore_index=True)
+        predict_df.to_csv(predict_file, index=False)
+
+        wall_time, memory = parse_export(td)
+
+    return wall_time, memory
 
 
 def get_bench_func(lib: str) -> Callable:
@@ -1071,6 +1234,7 @@ def get_bench_func(lib: str) -> Callable:
         "CRISPR_toolkit": bench_CRISPR_toolkit,
         "CRISPR-Analytics": bench_CRISPR_Analytics,
         "SIQ": bench_SIQ,
+        "PEM-Q": bench_PEM_Q,
     }
 
     return bench_funcs[lib]
