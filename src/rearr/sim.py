@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from .bench import get_bench_func
-from .metric import select_best_indel
+from .metric import fillin_err, select_best_indel
 from .random import generate_edit, generate_ref
 
 
@@ -110,4 +110,27 @@ def metric_sim(cfg: dict, lib: str) -> None:
                     / lib
                     / "metric"
                     / f"{mode}_{ref_len}_{error_rate}.csv",
+                )
+
+
+def fillin_sim(cfg: dict) -> None:
+    for mode in cfg["modes"]:
+        for ref_len in cfg["ref_lens"]:
+            for error_rate in cfg["error_rates"]:
+                print(mode, ref_len, error_rate)
+                fillin_err(
+                    metric_files=[
+                        cfg["output_dir"]
+                        / lib
+                        / "metric"
+                        / f"{mode}_{ref_len}_{error_rate}.csv"
+                        for lib in cfg["libs"]
+                    ],
+                    fillin_files=[
+                        cfg["output_dir"]
+                        / lib
+                        / "fillin"
+                        / f"{mode}_{ref_len}_{error_rate}.csv"
+                        for lib in cfg["libs"]
+                    ],
                 )

@@ -85,6 +85,7 @@ A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 
 # TODO
 ```[tasklist]
+- maybe expand prediction to all microhomology equivalence before metric accuracy
 - pip -> bioconda
 
 - R
