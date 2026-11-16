@@ -84,9 +84,12 @@ flowchart TD
 A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 
 # TODO
-```[tasklist]
-- maybe expand prediction to all microhomology equivalence before metric accuracy
+
+```
+- benchmark realdata
+- java version manager
 - pip -> bioconda
+- [ ] Use GNU autotools to install Rearrangement
 
 - R
   - arf
@@ -133,9 +136,4 @@ A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 - [ ] CDN
 - [ ] Use explicit base in shiny app microHomology
 - [ ] Use probability language to inplement Gibbs sampling for predicting the frequencies of blunt end cleavage events
-```
-
-# TODO (Long term)
-```[tasklist]
-- [ ] Use GNU autotools to install Rearrangement
 ```

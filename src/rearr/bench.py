@@ -556,6 +556,8 @@ def bench_ampliconDIVider(
                     rpos1=lambda df, reference_start=read.reference_start: (
                         df["rpos1"] + reference_start - cut1 + rend1
                     ),
+                    qpos1=lambda df: df["qpos1"] - len(prefix),
+                    qpos2=lambda df: df["qpos2"] - len(prefix),
                 )
                 predict_df_slices.append(predict_df_slice)
 
@@ -1130,16 +1132,19 @@ def bench_PEM_Q(
         ].itertuples(index=False):
             if strand == "-":
                 continue
+            # correct rstart2 and qstart2
+            rpos2 -= 1
+            qpos2 += 1
+
             idx = int(qname.removeprefix("seq"))
             rpos2 = rpos2 - cut1 + cut2
             rpos1 -= len(microhomology)
             qpos1 -= len(microhomology)
-            for shift in range(len(microhomology) + 1):
-                idxs.append(idx)
-                rpos1s.append(rpos1 + shift)
-                rpos2s.append(rpos2 + shift)
-                qpos1s.append(qpos1 + shift)
-                qpos2s.append(qpos2 + shift)
+            idxs.append(idx)
+            rpos1s.append(rpos1)
+            rpos2s.append(rpos2)
+            qpos1s.append(qpos1)
+            qpos2s.append(qpos2)
 
         germline_addup_df = pd.read_csv(
             td / "raw" / "_s_Germline_addup_indel.tab",
@@ -1168,6 +1173,10 @@ def bench_PEM_Q(
         ].itertuples(index=False):
             if strand == "-":
                 continue
+            # correct rstart2 and qstart2
+            rpos2 -= 1
+            qpos2 += 1
+
             idx = int(qname.removeprefix("seq"))
             rpos2 = rpos2 - cut1 + cut2
             rpos1 -= len(microhomology)
@@ -1177,10 +1186,10 @@ def bench_PEM_Q(
             rpos1 = cut1
             rpos2 = cut2
             idxs.append(idx)
-            rpos1s.append(rpos1 + shift)
-            rpos2s.append(rpos2 + shift)
-            qpos1s.append(qpos1 + shift)
-            qpos2s.append(qpos2 + shift)
+            rpos1s.append(rpos1)
+            rpos2s.append(rpos2)
+            qpos1s.append(qpos1)
+            qpos2s.append(qpos2)
 
         predict_df_slices = [
             pd.DataFrame({

@@ -14,5 +14,5 @@ if __name__ == "__main__":
     # for lib in cfg["libs"]:
     #     sim.bench_sim(cfg, lib=lib)
     # for lib in cfg["libs"]:
-    #     sim.metric_sim(cfg, lib=lib)
+    #     sim.select_sim(cfg, lib=lib)
     sim.fillin_sim(cfg)

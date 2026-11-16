@@ -92,8 +92,8 @@ def bench_sim(cfg: dict, lib: str) -> None:
                     fd.flush()
 
 
-def metric_sim(cfg: dict, lib: str) -> None:
-    (cfg["output_dir"] / lib / "metric").mkdir(exist_ok=True, parents=True)
+def select_sim(cfg: dict, lib: str) -> None:
+    (cfg["output_dir"] / lib / "select").mkdir(exist_ok=True, parents=True)
     for mode in cfg["modes"]:
         for ref_len in cfg["ref_lens"]:
             for error_rate in cfg["error_rates"]:
@@ -103,13 +103,16 @@ def metric_sim(cfg: dict, lib: str) -> None:
                     / lib
                     / "predict"
                     / f"{mode}_{ref_len}_{error_rate}.csv",
+                    ref_file=cfg["output_dir"] / "ref" / f"{mode}_{ref_len}.csv",
+                    query_ratio=cfg["query_ratio"],
                     edit_file=cfg["output_dir"]
                     / "edit"
                     / f"{mode}_{ref_len}_{error_rate}.csv",
-                    metric_file=cfg["output_dir"]
+                    select_file=cfg["output_dir"]
                     / lib
-                    / "metric"
+                    / "select"
                     / f"{mode}_{ref_len}_{error_rate}.csv",
+                    lib=lib,
                 )
 
 
@@ -119,10 +122,10 @@ def fillin_sim(cfg: dict) -> None:
             for error_rate in cfg["error_rates"]:
                 print(mode, ref_len, error_rate)
                 fillin_err(
-                    metric_files=[
+                    select_files=[
                         cfg["output_dir"]
                         / lib
-                        / "metric"
+                        / "select"
                         / f"{mode}_{ref_len}_{error_rate}.csv"
                         for lib in cfg["libs"]
                     ],
