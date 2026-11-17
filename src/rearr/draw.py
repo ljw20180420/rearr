@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -16,11 +18,16 @@ def plotly_template() -> go.layout.Template:
             xaxis={
                 "ticks": "outside",
                 "ticklen": 5,
+                "tickcolor": "black",
                 "automargin": True,
             },
             yaxis={
+                "zerolinecolor": "black",
+                "zerolinewidth": 1,
+                "zeroline": False,
                 "ticks": "outside",
                 "ticklen": 5,
+                "tickcolor": "black",
                 "automargin": True,
             },
         )
@@ -84,7 +91,7 @@ def draw_time_memory_benchmark(cfg) -> None:
                     fig.add_annotation(
                         x=x + offsets[ri],
                         y=0,
-                        text=str(ref_len),
+                        text=ref_len,
                         showarrow=False,
                         textangle=90,
                         xanchor="center",
@@ -95,7 +102,9 @@ def draw_time_memory_benchmark(cfg) -> None:
                     )
 
             fig.update_xaxes(
-                type="category", categoryorder="array", categoryarray=cfg["libs"]
+                type="category",
+                categoryorder="array",
+                categoryarray=cfg["libs"],
             )
             fig.update_layout(
                 scattermode="group",

@@ -9,4 +9,4 @@ if __name__ == "__main__":
     os.chdir(pathlib.Path(__file__).resolve().parent.parent)
 
     # draw.draw_time_memory_benchmark(cfg=config.sim_config())
-    draw.draw_accuracy_benchmark(cfg=config.sim_config())
+    # draw.draw_accuracy_benchmark(cfg=config.sim_config())

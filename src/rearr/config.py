@@ -46,3 +46,30 @@ def sim_config():
             "PEM-Q",
         ],
     }
+
+
+def real_config():
+    return {
+        "output_dir": pathlib.Path(os.environ["HOME"]) / "sde1" / "rearr" / "real",
+        "SJLJH": {
+            "fastq_dir": pathlib.Path(os.environ["HOME"])
+            / "sdc1"
+            / "sx_data"
+            / "SJLJH"
+            / "data",
+            "fastqs": [
+                "0del.fq.gz",
+            ],
+            "fq2ref": pathlib.Path(os.environ["HOME"])
+            / "new_fold"
+            / "projects"
+            / "CRISPR_align"
+            / "SJLJH"
+            / "fq2ref.tsv",
+            "ref_dir": pathlib.Path(os.environ["HOME"])
+            / "sdc1"
+            / "sx_data"
+            / "SJLJH"
+            / "refs",
+        },
+    }
