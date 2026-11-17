@@ -3,7 +3,7 @@ import pathlib
 
 import pandas as pd
 
-from .bench import parse_ref
+from .bench import parse_ref, read_edit, read_ref
 
 
 def expand_to_mh_equivalence(
@@ -70,7 +70,9 @@ def select_best_indel(
     select_file: os.PathLike,
     lib: str,
 ) -> None:
-    ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+    ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(
+        read_ref(ref_file, query_ratio)
+    )
     predict_df = pd.read_csv(predict_file, header=0)
     expand_df = expand_to_mh_equivalence(
         predict_df=predict_df,

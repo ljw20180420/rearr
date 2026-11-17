@@ -124,8 +124,7 @@ def bake_hyperfine(td: os.PathLike, command_name: str):
     )
 
 
-def parse_ref(ref_file: os.PathLike, query_ratio: float) -> tuple:
-    ref_df = read_ref(ref_file, query_ratio)
+def parse_ref(ref_df: pd.DataFrame) -> tuple:
     assert len(ref_df) == 1, "only single reference is supported"
 
     return (
@@ -147,19 +146,16 @@ def parse_export(td: os.PathLike) -> tuple[float, float]:
 
 
 def bench_rearr_full(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
-) -> tuple[float]:
+):
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        read_ref(ref_file, query_ratio).to_csv(
+        ref_df[["rstart1", "ref1", "rend1", "rstart2", "ref2", "rend2"]].to_csv(
             td / "temp.ref", sep="\t", index=False, header=False
         )
-        read_edit(edit_file).assign(
-            count=1,
-        )[["query", "count", "ref_id"]].to_csv(
+        edit_df.assign(count=1)[["query", "count", "ref_id"]].to_csv(
             td / "temp.query", sep="\t", index=False, header=False
         )
         bake_hyperfine(td, "rearr")(
@@ -223,9 +219,8 @@ def bench_rearr_full(
 
 
 def bench_rearr(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     (
@@ -236,26 +231,25 @@ def bench_rearr(
         _,
         wall_time,
         memory,
-    ) = bench_rearr_full(ref_file, edit_file, query_ratio, predict_file)
+    ) = bench_rearr_full(ref_df, edit_df, predict_file)
 
     return wall_time, memory
 
 
 def bench_resso(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         ref = ref1[:rend1] + ref2[rstart2:]
         sgRNA = ref[rend1 - 17 : rend1 + 3]
         cut1 = rend1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
             plus="+",
@@ -317,14 +311,13 @@ def bench_resso(
 
 
 def bench_amplicon(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         amplicon = (
             ref1[rstart1 - 6 : rend1].lower()
             + ref2[rstart2].upper()
@@ -335,7 +328,7 @@ def bench_amplicon(
         cut1 = rend1 - rstart1 + 6
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             primer_query=lambda df: df["query"].map(lambda query: f"{primer}{query}"),
             quality=lambda df: df["primer_query"].map(
@@ -415,21 +408,20 @@ def bench_amplicon(
 
 
 def bench_crisprvariants(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         ref = ref1[:rend1] + ref2[rstart2:]
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
         cut1 = rend1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
             plus="+",
@@ -486,14 +478,13 @@ def bench_crisprvariants(
 
 
 def bench_ampliconDIVider(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         prefix = "AAAAAATGTAAAACGACGGCCAGT"
         suffix = "aagacac"
         ref = (prefix + ref1[rstart1:rend1] + ref2[rstart2:rend2] + suffix).upper()
@@ -502,7 +493,7 @@ def bench_ampliconDIVider(
         cut1 = rend1 - rstart1 + len(prefix)
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             padded_query=lambda df: df["query"].map(
                 lambda query: f"{prefix}{query}{suffix}"
@@ -574,21 +565,20 @@ def bench_ampliconDIVider(
 
 
 def bench_crispr_grant(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         ref = ref1[:rend1] + ref2[rstart2:]
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
         cut1 = rend1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             rc_query=lambda df: df["query"].map(
                 lambda query: str(Seq(query).reverse_complement())
@@ -648,20 +638,19 @@ def bench_crispr_grant(
 
 
 def bench_calculate_indel(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         sgRNA = ref1[rend1 - 17 : rend1] + ref2[rstart2 : rstart2 + 3]
         ref = ref1[rstart1:rend1] + ref2[rstart2:rend2]
         cut1 = rend1 - rstart1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
             plus="+",
@@ -713,21 +702,20 @@ def bench_calculate_indel(
 
 
 def bench_SelfTarget(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         ref = ref1[:rend1] + ref2[rstart2:]
         with open(td / "oligo.fa", "w") as fd:
             fd.write(f">ref {rend1 + 3} FORWARD\n{ref}\n")
         cut1 = rend1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
             plus="+",
@@ -788,14 +776,13 @@ def bench_SelfTarget(
 
 
 def bench_CRISPR_toolkit(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         user = "ljw"
         project = "rearr"
         barcode = ref1[rstart1 - 19 : rstart1]
@@ -845,7 +832,7 @@ def bench_CRISPR_toolkit(
         (td / "Indel_searcher_2" / "Input" / user / "FASTQ" / project / "query").mkdir(
             exist_ok=True, parents=True
         )
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             barcode_query=lambda df: df["query"].map(lambda query: f"{barcode}{query}"),
             quality=lambda df: df["barcode_query"].map(
@@ -935,14 +922,13 @@ def bench_CRISPR_toolkit(
 
 
 def bench_CRISPR_Analytics(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         ref = ref1[:rend1] + ref2[rstart2:]
         sgRNA = ref[rend1 - 17 : rend1 + 3]
         with open(td / "ref.fa", "w") as fd:
@@ -950,7 +936,7 @@ def bench_CRISPR_Analytics(
         cut1 = rend1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
             plus="+",
@@ -1008,14 +994,13 @@ def bench_CRISPR_Analytics(
 
 
 def bench_SIQ(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         ref = ref1[:rend1] + ref2[rstart2:]
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
@@ -1024,7 +1009,7 @@ def bench_SIQ(
         cut1 = rend1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
             plus="+",
@@ -1069,21 +1054,20 @@ def bench_SIQ(
 
 
 def bench_PEM_Q(
-    ref_file: os.PathLike,
-    edit_file: os.PathLike,
-    query_ratio: float,
+    ref_df: pd.DataFrame,
+    edit_df: pd.DataFrame,
     predict_file: os.PathLike,
 ) -> tuple[float, float]:
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
-        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_file, query_ratio)
+        ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         ref = ref1[:rend1] + ref2[rstart2:]
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
         cut1 = rend1
         cut2 = rstart2
 
-        edit_df = read_edit(edit_file).assign(
+        edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
             plus="+",

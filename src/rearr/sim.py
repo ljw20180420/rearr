@@ -1,7 +1,9 @@
+import os
+
 import numpy as np
 import pandas as pd
 
-from .bench import get_bench_func
+from .bench import get_bench_func, read_edit, read_ref
 from .metric import fillin_err, select_best_indel
 from .random import generate_edit, generate_ref
 
@@ -77,11 +79,17 @@ def bench_sim(cfg: dict, lib: str) -> None:
                 for error_rate in cfg["error_rates"]:
                     print(lib, mode, ref_len, error_rate)
                     wall_time, memory = get_bench_func(lib)(
-                        ref_file=cfg["output_dir"] / "ref" / f"{mode}_{ref_len}.csv",
-                        edit_file=cfg["output_dir"]
-                        / "edit"
-                        / f"{mode}_{ref_len}_{error_rate}.csv",
-                        query_ratio=cfg["query_ratio"],
+                        ref_df=read_ref(
+                            ref_file=cfg["output_dir"]
+                            / "ref"
+                            / f"{mode}_{ref_len}.csv",
+                            query_ratio=cfg["query_ratio"],
+                        ),
+                        edit_df=read_edit(
+                            edit_file=cfg["output_dir"]
+                            / "edit"
+                            / f"{mode}_{ref_len}_{error_rate}.csv"
+                        ),
                         predict_file=cfg["output_dir"]
                         / lib
                         / "predict"
