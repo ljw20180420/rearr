@@ -1,4 +1,4 @@
-/paper/bench
+__pycache__
 /paper/tools/*
 !/paper/tools/ampliconDIVider
 !/paper/tools/Screening_Protocols_manuscript
@@ -16,9 +16,7 @@
 !/paper/tools/SIQ-1.8
 !/paper/tools/PEM-Q-1.0.0
 
-/paper/old_bench
 /core/Rearrangement/build/
-__pycache__
 /manim/media
 /manim_NHEJ/media
 /result
