@@ -248,7 +248,6 @@ def bench_resso(
         sgRNA = ref[rend1 - 17 : rend1 + 3]
         cut1 = rend1
         cut2 = rstart2
-
         edit_df = edit_df.assign(
             seqname=lambda df: df.index.map(lambda index: f"@seq{index}"),
             quality=lambda df: df["query"].map(lambda query: "~" * len(query)),
@@ -298,6 +297,8 @@ def bench_resso(
                 how="left",
                 validate="many_to_one",
             )
+            .query("not seqname.isna()")
+            .reset_index(drop=True)
             .assign(idx=lambda df: df["seqname"].str.removeprefix("@seq").astype(int))[
                 ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]
             ]

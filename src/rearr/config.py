@@ -51,25 +51,41 @@ def sim_config():
 def real_config():
     return {
         "output_dir": pathlib.Path(os.environ["HOME"]) / "sde1" / "rearr" / "real",
-        "SJLJH": {
-            "fastq_dir": pathlib.Path(os.environ["HOME"])
-            / "sdc1"
-            / "sx_data"
-            / "SJLJH"
-            / "data",
-            "fastqs": [
-                "0del.fq.gz",
-            ],
-            "fq2ref": pathlib.Path(os.environ["HOME"])
-            / "new_fold"
-            / "projects"
-            / "CRISPR_align"
-            / "SJLJH"
-            / "fq2ref.tsv",
-            "ref_dir": pathlib.Path(os.environ["HOME"])
-            / "sdc1"
-            / "sx_data"
-            / "SJLJH"
-            / "refs",
+        "seed": 63036,
+        "datasets": {
+            "SJLJH": {
+                "fq_num": 10,
+                "sample_num": 1000,
+                "fq_dir": pathlib.Path(os.environ["HOME"])
+                / "sdc1"
+                / "sx_data"
+                / "SJLJH"
+                / "data",
+                "fq2ref": pathlib.Path(os.environ["HOME"])
+                / "new_fold"
+                / "projects"
+                / "CRISPR_align"
+                / "SJLJH"
+                / "fq2ref.tsv",
+                "ref_dir": pathlib.Path(os.environ["HOME"])
+                / "sdc1"
+                / "sx_data"
+                / "SJLJH"
+                / "refs",
+            },
         },
+        "libs": [
+            "rearr",
+            "resso",
+            "amplicon",
+            "crisprvariants",
+            "ampliconDIVider",
+            "crispr_grant",
+            "calculate_indel",
+            "SelfTarget",
+            "CRISPR_toolkit",
+            "CRISPR-Analytics",
+            "SIQ",
+            "PEM-Q",
+        ],
     }
