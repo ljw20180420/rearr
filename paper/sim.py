@@ -11,8 +11,10 @@ if __name__ == "__main__":
 
     # sim.generate_sim_ref(cfg)
     # sim.generate_sim_edit(cfg)
-    # for lib in cfg["libs"]:
-    #     sim.bench_sim(cfg, lib=lib)
-    # for lib in cfg["libs"]:
-    #     sim.select_sim(cfg, lib=lib)
+    for lib in cfg["libs"]:
+        if lib != "SelfTarget":
+            continue
+        sim.bench_sim(cfg, lib=lib)
+    for lib in cfg["libs"]:
+        sim.select_sim(cfg, lib=lib)
     sim.fillin_sim(cfg)

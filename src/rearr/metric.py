@@ -25,29 +25,26 @@ def expand_to_mh_equivalence(
         lext = 0
         rext = 0
         if qpos1 == qpos2:
-            try:
-                while True:
-                    left_rpos1 = rpos1 - lext - 1
-                    left_rpos2 = rpos2 + rpos2_correct - lext - 1
-                    if (
-                        left_rpos1 < 0
-                        or left_rpos2 < 0
-                        or ref1[left_rpos1] != ref2[left_rpos2]
-                    ):
-                        break
-                    lext += 1
-                while True:
-                    right_rpos1 = rpos1 + rext
-                    right_rpos2 = rpos2 + rpos2_correct + rext
-                    if (
-                        right_rpos1 >= len(ref1)
-                        or right_rpos2 >= len(ref2)
-                        or ref1[right_rpos1] != ref2[right_rpos2]
-                    ):
-                        break
-                    rext += 1
-            except IndexError:
-                breakpoint()
+            while True:
+                left_rpos1 = rpos1 - lext - 1
+                left_rpos2 = rpos2 + rpos2_correct - lext - 1
+                if (
+                    left_rpos1 < 0
+                    or left_rpos2 < 0
+                    or ref1[left_rpos1] != ref2[left_rpos2]
+                ):
+                    break
+                lext += 1
+            while True:
+                right_rpos1 = rpos1 + rext
+                right_rpos2 = rpos2 + rpos2_correct + rext
+                if (
+                    right_rpos1 >= len(ref1)
+                    or right_rpos2 >= len(ref2)
+                    or ref1[right_rpos1] != ref2[right_rpos2]
+                ):
+                    break
+                rext += 1
 
         for shift in range(-lext, rext + 1):
             idxs.append(idx)

@@ -111,6 +111,8 @@ def bake_hyperfine(td: os.PathLike, command_name: str):
     return sh.hyperfine.bake(
         "--metrics",
         "time_wall_clock:s,memory_peak_resident:kB",
+        "--warmup",
+        1,
         "--runs",
         1,
         "--shell",
@@ -604,6 +606,7 @@ def bench_crispr_grant(
         bake_hyperfine(td, "crispr_grant")(
             textwrap.dedent(
                 f"""\
+                    rm -rf {td / "output"}
                     paper/tools/CRISPR-GRANT/bin/indel_analysis \
 				        -1:{td / "query.for.fq"} \
 				        -2:{td / "query.rev.fq"} \

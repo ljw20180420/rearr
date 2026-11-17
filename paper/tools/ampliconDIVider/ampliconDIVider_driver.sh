@@ -131,7 +131,10 @@ echo $NAME | grep -q [[:blank:]] && throw_error "'NAME' can't have blanks"
 
 WORKDIR=$PWD/Workdir_${NAME}_$JOB_ID
 
-if [ -d $WORKDIR ]; then throw_error "$WORKDIR already exists!"; fi
+# if [ -d $WORKDIR ]; then throw_error "$WORKDIR already exists!"; fi
+if [ -d $WORKDIR ]; then
+	rm -rf "$WORKDIR" $PWD/Output_${NAME}_$JOB_ID
+fi
 
 mkdir $WORKDIR
 cd $WORKDIR
@@ -684,13 +687,23 @@ if [ $RANGES ]; then
 fi
 
 echo "Making output directory..."
-mkdir $PWD/Output_${NAME}_${JOB_ID}
+echo $PWD/Output_${NAME}_${JOB_ID}
+mkdir -p $PWD/Output_${NAME}_${JOB_ID}
 
+# function move_file {
+# 	if
+# 		[ -e Output_${NAME}_${JOB_ID}/$1 ]
+# 	then
+# 		throw_error "Can't move ${1}; a file with that name already exists in destination!"
+# 	else
+# 		mv $1 Output_${NAME}_${JOB_ID}/ || throw_error "Didn't move ${1}!"
+# 	fi
+# }
 function move_file {
 	if
 		[ -e Output_${NAME}_${JOB_ID}/$1 ]
 	then
-		throw_error "Can't move ${1}; a file with that name already exists in destination!"
+		rm Output_${NAME}_${JOB_ID}/$1
 	else
 		mv $1 Output_${NAME}_${JOB_ID}/ || throw_error "Didn't move ${1}!"
 	fi
