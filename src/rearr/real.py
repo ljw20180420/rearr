@@ -18,6 +18,9 @@ def bench_real(cfg: dict, lib: str):
                     data_cfg["ref_dir"] / ref_file,
                     sep="\t",
                     names=["rstart1", "ref1", "rend1", "rstart2", "ref2", "rend2"],
+                ).assign(
+                    ref1=lambda df: df["ref1"].str.upper(),
+                    ref2=lambda df: df["ref2"].str.upper(),
                 )
                 edit_df = (
                     pd

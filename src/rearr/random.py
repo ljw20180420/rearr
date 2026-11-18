@@ -16,18 +16,20 @@ def random_ref(length: int, cut: int, rng: np.random.Generator) -> str:
     return "".join(DNA)
 
 
-def SNP_DNA(DNA: str, error_rate: float, rng: np.random.Generator) -> str:
+def SNP_DNA(DNA: str, snp_rate: float, rng: np.random.Generator) -> str:
     DNA = np.array(list(DNA))
-    SNP_mask = rng.random(len(DNA)) < error_rate
+    SNP_mask = rng.random(len(DNA)) < snp_rate
     DNA[SNP_mask] = rng.choice(["A", "C", "G", "T"], sum(SNP_mask))
 
     return "".join(DNA)
 
 
-def indel_DNA(DNA: str, error_rate: float, rng: np.random.Generator) -> str:
+def indel_DNA(
+    DNA: str, del_rate: float, ins_rate: float, rng: np.random.Generator
+) -> str:
     DNA = np.array(list(DNA))
-    DNA[rng.random(len(DNA)) < error_rate] = ""
-    inslens = rng.negative_binomial(1, 1 - error_rate, len(DNA) + 1)
+    DNA[rng.random(len(DNA)) < del_rate] = ""
+    inslens = rng.negative_binomial(1, 1 - ins_rate, len(DNA) + 1)
     insDNAs = np.array([random_DNA(inslen, rng) for inslen in inslens])
 
     return "".join(np.stack([insDNAs, np.append(DNA, "")], axis=1).flatten())
@@ -71,6 +73,9 @@ def generate_edit(
     max_random_insertion_length: int,
     rng: np.random.Generator,
 ) -> pd.DataFrame:
+    snp_rate = error_rate / 3
+    del_rate = error_rate / 3
+    ins_rate = error_rate / 3
     max_shift1 = int(len(ref1) * max_align_pos_shift_ratio)
     max_shift2 = int(len(ref2) * max_align_pos_shift_ratio)
 
@@ -88,12 +93,12 @@ def generate_edit(
     edit_df = edit_df.assign(
         mut1=lambda df: df["rpos1"].map(
             lambda rpos1: indel_DNA(
-                SNP_DNA(ref1[rstart1:rpos1], error_rate, rng), error_rate, rng
+                SNP_DNA(ref1[rstart1:rpos1], snp_rate, rng), del_rate, ins_rate, rng
             )
         ),
         mut2=lambda df: df["rpos2"].map(
             lambda rpos2: indel_DNA(
-                SNP_DNA(ref2[rpos2:rend2], error_rate, rng), error_rate, rng
+                SNP_DNA(ref2[rpos2:rend2], snp_rate, rng), del_rate, ins_rate, rng
             )
         ),
     )

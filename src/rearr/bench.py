@@ -786,7 +786,7 @@ def bench_CRISPR_toolkit(
         ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
         user = "ljw"
         project = "rearr"
-        barcode = ref1[rstart1 - 19 : rstart1]
+        barcode = "A" * 19
         ref = barcode + ref1[rstart1:rend1] + ref2[rstart2:]
         (
             td / "Indel_searcher_2" / "Input" / user / "Reference" / project / "ref"
@@ -1002,12 +1002,12 @@ def bench_SIQ(
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
         ref1, ref2, rstart1, rend1, rstart2, rend2 = parse_ref(ref_df)
-        ref = ref1[:rend1] + ref2[rstart2:]
+        left_flank = "A" * 15
+        right_flank = "T" * 15
+        ref = left_flank + ref1[rstart1:rend1] + ref2[rstart2:rend2] + right_flank
         with open(td / "ref.fa", "w") as fd:
             fd.write(f">ref\n{ref}\n")
-        left_flank = ref1[rstart1 - 15 : rstart1]
-        right_flank = ref2[rend2 : rend2 + 15]
-        cut1 = rend1
+        cut1 = rend1 - rstart1 + len(left_flank)
         cut2 = rstart2
 
         edit_df = edit_df.assign(
@@ -1037,7 +1037,7 @@ def bench_SIQ(
                 seq_name, rpos1, rpos2, qpos1, qpos2 = line.split("\t")
                 predict_df_slice = pd.DataFrame({
                     "idx": [int(seq_name.removeprefix("seq"))],
-                    "rpos1": [int(rpos1)],
+                    "rpos1": [int(rpos1) - cut1 + rend1],
                     "rpos2": [int(rpos2) - cut1 + cut2],
                     "qpos1": [int(qpos1)],
                     "qpos2": [int(qpos2)],

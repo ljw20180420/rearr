@@ -1,6 +1,3 @@
-import itertools
-
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -34,7 +31,7 @@ def plotly_template() -> go.layout.Template:
     )
 
 
-def draw_time_memory_benchmark(cfg) -> None:
+def draw_sim_time_memory_benchmark(cfg) -> None:
     color_dict = {
         0.01: "red",
         0.02: "green",
@@ -117,7 +114,7 @@ def draw_time_memory_benchmark(cfg) -> None:
             fig.write_image(draw_dir / f"{mode}.pdf")
 
 
-def draw_accuracy_benchmark(cfg) -> None:
+def draw_sim_accuracy_benchmark(cfg) -> None:
     error_name_dict = {
         "rpos1_d": "reference upstream",
         "rpos2_d": "reference downstream",
@@ -222,3 +219,47 @@ def draw_accuracy_benchmark(cfg) -> None:
                     / "accuracy"
                     / f"{mode}_{ref_len}_{error_rate}.pdf"
                 )
+
+
+def draw_real_time_memory_benchmark(cfg: dict):
+    df = (
+        pd
+        .concat(
+            [
+                pd.read_csv(cfg["output_dir"] / lib / "bench.csv", header=0).assign(
+                    lib=lib
+                )
+                for lib in cfg["libs"]
+            ],
+            ignore_index=True,
+        )
+        .groupby("lib", as_index=False)
+        .agg(
+            wall_time_mean=pd.NamedAgg(column="wall_time", aggfunc="mean"),
+            wall_time_sem=pd.NamedAgg(column="wall_time", aggfunc="sem"),
+            memory_mean=pd.NamedAgg(column="memory", aggfunc="mean"),
+            memory_sem=pd.NamedAgg(column="memory", aggfunc="sem"),
+        )
+    )
+    for target in ["wall_time", "memory"]:
+        if target == "wall_time":
+            draw_dir = cfg["output_dir"] / "draw" / "time"
+        else:
+            draw_dir = cfg["output_dir"] / "draw" / "memory"
+        draw_dir.mkdir(exist_ok=True, parents=True)
+        fig = px.scatter(
+            df,
+            x="lib",
+            y=f"{target}_mean",
+            error_y=f"{target}_sem",
+            color_discrete_sequence=["black"],
+        )
+        fig.update_xaxes(
+            type="category", categoryorder="array", categoryarray=cfg["libs"]
+        )
+        fig.update_layout(
+            xaxis_title="package",
+            yaxis_title="time (s)" if target == "wall_time" else "memory (kB)",
+            template=plotly_template(),
+        )
+        fig.write_image(draw_dir / "real.pdf")
