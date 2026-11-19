@@ -3,7 +3,7 @@
 import os
 import pathlib
 
-from rearr import config, real
+from rearr import config, draw, real
 
 if __name__ == "__main__":
     os.chdir(pathlib.Path(__file__).resolve().parent.parent)
@@ -11,3 +11,5 @@ if __name__ == "__main__":
 
     for lib in cfg["libs"]:
         real.bench_real(cfg, lib=lib)
+
+    draw.draw_real_time_memory_benchmark(cfg=cfg)

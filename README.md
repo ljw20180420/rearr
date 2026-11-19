@@ -86,10 +86,6 @@ A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 # TODO
 
 ```
-- Modify error rate (total for indel and snp)
-- optimize rearr performance for single cut mode
-- rerun all sim and real benchmark after modification
-- benchmark realdata
 - java version manager
 - pip -> bioconda
 - [ ] Use GNU autotools to install Rearrangement

@@ -295,7 +295,6 @@ def bench_resso(
                 right=edit_df[["seqname", "query"]],
                 on="query",
                 how="left",
-                validate="many_to_one",
             )
             .query("not seqname.isna()")
             .reset_index(drop=True)
@@ -394,7 +393,6 @@ def bench_amplicon(
                 right=unique_seq_query_df[["seqname", "primer_query"]],
                 on="primer_query",
                 how="left",
-                validate="many_to_one",
             )
             .assign(idx=lambda df: df["seqname"].str.removeprefix("@seq").astype(int))[
                 ["idx", "rpos1", "rpos2", "qpos1", "qpos2"]

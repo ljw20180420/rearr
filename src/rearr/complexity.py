@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
-from .bench import bench_rearr_full
+from .bench import bench_rearr_full, read_edit, read_ref
 from .random import generate_edit, generate_ref
 
 
@@ -89,11 +89,17 @@ def bench_complexity_rearr(cfg: dict) -> None:
                         wall_time,
                         memory,
                     ) = bench_rearr_full(
-                        ref_file=cfg["output_dir"] / "ref" / f"{mode}_{ref_len}.csv",
-                        edit_file=cfg["output_dir"]
-                        / "edit"
-                        / f"{mode}_{ref_len}_{error_rate}.csv",
-                        query_ratio=cfg["query_ratio"],
+                        ref_df=read_ref(
+                            ref_file=cfg["output_dir"]
+                            / "ref"
+                            / f"{mode}_{ref_len}.csv",
+                            query_ratio=cfg["query_ratio"],
+                        ),
+                        edit_df=read_edit(
+                            edit_file=cfg["output_dir"]
+                            / "edit"
+                            / f"{mode}_{ref_len}_{error_rate}.csv"
+                        ),
                         predict_file=cfg["output_dir"]
                         / "predict"
                         / f"{mode}_{ref_len}_{error_rate}.predict",

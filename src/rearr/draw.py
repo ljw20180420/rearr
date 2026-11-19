@@ -39,6 +39,13 @@ def draw_sim_time_memory_benchmark(cfg) -> None:
         0.04: "purple",
         0.05: "black",
     }
+    symbol_dict = {
+        0.01: "circle-open",
+        0.02: "square-open",
+        0.03: "diamond-open",
+        0.04: "cross-thin-open",
+        0.05: "x-thin-open",
+    }
     df = pd.concat(
         [
             pd.read_csv(cfg["output_dir"] / lib / "bench.csv", header=0).assign(lib=lib)
@@ -72,12 +79,10 @@ def draw_sim_time_memory_benchmark(cfg) -> None:
                             offsetgroup=ref_len,
                             mode="markers",
                             marker={
-                                "symbol": "line-ew",
-                                "size": 2,
-                                "line": {
-                                    "width": 1,
-                                    "color": color_dict[error_rate],
-                                },
+                                "symbol": symbol_dict[error_rate],
+                                "color": color_dict[error_rate],
+                                "size": 5,
+                                "line": {"width": 0.5},
                             },
                             name=error_rate,
                             legendgroup=error_rate,

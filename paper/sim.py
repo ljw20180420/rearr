@@ -3,7 +3,7 @@
 import os
 import pathlib
 
-from rearr import config, sim
+from rearr import config, draw, sim
 
 if __name__ == "__main__":
     os.chdir(pathlib.Path(__file__).resolve().parent.parent)
@@ -13,6 +13,9 @@ if __name__ == "__main__":
     # sim.generate_sim_edit(cfg)
     # for lib in cfg["libs"]:
     #     sim.bench_sim(cfg, lib=lib)
-    for lib in cfg["libs"]:
-        sim.select_sim(cfg, lib=lib)
-    sim.fillin_sim(cfg)
+    # for lib in cfg["libs"]:
+    #     sim.select_sim(cfg, lib=lib)
+    # sim.fillin_sim(cfg)
+
+    draw.draw_sim_time_memory_benchmark(cfg=cfg)
+    # draw.draw_sim_accuracy_benchmark(cfg=cfg)
