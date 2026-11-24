@@ -86,6 +86,7 @@ A dedicated web server is at [qiangwulab](https://qiangwulab.sjtu.edu.cn).
 # TODO
 
 ```
+- Merge rearr_test repository
 - java version manager
 - pip -> bioconda
 - [ ] Use GNU autotools to install Rearrangement
